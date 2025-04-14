@@ -46,24 +46,157 @@ export function generateStyledTemplate(
   // Generate images HTML
   let imagesHtml = '';
   if (templateData.images && templateData.images.length > 0) {
-    // Main gallery images
-    const mainImagesHtml = templateData.images.map(img => 
-      `<div class="gallery-image-container">
-        <img class="gallery-image" src="${img.url}" alt="${templateData.title || 'Product'}" />
-      </div>`
-    ).join('');
+    // Main gallery images - all images with radio button selection
+    const mainImagesHtml = templateData.images.map((img, idx) => `
+      <input type="radio" name="gallery-select" id="gallery-select-${idx}" ${idx === 0 ? 'checked' : ''} class="gallery-select" />
+      <div class="gallery-main-image" id="main-image-${idx}" data-id="${img.id}">
+        <img src="${img.url}" alt="${templateData.title || 'Product'}" />
+      </div>
+    `).join('');
     
-    // Thumbnail images
-    const thumbnailsHtml = templateData.images.map(img => 
-      `<div class="thumbnail-container">
-        <img class="thumbnail-image" src="${img.url}" alt="Thumbnail" />
-      </div>`
-    ).join('');
+    // Thumbnail images with labels connected to radio buttons
+    const thumbnailsHtml = templateData.images.map((img, idx) => `
+      <label for="gallery-select-${idx}" class="thumbnail-item" data-for="main-image-${idx}" data-id="${img.id}">
+        <img src="${img.url}" alt="Thumbnail ${idx + 1}" />
+      </label>
+    `).join('');
     
+    // Create a complete gallery with pure CSS interaction
     imagesHtml = `
       <div class="product-gallery">
-        <div class="main-gallery">${mainImagesHtml}</div>
-        <div class="thumbnails">${thumbnailsHtml}</div>
+        <div class="gallery-main-wrapper">
+          <div class="gallery-main">
+            ${mainImagesHtml}
+          </div>
+        </div>
+        
+        <div class="gallery-thumbnails">
+          <div class="thumbnail-scroll">
+            ${thumbnailsHtml}
+          </div>
+        </div>
+        
+        <style>
+          /* CSS-only gallery styles */
+          .product-gallery {
+            position: relative;
+            margin-bottom: 30px;
+          }
+          
+          .gallery-main-wrapper {
+            position: relative;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            aspect-ratio: 4/3;
+            overflow: hidden;
+            margin-bottom: 10px;
+          }
+          
+          .gallery-main {
+            position: relative;
+            width: 100%;
+            height: 100%;
+          }
+          
+          .gallery-select {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+          }
+          
+          .gallery-main-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          .gallery-main-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+          }
+          
+          /* Show selected image */
+          .gallery-select:checked + .gallery-main-image {
+            opacity: 1;
+            z-index: 2;
+          }
+          
+          /* Thumbnails */
+          .gallery-thumbnails {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #ddd #f7f7f7;
+          }
+          
+          .thumbnail-scroll {
+            display: flex;
+            gap: 10px;
+            padding-bottom: 5px;
+          }
+          
+          .thumbnail-item {
+            flex: 0 0 80px;
+            height: 80px;
+            border: 2px solid #ddd;
+            overflow: hidden;
+            cursor: pointer;
+            display: block;
+          }
+          
+          .thumbnail-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          
+          .thumbnail-item:hover {
+            border-color: var(--color-primary);
+          }
+          
+          /* Selected thumbnail highlight */
+          #gallery-select-0:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-0"],
+          #gallery-select-1:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-1"],
+          #gallery-select-2:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-2"],
+          #gallery-select-3:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-3"],
+          #gallery-select-4:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-4"],
+          #gallery-select-5:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-5"],
+          #gallery-select-6:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-6"],
+          #gallery-select-7:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-7"],
+          #gallery-select-8:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-8"],
+          #gallery-select-9:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-9"] {
+            border-color: var(--color-primary);
+            position: relative;
+          }
+          
+          /* Make sure thumbnails spread across the row but don't shrink */
+          .thumbnail-item {
+            min-width: 80px;
+          }
+          
+          /* Responsive */
+          @media (max-width: 768px) {
+            .gallery-main-wrapper {
+              aspect-ratio: 1/1;
+            }
+            
+            .thumbnail-item {
+              flex: 0 0 60px;
+              height: 60px;
+              min-width: 60px;
+            }
+          }
+        </style>
       </div>
     `;
   }
@@ -340,18 +473,140 @@ export function generateDefaultTemplate(templateData: TemplateData): string {
       
       ${templateData.images && templateData.images.length > 0 ? `
       <div class="product-gallery">
-        <div class="main-gallery">
-          <div class="gallery-image-container">
-            <img class="gallery-image" src="${templateData.images[0].url}" alt="${templateData.title || 'Product'}" />
+        <div class="gallery-main-wrapper">
+          <div class="gallery-main">
+            ${templateData.images.map((img, idx) => `
+              <input type="radio" name="gallery-select" id="gallery-select-${idx}" ${idx === 0 ? 'checked' : ''} class="gallery-select" />
+              <div class="gallery-main-image" id="main-image-${idx}" data-id="${img.id}">
+                <img src="${img.url}" alt="${templateData.title || 'Product'}" />
+              </div>
+            `).join('')}
           </div>
         </div>
-        <div class="thumbnails">
-          ${templateData.images.map(img => `
-            <div class="thumbnail-container">
-              <img class="thumbnail-image" src="${img.url}" alt="Thumbnail" />
-            </div>
-          `).join('')}
+        
+        <div class="gallery-thumbnails">
+          <div class="thumbnail-scroll">
+            ${templateData.images.map((img, idx) => `
+              <label for="gallery-select-${idx}" class="thumbnail-item" data-for="main-image-${idx}" data-id="${img.id}">
+                <img src="${img.url}" alt="Thumbnail ${idx + 1}" />
+              </label>
+            `).join('')}
+          </div>
         </div>
+        
+        <style>
+          .product-gallery {
+            margin-bottom: 30px;
+          }
+          
+          .gallery-main-wrapper {
+            position: relative;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            aspect-ratio: 4/3;
+            overflow: hidden;
+            margin-bottom: 10px;
+          }
+          
+          .gallery-main {
+            position: relative;
+            width: 100%;
+            height: 100%;
+          }
+          
+          .gallery-select {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+          }
+          
+          .gallery-main-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          .gallery-main-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+          }
+          
+          /* Show selected image */
+          .gallery-select:checked + .gallery-main-image {
+            opacity: 1;
+            z-index: 2;
+          }
+          
+          /* Thumbnails */
+          .gallery-thumbnails {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #ddd #f7f7f7;
+          }
+          
+          .thumbnail-scroll {
+            display: flex;
+            gap: 10px;
+            padding-bottom: 5px;
+          }
+          
+          .thumbnail-item {
+            flex: 0 0 80px;
+            height: 80px;
+            border: 2px solid #ddd;
+            overflow: hidden;
+            cursor: pointer;
+            display: block;
+          }
+          
+          .thumbnail-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          
+          .thumbnail-item:hover {
+            border-color: var(--color-primary);
+          }
+          
+          /* Selected thumbnail */
+          #gallery-select-0:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-0"],
+          #gallery-select-1:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-1"],
+          #gallery-select-2:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-2"],
+          #gallery-select-3:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-3"],
+          #gallery-select-4:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-4"],
+          #gallery-select-5:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-5"],
+          #gallery-select-6:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-6"],
+          #gallery-select-7:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-7"],
+          #gallery-select-8:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-8"],
+          #gallery-select-9:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-9"] {
+            border-color: var(--color-primary);
+            position: relative;
+          }
+          
+          /* Responsive */
+          @media (max-width: 768px) {
+            .gallery-main-wrapper {
+              aspect-ratio: 1/1;
+            }
+            
+            .thumbnail-item {
+              flex: 0 0 60px;
+              height: 60px;
+            }
+          }
+        </style>
       </div>
       ` : ''}
       
