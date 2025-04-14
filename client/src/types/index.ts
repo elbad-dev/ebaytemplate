@@ -1,7 +1,7 @@
 // Types for the template editor components
 export type UploadState = "idle" | "file" | "paste" | "uploading" | "success" | "error";
 
-export type EditorTab = "images" | "title" | "specs" | "company";
+export type EditorTab = "images" | "title" | "description" | "specs" | "company";
 
 export type PreviewMode = "desktop" | "tablet" | "mobile";
 
@@ -28,6 +28,7 @@ export interface TemplateData {
   subtitle?: string;
   price?: string;
   currency?: string;
+  description?: string;
   images: Image[];
   specs: TechSpec[];
   companyInfo: CompanySection[];

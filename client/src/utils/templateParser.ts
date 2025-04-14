@@ -183,6 +183,30 @@ export function parseTemplate(htmlContent: string): TemplateData {
       }
     }
     
+    // Extract product description from "Produktbeschreibung" section
+    let description = '';
+    
+    // Method 1: Look for a section with title "Produktbeschreibung"
+    $('.product-section h2, .section-title, .card-title').each((_, el) => {
+      const title = $(el).text().trim();
+      if (title.includes('Produktbeschreibung')) {
+        const parent = $(el).parent();
+        const descriptionContent = parent.find('p, .description, .content').text().trim();
+        if (descriptionContent) {
+          description = descriptionContent;
+          return false; // Break the loop
+        }
+      }
+    });
+    
+    // Method 2: Look for div with class or ID containing "description"
+    if (!description) {
+      const descriptionEl = $('.product-description, #description, .description, .produktbeschreibung').first();
+      if (descriptionEl.length) {
+        description = descriptionEl.text().trim();
+      }
+    }
+    
     // Extract company info sections
     const companyInfo: CompanySection[] = [];
     
@@ -250,6 +274,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
       subtitle,
       price,
       currency,
+      description,
       images,
       specs,
       companyInfo,
@@ -263,6 +288,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
       subtitle: '',
       price: '',
       currency: 'EUR',
+      description: '',
       images: [],
       specs: [],
       companyInfo: [

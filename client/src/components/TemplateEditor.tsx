@@ -109,6 +109,7 @@ const TemplateEditor: React.FC = () => {
       subtitle: '',
       price: '',
       currency: 'EUR',
+      description: '',
       images: [],
       specs: [],
       companyInfo: []

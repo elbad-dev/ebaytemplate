@@ -178,6 +178,28 @@ export function generateTemplate(templateData: TemplateData): string {
       }
     }
     
+    // Update product description
+    if (templateData.description) {
+      $('.product-description, .description, .produktbeschreibung').each((_, el) => {
+        $(el).html(templateData.description);
+      });
+      
+      // If no description found but there's a section titled "Produktbeschreibung"
+      $('.product-section h2, .section-title, .card-title').each((_, el) => {
+        const title = $(el).text().trim();
+        if (title.includes('Produktbeschreibung')) {
+          const parent = $(el).parent();
+          const descriptionEl = parent.find('p, .description, .content');
+          if (descriptionEl.length) {
+            descriptionEl.html(templateData.description);
+          } else {
+            // Add description if there's no content element
+            $(el).after(`<p class="description">${templateData.description}</p>`);
+          }
+        }
+      });
+    }
+    
     // Update company information sections
     if (templateData.companyInfo.length > 0) {
       const companyContainers = [
