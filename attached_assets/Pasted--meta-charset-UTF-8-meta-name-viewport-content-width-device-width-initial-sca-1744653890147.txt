@@ -1,0 +1,1620 @@
+
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAUS WERKZEUGE - Premium Werkzeug Set</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* Theme variables - with dark theme support */
+        :root {
+            /* Light theme variables */
+            --primary: #00a651;
+            --background: rgba(255, 255, 255, 0.95);
+            --text: #1a1a1a;
+            --muted: #666666;
+            --border: #e5e5e5;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --radius: 16px; /* Increased from 12px for more noticeable rounding */
+            --image-bg: rgba(255, 255, 255, 0.95);
+            --frame-border: #e5e5e5;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --hover-bg: rgba(0, 0, 0, 0.05);
+            --button-hover: rgba(0, 0, 0, 0.1);
+            --main-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        /* Manual theme switching */
+        /* Dark theme CSS variables - replaced with more comprehensive selectors below */
+        /* @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #00cc63;
+                --background: #1a1a1a;
+                --text: #ffffff;
+                --muted: #a0a0a0;
+                --border: #333333;
+                --card-bg: #242424;
+            }
+        } */
+        /* :root[data-theme="dark"] {
+            --primary: #00cc63;
+            --background: #1a1a1a;
+            --text: #ffffff;
+            --muted: #a0a0a0;
+            --border: #333333;
+            --card-bg: #242424;
+        } */
+
+
+        /* Theme toggle styles */
+        .theme-toggle {
+            position: relative;
+            top: auto;
+            right: auto;
+            transform: none;
+            margin-left: auto;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            margin: 0; /* Added to ensure no default margins */
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        /* Hide the actual checkbox */
+        #theme-toggle {
+            display: none;
+        }
+
+        /* Theme icons */
+        .theme-toggle svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: var(--text);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sun-icon, .moon-icon {
+            position: absolute;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        /* Show/hide icons based on theme */
+        .sun-icon {
+            opacity: 1;
+        }
+
+        .moon-icon {
+            opacity: 0;
+        }
+
+        /* Dark theme switching using pure CSS */
+        #theme-toggle:checked ~ .container,
+        #theme-toggle:checked ~ .container * {
+            --primary: #00cc63;
+            --background: rgba(26, 26, 26, 0.95);
+            --text: #ffffff;
+            --muted: #a0a0a0;
+            --border: #333333;
+            --card-bg: rgba(36, 36, 36, 0.95);
+            --image-bg: rgba(42, 42, 42, 0.95);
+            --frame-border: #404040;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --hover-bg: rgba(255, 255, 255, 0.1);
+            --button-hover: rgba(255, 255, 255, 0.1);
+            --main-bg: rgba(26, 26, 26, 0.95);
+        }
+
+        #theme-toggle:checked ~ .theme-toggle .sun-icon {
+            opacity: 0;
+        }
+
+        #theme-toggle:checked ~ .theme-toggle .moon-icon {
+            opacity: 1;
+        }
+
+        /* Ensure dark theme affects the entire document */
+        #theme-toggle:checked ~ body {
+            background-color: var(--main-bg);
+            color: var(--text);
+        }
+
+        /* Fix tag contrast in dark mode */
+        #theme-toggle:checked ~ body .tag {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+        }
+
+        /* Ensure buttons maintain contrast in dark mode */
+        #theme-toggle:checked ~ body .button-cart {
+            background: var(--card-bg);
+            color: var(--primary);
+            border-color: var(--border);
+        }
+
+        #theme-toggle:checked ~ body .button-secondary {
+            background: var(--card-bg);
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        /* Fix card backgrounds in dark mode */
+        #theme-toggle:checked ~ body .card {
+            background: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Ensure proper text contrast */
+        #theme-toggle:checked ~ body .tech-label,
+        #theme-toggle:checked ~ body .price-note,
+        #theme-toggle:checked ~ body .brand-text p,
+        #theme-toggle:checked ~ body .copyright {
+            color: var(--muted);
+        }
+
+        #theme-toggle:checked ~ body .tech-value,
+        #theme-toggle:checked ~ body .price,
+        #theme-toggle:checked ~ body .brand-text h1 {
+            color: var(--text);
+        }
+
+        /* Adjust primary color elements */
+        #theme-toggle:checked ~ body .price,
+        #theme-toggle:checked ~ body .brand-text h1,
+        #theme-toggle:checked ~ body .button-primary {
+            color: var(--primary);
+        }
+
+        /* Fix gallery controls in dark mode */
+        #theme-toggle:checked ~ body .gallery-arrow {
+            background: var(--card-bg);
+            border-color: var(--frame-border);
+        }
+
+        #theme-toggle:checked ~ body .gallery-arrow::before {
+            border-color: var(--text);
+        }
+
+        /* Ensure thumbnail borders are visible */
+        #theme-toggle:checked ~ body .thumbnail {
+            border-color: var(--frame-border);
+        }
+
+        #theme-toggle:checked ~ body .thumbnail img {
+            opacity: 0.7;
+            filter: brightness(1.1) contrast(1.1);
+        }
+
+        #theme-toggle:checked ~ body .set-switcher label {
+            background: var(--frame-border);
+        }
+
+        #theme-toggle:checked ~ body .set-switcher label[for="set1"],
+        #theme-toggle:checked ~ body .set-switcher label[for="set2"],
+        #theme-toggle:checked ~ body .set-switcher label[for="set3"] {
+            background: var(--primary);
+        }
+
+        #theme-toggle:checked ~ body .container {
+            background-color: var(--main-bg);
+        }
+
+        #theme-toggle:checked ~ body .header {
+            background-color: var(--background);
+            border-color: var(--border);
+        }
+
+        #theme-toggle:checked ~ body .brand-subtitle p {
+            color: var(--muted);
+        }
+
+        #theme-toggle:checked ~ body .card {
+            background: var(--card-bg);
+            border-color: var(--border);
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
+
+        #theme-toggle:checked ~ body .button:hover {
+            background-color: var(--button-hover);
+        }
+
+        #theme-toggle:checked ~ body .button-primary {
+            background: var(--primary);
+            color: var(--background);
+        }
+
+        #theme-toggle:checked ~ body .button-secondary {
+            background: var(--card-bg);
+            color: var(--primary);
+            border-color: var(--border);
+        }
+
+        #theme-toggle:checked ~ body .tag {
+            background: var(--hover-bg);
+            color: var(--text);
+        }
+
+        #theme-toggle:checked ~ body .info-icon {
+            color: var(--primary);
+        }
+
+        #theme-toggle:checked ~ body .info-cards .card:hover {
+            background: var(--hover-bg);
+        }
+
+        #theme-toggle:checked ~ body img {
+            opacity: 0.9;
+            filter: brightness(0.9) contrast(1.1);
+        }
+
+        #theme-toggle:checked ~ body .theme-toggle {
+            background: var(--card-bg);
+            border-color: var(--border);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            border-radius: 16px; /* Add rounded corners */
+            overflow: hidden;
+        }
+        .gallery {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: transparent; /* Remove background */
+            padding: 0; /* Remove padding */
+        }
+        .gallery-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 75%;
+            overflow: hidden;
+            border-radius: var(--radius); /* Add rounded corners */
+            background: var(--image-bg);
+            border: none;
+            margin-bottom: 1rem; /* Add margin to separate from thumbnails */
+        }
+        .gallery-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            object-fit: contain;
+            z-index: 1;
+            background: var(--image-bg);
+        }
+        .gallery input[type="radio"] {
+            display: none;
+        }
+        #img1:checked ~ .gallery-container #main1,
+        #img2:checked ~ .gallery-container #main2,
+        #img3:checked ~ .gallery-container #main3,
+        #img4:checked ~ .gallery-container #main4,
+        #img5:checked ~ .gallery-container #main5 {
+            opacity: 1;
+            z-index: 2;
+        }
+        .gallery-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            z-index: 10;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+            display: none;
+            background: var(--image-bg);
+            border: 2px solid var(--frame-border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .gallery-arrow::before {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-style: solid;
+            border-width: 2px 2px 0 0;
+            top: 50%;
+            left: 50%;
+        }
+        .gallery-arrow.prev {
+            left: 10px;
+        }
+        .gallery-arrow.next {
+            right: 10px;
+        }
+        .gallery-arrow.prev::before {
+            transform: translate(-30%, -50%) rotate(-135deg);
+        }
+        .gallery-arrow.next::before {
+            transform: translate(-70%, -50%) rotate(45deg);
+        }
+        .gallery-arrow {
+            display: none;
+        }
+        #img1:checked ~ .gallery-container .next[for="img2"],
+        #img2:checked ~ .gallery-container .next[for="img3"],
+        #img3:checked ~ .gallery-container .next[for="img4"],
+        #img4:checked ~ .gallery-container .next[for="img5"] {
+            display: block;
+        }
+        #img2:checked ~ .gallery-container .prev[for="img1"],
+        #img3:checked ~ .gallery-container .prev[for="img2"],
+        #img4:checked ~ .gallery-container .prev[for="img3"],
+        #img5:checked ~ .gallery-container .prev[for="img4"] {
+            display: block;
+        }
+        .thumbnail-sets {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 0; /* Remove top margin since we added bottom margin to container */
+        }
+        .thumbnail-set {
+            display: none;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        #img1:checked ~ .thumbnail-sets .set1,
+        #img2:checked ~ .thumbnail-sets .set1,
+        #img3:checked ~ .thumbnail-sets .set1,
+        #img4:checked ~ .thumbnail-sets .set1,
+        #img5:checked ~ .thumbnail-sets .set1 {
+            display: flex;
+        }
+        .set-switcher {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .set-switcher label {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+            cursor: pointer;
+            transition: background-color 0.3s;
+            background: var(--frame-border);
+            opacity: 0.7;
+        }
+        #img1:checked ~ .set-switcher label[for="set1"],
+        #img2:checked ~ .set-switcher label[for="set1"],
+        #img3:checked ~ .set-switcher label[for="set1"],
+        #img4:checked ~ .set-switcher label[for="set1"],
+        #img5:checked ~ .set-switcher label[for="set1"] {
+            background: var(--primary);
+        }
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            border: none;
+            border-radius: 16px; /* Add rounded corners */
+            overflow: hidden;
+            transition: transform 0.2s;
+            background: var(--image-bg);
+        }
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 1;
+            transition: transform 0.2s;
+        }
+        #img1:checked ~ .thumbnail-sets label[for="img1"],
+        #img2:checked ~ .thumbnail-sets label[for="img2"],
+        #img3:checked ~ .thumbnail-sets label[for="img3"],
+        #img4:checked ~ .thumbnail-sets label[for="img4"],
+        #img5:checked ~ .thumbnail-sets label[for="img5"] {
+            border: none;
+            transform: scale(1.1);
+        }
+        .thumbnail:hover {
+            border: none;
+            transform: scale(1.1);
+        }
+        .header {
+            padding: 1rem 0; /* Increase top padding */
+            margin-top: 0; /* Ensure no top margin */
+        }
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding-top: 0.5rem; /* Add slight top padding */
+        }
+        @media (min-width: 640px) {
+            .header-content {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+        }
+        .brand-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        @media (min-width: 640px) {
+            .brand-section {
+                flex-direction: row;
+                align-items: center;
+            }
+        }
+        .brand-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .brand-text h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: var(--primary);
+            letter-spacing: 0.05em;
+        }
+        .brand-text p {
+            font-size: 0.875rem;
+            color: var(--muted);
+        }
+        .product-section {
+            display: grid;
+            gap: 1rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            margin-top: 1rem;
+        }
+        @media (min-width: 768px) {
+            .product-section {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2rem;
+            }
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px; /* Add rounded corners */
+            padding: 1rem;
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
+        .tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius);
+            background: rgba(0,0,0,0.05);
+            color: var(--muted);
+        }
+        .price {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary) !important; /* Force primary color */
+        }
+        .price-note {
+            font-size: 0.875rem;
+            color: var(--muted);
+        }
+        .button {
+            display: inline-block;
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            margin-top: 0.75rem;
+            border: none;
+        }
+        .button-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+        .button-secondary {
+            background: #f3f4f6;
+            color: var(--primary);
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .button-cart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: var(--card-bg);
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+        .button-cart::before {
+            content: '🛒';
+            font-size: 1.2em;
+        }
+        .tech-data {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            display: grid;
+            gap: 2rem;
+        }
+        @media (min-width: 768px) {
+            .tech-data {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .tech-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .tech-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        .tech-label {
+            color: var(--muted);
+        }
+        .tech-value {
+            font-weight: 500;
+        }
+        .company-info {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            padding-bottom: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .info-cards {
+            display: grid;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        @media (min-width: 768px) {
+            .info-cards {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        .copyright {
+            font-size: 0.875rem;
+            color: var(--muted);
+            margin-top: 2rem;
+        }
+        .info-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            color: var(--primary);
+        }
+        .info-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Replace JavaScript theme toggle with CSS-only solution */
+        #theme-toggle:checked ~ * {
+            --primary: #00cc63;
+            --background: rgba(26, 26, 26, 0.9); /* Add transparency */
+            --text: #ffffff;
+            --muted: #a0a0a0;
+            --border: #333333;
+            --card-bg: rgba(36, 36, 36, 0.9); /* Add transparency */
+        }
+
+        /* Add keyboard accessibility for theme toggle */
+        .theme-toggle:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Improve gallery transitions */
+        .gallery-item {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        /* Add focus states for better accessibility */
+        .thumbnail:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        .gallery-arrow:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Fix technical image card */
+        .tech-image-container {
+            background: var(--image-bg);
+            border: 1px solid var(--frame-border);
+            padding: 1rem;
+        }
+
+        #theme-toggle:checked ~ body .tech-image-container img {
+            filter: brightness(1.1) contrast(1.1);
+        }
+
+        /* Update existing hover states for dark mode */
+        .button:hover {
+            background-color: var(--button-hover);
+            transition: all 0.2s ease;
+        }
+
+        .card {
+            box-shadow: 0 4px 6px var(--shadow-color);
+            transition: all 0.2s ease;
+        }
+
+        .info-cards .card:hover {
+            background: var(--hover-bg);
+            transform: translateY(-2px);
+        }
+
+        /* Ensure container and body use the main background */
+        body, 
+        .container {
+            background-color: var(--main-bg);
+            color: var(--text);
+            border-radius: 16px; /* Add rounded corners */
+            overflow: hidden;
+        }
+
+        .container {
+            padding-bottom: 2rem;
+            border-radius: 16px; /* Add rounded corners */
+            background-color: var(--main-bg); /* Ensure transparency is applied */
+        }
+
+        /* Additional dark mode fixes */
+        #theme-toggle:checked ~ body {
+            background-color: var(--main-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        #theme-toggle:checked ~ * .container {
+            background-color: var(--main-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        /* Ensure text colors update properly */
+        #theme-toggle:checked ~ * p,
+        #theme-toggle:checked ~ * h1,
+        #theme-toggle:checked ~ * h2,
+        #theme-toggle:checked ~ * h3,
+        #theme-toggle:checked ~ * span:not(.price):not(.tag):not(.brand-text *):not(.brand-subtitle *) {
+            color: var(--text);
+        }
+
+        /* Fix brand text colors in dark mode */
+        #theme-toggle:checked ~ body .brand-text h1,
+        #theme-toggle:checked ~ body .brand-text p {
+            color: var(--primary) !important;
+        }
+
+        /* Fix brand subtitle in dark mode */
+        #theme-toggle:checked ~ body .brand-subtitle p {
+            color: var(--primary) !important;
+        }
+
+        /* Reset dark mode text color overrides */
+        #theme-toggle:checked ~ * p,
+        #theme-toggle:checked ~ * h1,
+        #theme-toggle:checked ~ * h2,
+        #theme-toggle:checked ~ * h3,
+        #theme-toggle:checked ~ * span:not(.price):not(.tag):not(.brand-text *):not(.brand-subtitle *) {
+            color: var(--text);
+        }
+
+        /* Replace with these specific brand text styles */
+        .brand-text h1 {
+            color: var(--primary) !important;
+            font-size: 1.875rem;
+            font-weight: bold;
+            letter-spacing: 0.05em;
+        }
+
+        .brand-text p {
+            color: var(--primary) !important;
+            font-size: 0.875rem;
+        }
+
+        /* Remove all other brand text color overrides and keep only these */
+        #theme-toggle:checked ~ * {
+            --primary: #00a651;  /* Keep original green in both modes */
+            --background: #1a1a1a;
+            --text: #ffffff;
+            /* ...rest of the dark mode variables... */
+        }
+
+        /* Brand subtitle should follow theme color */
+        .brand-subtitle p {
+            color: var(--text);
+            font-size: 0.875rem;
+        }
+
+        /* Fix bottom spacing and scrolling */
+        .container {
+            min-height: 100vh;
+            padding-bottom: 4rem;
+            margin-bottom: 2rem;
+        }
+
+        .company-info {
+            margin-bottom: 4rem;
+        }
+
+        .copyright {
+            padding-bottom: 4rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Ensure content is scrollable */
+        html, body {
+            min-height: 100%;
+            height: auto;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Fix iOS bottom spacing */
+        @supports (-webkit-touch-callout: none) {
+            .container {
+                padding-bottom: 6rem;
+            }
+        }
+
+        /* Replace existing body/container scroll styles with these */
+        html {
+            height: 100%;
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        body {
+            min-height: 100%;
+            background-color: var(--background);
+            color: var(--text);
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            padding-bottom: 4rem;
+            background-color: var(--main-bg);
+        }
+
+        /* Remove any overflow:hidden from existing styles */
+        body, 
+        .container {
+            overflow: visible;
+        }
+
+        /* iOS scroll fix */
+        @supports (-webkit-touch-callout: none) {
+            html, body {
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        /* Remove all existing scroll styles and replace with these */
+        html, body {
+            width: 100%;
+            height: auto;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            padding-bottom: 2rem;
+            background-color: var(--main-bg);
+        }
+
+        /* Remove any overflow:hidden */
+        .container, body {
+            overflow: visible;
+        }
+
+        /* Remove any border-radius from container */
+        .container {
+            border-radius: 0;
+        }
+
+        /* iOS scroll fix */
+        @supports (-webkit-touch-callout: none) {
+            html, body {
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        /* Remove all conflicting scroll and overflow styles and replace with these */
+        html {
+            height: 100%;
+            margin: 0;
+            padding: 1rem; /* Add padding to show rounded corners */
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #f0f0f0; /* Light background to show container rounding */
+        }
+
+        body {
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            background-color: var(--background);
+            color: var(--text);
+            overflow-x: hidden;
+            contain: content;
+            border-radius: var(--radius);
+            overflow: hidden; /* Ensure content doesn't break rounded corners */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            background-color: var(--main-bg);
+            contain: content;
+            border-radius: var(--radius);
+            overflow: auto; /* Allow scrolling while maintaining rounded corners */
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+        }
+
+        /* Remove these conflicting styles */
+        /* Delete or comment out:
+        html, body {
+            min-height: 100%;
+            height: auto;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        body, .container {
+            overflow: visible;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            padding-bottom: 4rem;
+        }
+        */
+
+        /* Update gallery container */
+        .gallery-container {
+            contain: content;
+            height: 0;
+            padding-bottom: 75%;
+        }
+
+        /* Fix double box-shadow declaration */
+        .card {
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
+
+        /* Fix invalid color syntax */
+        .tag {
+            color: var(--muted); /* Remove space after var */
+        }
+
+        .price-note {
+            color: var(--muted); /* Remove space after var */
+        }
+
+        /* Remove conflicting border-radius declarations */
+        #theme-toggle:checked ~ body,
+        #theme-toggle:checked ~ * .container {
+            border-radius: var(--radius);
+        }
+
+        /* Ensure dark mode maintains rounded corners */
+        #theme-toggle:checked ~ body {
+            background-color: #121212; /* Darker background for dark mode */
+        }
+
+        #theme-toggle:checked ~ * .container {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); /* Darker shadow for dark mode */
+        }
+
+        /* Update html and body spacing */
+        html {
+            height: 100%;
+            margin: 0;
+            padding: 2rem; /* Increased padding to show more background */
+            background: #f0f0f0;
+            min-height: 100vh;
+        }
+
+        body {
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            background-color: var(--background);
+            color: var(--text);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        /* Update container spacing */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 1rem auto; /* Added vertical margin */
+            padding: 2rem; /* Increased padding */
+            background-color: var(--main-bg);
+            border-radius: var(--radius);
+            overflow: auto;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.15); /* Enhanced shadow */
+        }
+
+        /* Update bottom spacing */
+        .company-info {
+            margin-top: 3rem; /* Increased */
+            margin-bottom: 3rem; /* Increased */
+            padding-top: 2rem;
+            padding-bottom: 2rem; /* Increased */
+        }
+
+        .copyright {
+            padding-bottom: 2rem; /* Increased */
+            margin-bottom: 1rem;
+        }
+
+        /* Fix iOS bottom spacing */
+        @supports (-webkit-touch-callout: none) {
+            .container {
+                padding-bottom: 8rem; /* Increased */
+            }
+        }
+
+        /* Update html spacing */
+        html {
+            height: 100%;
+            margin: 0;
+            padding: 0; /* Remove top padding */
+            background: #f0f0f0;
+            min-height: 100vh;
+        }
+
+        /* Update container spacing and margin */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto; /* Remove top margin */
+            padding: 2rem;
+            background-color: var(--main-bg);
+            border-radius: var(--radius);
+            overflow: auto;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Add new header spacing */
+        .header {
+            padding: 1rem 0; /* Increase top padding */
+            margin-top: 0; /* Ensure no top margin */
+        }
+
+        /* Update header-content spacing */
+        .header-content {
+            padding-top: 0.5rem; /* Add slight top padding */
+        }
+
+        .gallery {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: transparent;
+            padding: 0;
+        }
+
+        .gallery-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 75%;
+            overflow: hidden;
+            border-radius: var(--radius);
+            background: var(--image-bg);
+            border: none;
+            margin-bottom: 1rem;
+        }
+
+        .gallery-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            object-fit: contain; /* Keep aspect ratio */
+            object-position: center; /* Center the image */
+            max-width: 100%;
+            max-height: 100%;
+            z-index: 1;
+            background: var(--image-bg);
+        }
+
+        /* Update thumbnail styles to maintain aspect ratio */
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Keep aspect ratio */
+            object-position: center; /* Center the image */
+            background: var(--image-bg);
+        }
+
+        /* Reset viewport and container constraints */
+        html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            background: #f0f0f0;
+        }
+
+        body {
+            min-height: 100vh;
+            max-height: 100vh; /* Limit maximum height */
+            margin: 0;
+            padding: 0;
+            position: relative;
+            background-color: var(--background);
+            color: var(--text);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: var(--main-bg);
+            border-radius: var(--radius);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+            position: relative;
+            height: auto;
+            min-height: min-content;
+            max-height: calc(100vh - 4rem); /* Subtract padding */
+        }
+
+        /* Update company info spacing */
+        .company-info {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        .copyright {
+            padding-bottom: 1rem;
+            margin-bottom: 0;
+        }
+
+        /* Add padding around main container */
+        html {
+            padding: 2mm 0;
+            background: #f0f0f0;
+        }
+
+        .container {
+            margin: 2mm auto;
+            width: calc(100% - 4mm); /* Account for padding */
+            /* ...existing container styles... */
+        }
+
+        @media (max-width: 768px) {
+            html {
+                padding: 1mm 0; /* Slightly smaller on mobile */
+            }
+            .container {
+                margin: 1mm auto;
+                width: calc(100% - 2mm);
+            }
+        }
+
+        /* Fix theme toggle state changes */
+        #theme-toggle:checked ~ .container .theme-toggle {
+            background: var(--card-bg);
+            border-color: var(--border);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        #theme-toggle:checked ~ .container .theme-toggle .sun-icon {
+            opacity: 0;
+        }
+
+        #theme-toggle:checked ~ .container .theme-toggle .moon-icon {
+            opacity: 1;
+        }
+
+        /* Remove or comment out these conflicting selectors */
+        /*
+        #theme-toggle:checked ~ .theme-toggle .sun-icon {
+            opacity: 0;
+        }
+
+        #theme-toggle:checked ~ .theme-toggle .moon-icon {
+            opacity: 1;
+        }
+
+        #theme-toggle:checked ~ body .theme-toggle {
+            background: var(--card-bg);
+            border-color: var(--border);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+        */
+
+        /* Fix theme toggle selectors */
+        #theme-toggle:checked ~ .container {
+            --primary: #00cc63;
+            --background: rgba(26, 26, 26, 0.95);
+            --text: #ffffff;
+            --muted: #a0a0a0;
+            --border: #333333;
+            --card-bg: rgba(36, 36, 36, 0.95);
+            --image-bg: rgba(42, 42, 42, 0.95);
+            --frame-border: #404040;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --hover-bg: rgba(255, 255, 255, 0.1);
+            --button-hover: rgba(255, 255, 255, 0.1);
+            --main-bg: rgba(26, 26, 26, 0.95);
+        }
+
+        #theme-toggle:checked ~ .container .theme-toggle .sun-icon {
+            opacity: 0;
+        }
+
+        #theme-toggle:checked ~ .container .theme-toggle .moon-icon {
+            opacity: 1;
+        }
+
+        /* Ensure dark theme affects the entire document */
+        #theme-toggle:checked ~ .container {
+            background-color: var(--main-bg);
+            color: var(--text);
+        }
+
+        /* Fix tag contrast in dark mode */
+        #theme-toggle:checked ~ .container .tag {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+        }
+
+        /* Ensure buttons maintain contrast in dark mode */
+        #theme-toggle:checked ~ .container .button-cart {
+            background: var(--card-bg);
+            color: var(--primary);
+            border-color: var(--border);
+        }
+
+        #theme-toggle:checked ~ .container .button-secondary {
+            background: var(--card-bg);
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        /* Fix card backgrounds in dark mode */
+        #theme-toggle:checked ~ .container .card {
+            background: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Ensure proper text contrast */
+        #theme-toggle:checked ~ .container .tech-label,
+        #theme-toggle:checked ~ .container .price-note,
+        #theme-toggle:checked ~ .container .brand-text p,
+        #theme-toggle:checked ~ .container .copyright {
+            color: var(--muted);
+        }
+
+        #theme-toggle:checked ~ .container .tech-value,
+        #theme-toggle:checked ~ .container .price,
+        #theme-toggle:checked ~ .container .brand-text h1 {
+            color: var(--text);
+        }
+
+        /* Adjust primary color elements */
+        #theme-toggle:checked ~ .container .price,
+        #theme-toggle:checked ~ .container .brand-text h1,
+        #theme-toggle:checked ~ .container .button-primary {
+            color: var(--primary);
+        }
+
+        /* Fix gallery controls in dark mode */
+        #theme-toggle:checked ~ gallery.container .gallery-arrow {
+            background: var(--card-bg);
+            border-color: var(--frame-border);
+        }
+
+        #theme-toggle:checked ~ .container .gallery-arrow::before {
+            border-color: var(--text);
+        }
+
+        /* Ensure thumbnail borders are visible */
+        #theme-toggle:checked ~ .container .thumbnail {
+            border-color: var(--frame-border);
+        }
+
+        #theme-toggle:checked ~ .container .thumbnail img {
+            opacity: 0.7;
+            filter: brightness(1.1) contrast(1.1);
+        }
+
+        #theme-toggle:checked ~ .container .set-switcher label {
+            background: var(--frame-border);
+        }
+
+        #theme-toggle:checked ~ .container .set-switcher label[for="set1"],
+        #theme-toggle:checked ~ .container .set-switcher label[for="set2"],
+        #theme-toggle:checked ~ .container .set-switcher label[for="set3"] {
+            background: var(--primary);
+        }
+
+        /* Remove or comment out old header background rules */
+        /*
+        #theme-toggle:checked ~ .container .header {
+            background-color: var(--background);
+            border-color: var(--border);
+        }
+        */
+        
+        /* Update header styles for dark mode */
+        #theme-toggle:checked ~ .container .header {
+            background-color: var(--main-bg);
+            border-color: var(--border);
+        }
+
+        /* Make header sections transparent */
+        .header,
+        .header-content,
+        .brand-section,
+        .brand-info {
+            background: transparent !important;
+        }
+        
+        /* Update dark mode header styles */
+        #theme-toggle:checked ~ .container .header,
+        #theme-toggle:checked ~ .container .header-content,
+        #theme-toggle:checked ~ .container .brand-section,
+        #theme-toggle:checked ~ .container .brand-info {
+            background: transparent !important;
+        }
+
+        /* Fix primary button text color */
+        #theme-toggle:checked ~ .container .button-primary {
+            background: var(--primary);
+            color: #fff !important;
+        }
+
+        /* Add/update mobile responsive styles */
+        @media (max-width: 768px) {
+            .container {
+                width: 100%;
+                padding: 1rem;
+                margin: 0;
+                max-width: none;
+                overflow-x: hidden;
+            }
+
+            .product-section {
+                padding: 1rem 0;
+            }
+
+            .gallery {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+            }
+
+            .thumbnail-sets .thumbnail-set {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+
+            .thumbnail {
+                width: 60px;
+                height: 60px;
+            }
+
+            .tech-data, 
+            .info-cards {
+                padding: 0;
+            }
+        }
+
+        /* Fix container overflow */
+        html, 
+        body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+    </style>
+
+
+    <!-- Move checkbox outside container -->
+    <input type="checkbox" id="theme-toggle" aria-label="Toggle dark mode">
+    
+    <div class="container">
+        <!-- Move theme toggle checkbox inside container -->
+        
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="brand-section">
+                    <div class="brand-info">
+                        <img src="https://ir.ebaystatic.com/cr/v/c1/ebay-logo-1-1200x630-margin.png" alt="eBay" style="height: 1.5rem;">
+                        <div class="brand-text">
+                            <h1>HAUS WERKZEUGE</h1>
+                            <p>Profi Tools für Zuhause</p>
+                        </div>
+                    </div>
+                    <div class="brand-subtitle">
+                        <p>• Professionelle Werkzeuge &amp; Ausrüstung • Qualitätsgarantie</p>
+                    </div>
+                </div>
+                
+                <!-- Theme toggle label stays here -->
+                <label for="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 A7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </label>
+            </div>
+        </header>
+
+        <!-- Product Section -->
+        <div class="product-section">
+            <!-- Updated Gallery -->
+            <div class="gallery">
+                <!-- Image Selection Radio Buttons -->
+                <input type="radio" name="gallery" id="img1" checked="">
+                <input type="radio" name="gallery" id="img2">
+                <input type="radio" name="gallery" id="img3">
+                <input type="radio" name="gallery" id="img4">
+                <input type="radio" name="gallery" id="img5">
+
+                <!-- Main Image Container -->
+                <div class="gallery-container">
+                    <!-- Navigation Arrows -->
+                    <label class="gallery-arrow prev" for="img1"></label>
+                    <label class="gallery-arrow prev" for="img2"></label>
+                    <label class="gallery-arrow prev" for="img3"></label>
+                    <label class="gallery-arrow prev" for="img4"></label>
+                    <label class="gallery-arrow prev" for="img5"></label>
+
+                    <label class="gallery-arrow next" for="img2"></label>
+                    <label class="gallery-arrow next" for="img3"></label>
+                    <label class="gallery-arrow next" for="img4"></label>
+                    <label class="gallery-arrow next" for="img5"></label>
+
+                    <!-- Main Images -->
+                    <img src="https://i.ebayimg.com/images/g/0ycAAOSwzO1nlnAl/s-l1600.webp" alt="Werkzeug Detail 1" class="gallery-item" id="main1">
+                    <img src="https://i.ebayimg.com/images/g/9R8AAOSw4ORnlnAS/s-l1600.webp" alt="Werkzeug Detail 2" class="gallery-item" id="main2">
+                    <img src="https://i.ebayimg.com/images/g/O1gAAOSw8rhnlnJD/s-l1600.webp" alt="Werkzeug Detail 3" class="gallery-item" id="main3">
+                    <img src="https://i.ebayimg.com/images/g/6poAAOSw3E1nlnJF/s-l1600.webp" alt="Werkzeug Detail 4" class="gallery-item" id="main4">
+                    <img src="https://i.ebayimg.com/images/g/example5.jpg" alt="Werkzeug Detail 5" class="gallery-item" id="main5">
+                </div>
+
+                <!-- Thumbnail Sets -->
+                <div class="thumbnail-sets">
+                    <!-- Set 1: Images 1-5 -->
+                    <div class="thumbnail-set set1">
+                        <label class="thumbnail" for="img1">
+                            <img src="https://i.ebayimg.com/images/g/0ycAAOSwzO1nlnAl/s-l1600.webp" alt="Thumbnail 1">
+                        </label>
+                        <label class="thumbnail" for="img2">
+                            <img src="https://i.ebayimg.com/images/g/9R8AAOSw4ORnlnAS/s-l1600.webp" alt="Thumbnail 2">
+                        </label>
+                        <label class="thumbnail" for="img3">
+                            <img src="https://i.ebayimg.com/images/g/O1gAAOSw8rhnlnJD/s-l1600.webp" alt="Thumbnail 3">
+                        </label>
+                        <label class="thumbnail" for="img4">
+                            <img src="https://i.ebayimg.com/images/g/6poAAOSw3E1nlnJF/s-l1600.webp" alt="Thumbnail 4">
+                        </label>
+                        <label class="thumbnail" for="img5">
+                            <img src="https://i.ebayimg.com/images/g/example5.jpg" alt="Thumbnail 5">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+                <div class="card">
+                    <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">
+                        Professioneller Werkzeugsatz Premium
+                    </h2>
+                    <div class="tags">
+                        <span class="tag">Neu</span>
+                        <span class="tag">Kostenloser Versand</span>
+                        <span class="tag">Garantie inklusive</span>
+                    </div>
+                    <div style="height: 1px; background: var(--border); margin: 1rem 0;"></div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <span class="price">€299,99</span>
+                        <span class="price-note">inkl. MwSt.</span>
+                    </div>
+                    <div class="button-container">
+                        <button class="button button-cart">In den Warenkorb</button>
+                        <a href="#" class="button button-primary">Jetzt Kaufen</a>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">
+                        Produktbeschreibung
+                    </h2>
+                    <div style="">
+                        <p style="margin-bottom: 1rem;"><font color="rgba(0, 0, 0, 0)">
+                            U</font><font color="#666666">Das 11,1 mm Camlock F298 ist in Nickel-Finish mit einem Doppel-D-Montageloch erhältlich, ein Schloss, das in Metallkassetten, Cash-Management-Systemen, Büromöbeln und Briefkästen verwendet wird, Schublade, Spint und Schrank</font></p><p style="margin-bottom: 1rem;"><font color="#666666">Produktbeschreibung und Spezifikationen:</font></p><p style="margin-bottom: 1rem;"><font color="#666666">✔ Anzahl verfügbarer Tastenkombinationen: 100</font></p><p style="margin-bottom: 1rem;"><font color="#666666">✔ Standardausführung: Nickel</font></p><p style="margin-bottom: 1rem;"><font color="#666666">✔ Form des Montagelochs: Doppel-D</font></p><p style="margin-bottom: 1rem;"><font color="#666666">✔ Das Set beinhaltet zwei Schraubenschlüssel und eine Befestigungsmutter</font></p><p style="margin-bottom: 1rem;"><font color="#666666">✔ 2 Schlüssel</font></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Data -->
+        <div class="tech-data">
+            <div class="card">
+                <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">
+                    Technische Daten
+                </h2>
+                <div class="tech-list">
+                    <div class="tech-item">
+                        <span class="tech-label">Material</span>
+                        <span class="tech-value">Gehärteter Stahl</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-label">Gewicht</span>
+                        <span class="tech-value">0,02 kg</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-label">Länge</span>
+                        <span class="tech-value">280 mm</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-label">Garantie</span>
+                        <span class="tech-value">2 Jahre</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-label">Herstellungsland</span>
+                        <span class="tech-value">Deutschland</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card tech-image-container">
+                <img src="https://i.ebayimg.com/images/g/EmUAAOSwmpVnlnAR/s-l1600.webp" alt="Technische Details" style="width: 100%; height: auto; border-radius: var(--radius);">
+            </div>
+        </div>
+
+        <!-- Company Info -->
+        <div class="company-info">
+            <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Über Uns</h2>
+            <p style="color: var(--muted); max-width: 600px; margin: 0 auto 2rem;">
+                Seit 2017 sind wir Ihr zuverlässiger Partner für hochwertige Werkzeuge.
+                Unser Ziel ist es, Ihnen professionelle Qualität zu einem fairen Preis anzubieten.
+            </p>
+
+            <div class="info-cards">
+                <div class="card">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <h3 style="font-weight: 600; margin: 0.5rem 0;">Seit 2017 am Markt</h3>
+                    <p style="font-size: 0.875rem; color: var(--muted);">
+                        Gegründet im Jahr 2017 und seitdem verpflichtet, professionelle Werkzeuge zu liefern.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </div>
+                    <h3 style="font-weight: 600; margin: 0.5rem 0;">Qualitätsgarantie</h3>
+                    <p style="font-size: 0.875rem; color: var (--muted);">
+                        Wir stehen für höchste Qualität und Langlebigkeit unserer Produkte.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                        </svg>
+                    </div>
+                    <h3 style="font-weight: 600; margin: 0.5rem 0;">Fachkompetenz</h3>
+                    <p style="font-size: 0.875rem; color: var(--muted);">
+                        Unser Team besteht aus erfahrenen Werkzeugexperten.
+                    </p>
+                </div>
+            </div>
+
+            <div class="copyright">
+                ® Alle Rechte vorbehalten 2025
+            </div>
+        </div>
+    </div>
+
+
