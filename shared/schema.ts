@@ -49,6 +49,7 @@ export const templateDataSchema = z.object({
   subtitle: z.string().optional(),
   price: z.string().optional(),
   currency: z.string().optional(),
+  description: z.string().optional(),
   images: z.array(z.object({
     id: z.string(),
     url: z.string()

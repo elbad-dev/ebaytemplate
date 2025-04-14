@@ -6,6 +6,7 @@ import { Image, TechSpec, CompanySection, EditorTab, PreviewMode, TemplateData }
 import PreviewPanel from './PreviewPanel';
 import ImageEditor from './ImageEditor';
 import TitleEditor from './TitleEditor';
+import ProductDescriptionEditor from './ProductDescriptionEditor';
 import TechSpecsEditor from './TechSpecsEditor';
 import CompanyEditor from './CompanyEditor';
 import SvgEditor from './SvgEditor';
@@ -22,6 +23,7 @@ const TemplateEditor: React.FC = () => {
     subtitle: '',
     price: '',
     currency: 'EUR',
+    description: '',
     images: [],
     specs: [],
     companyInfo: []
@@ -182,6 +184,12 @@ const TemplateEditor: React.FC = () => {
                   Title
                 </button>
                 <button 
+                  className={`tab-button ${activeTab === 'description' ? 'tab-button-active' : 'tab-button-inactive'}`}
+                  onClick={() => setActiveTab('description')}
+                >
+                  Description
+                </button>
+                <button 
                   className={`tab-button ${activeTab === 'specs' ? 'tab-button-active' : 'tab-button-inactive'}`}
                   onClick={() => setActiveTab('specs')}
                 >
@@ -206,6 +214,13 @@ const TemplateEditor: React.FC = () => {
               
               {activeTab === 'title' && (
                 <TitleEditor 
+                  data={templateData}
+                  onUpdate={updateTemplateData}
+                />
+              )}
+              
+              {activeTab === 'description' && (
+                <ProductDescriptionEditor 
                   data={templateData}
                   onUpdate={updateTemplateData}
                 />
