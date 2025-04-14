@@ -1,4 +1,4 @@
-import { TemplateData } from '../types';
+import { TemplateData } from '@shared/schema';
 import * as cheerio from 'cheerio';
 
 /**
@@ -18,7 +18,7 @@ export function generateTemplate(templateData: TemplateData): string {
     // Update main heading(s)
     const headings = ['h1', '.main-title', '.product-title', '.brand-text h1'];
     for (const selector of headings) {
-      $(selector).each((_, el) => {
+      $(selector).each((i: number, el: any) => {
         $(el).text(templateData.title);
       });
     }
@@ -45,7 +45,7 @@ export function generateTemplate(templateData: TemplateData): string {
       const logoStr = templateData.logo; // Local constant to avoid undefined errors
       
       // Update image-based logos
-      $('img[src*="logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img').each((_, el) => {
+      $('img[src*="logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img').each((i: number, el: any) => {
         // If the logo is a URL to an image
         if (!logoStr.includes('<svg')) {
           $(el).attr('src', logoStr);
@@ -56,7 +56,7 @@ export function generateTemplate(templateData: TemplateData): string {
       });
       
       // Update SVG-based logos
-      $('.logo svg, .header-logo svg, .brand-logo svg').each((_, el) => {
+      $('.logo svg, .header-logo svg, .brand-logo svg').each((i: number, el: any) => {
         // If the logo is an SVG, replace it
         if (logoStr.includes('<svg')) {
           $(el).replaceWith(logoStr);
@@ -69,7 +69,7 @@ export function generateTemplate(templateData: TemplateData): string {
     
     // Update price
     if (templateData.price) {
-      $('.price').each((_, el) => {
+      $('.price').each((i: number, el: any) => {
         const currencySymbol = getCurrencySymbol(templateData.currency || 'EUR');
         $(el).text(`${currencySymbol}${templateData.price}`);
       });
@@ -77,27 +77,151 @@ export function generateTemplate(templateData: TemplateData): string {
     
     // Update gallery images
     if (templateData.images.length > 0) {
-      // First, inspect the gallery structure
-      const hasRadioButtons = $('input[type="radio"][name="gallery"]').length > 0;
-      const hasArrowNavigation = $('.gallery-arrow').length > 0;
+      // Check if the gallery uses eBay-style structure with radio buttons and arrows
+      const hasEbayStyleGallery = $('input[type="radio"][name="gallery"]').length > 0 && 
+                                 $('.gallery-arrow').length > 0 && 
+                                 $('#main1').length > 0;
       
-      // Get all main images and thumbnail images
-      const mainImages = $('.gallery-item');
-      const thumbnailImages = $('.thumbnail img');
-      
-      // Create image ID to thumbnail mapping
-      // In templates, there's often a pattern like main1, main2, main3 for IDs
-      // and thumbnails with labels that reference those IDs
-      const mainImageMap = new Map();
-      
-      // Handle radio button-based gallery if present - ensure all radio buttons are properly set up
-      if (hasRadioButtons) {
-        // Make sure first radio button is checked to show first image by default
-        $('input[type="radio"][name="gallery"]').prop('checked', false);
-        $('input[type="radio"][name="gallery"]:first').prop('checked', true);
+      if (hasEbayStyleGallery) {
+        // This is the exact structure in your example
+        const existingCount = $('input[type="radio"][name="gallery"]').length;
+        const totalImages = templateData.images.length;
+        
+        // First update existing images
+        for (let i = 0; i < Math.min(existingCount, totalImages); i++) {
+          const n = i + 1; // 1-based indexing as in your example
+          
+          // Update main image
+          const mainImage = $(`#main${n}`);
+          if (mainImage.length) {
+            mainImage.attr('src', templateData.images[i].url);
+          }
+          
+          // Update thumbnail
+          const thumbnail = $(`.thumbnail[for="img${n}"] img`);
+          if (thumbnail.length) {
+            thumbnail.attr('src', templateData.images[i].url);
+          }
+        }
+        
+        // Add new images if needed
+        if (totalImages > existingCount) {
+          // 1. Add new radio buttons
+          const radioButtonsContainer = $('input[type="radio"][name="gallery"]').first().parent();
+          for (let i = existingCount; i < totalImages; i++) {
+            const n = i + 1;
+            radioButtonsContainer.append(`<input type="radio" name="gallery" id="img${n}">`);
+          }
+          
+          // 2. Add new prev arrows
+          const galleryContainer = $('.gallery-container');
+          for (let i = existingCount; i < totalImages; i++) {
+            const n = i + 1;
+            const prevTarget = n === 1 ? totalImages : n - 1;
+            galleryContainer.append(`<label class="gallery-arrow prev" for="img${prevTarget}"></label>`);
+          }
+          
+          // 3. Add new next arrows
+          for (let i = existingCount; i < totalImages; i++) {
+            const n = i + 1;
+            const nextTarget = n === totalImages ? 1 : n + 1;
+            galleryContainer.append(`<label class="gallery-arrow next" for="img${nextTarget}"></label>`);
+          }
+          
+          // 4. Add new main images
+          for (let i = existingCount; i < totalImages; i++) {
+            const n = i + 1;
+            galleryContainer.append(`<img src="${templateData.images[i].url}" alt="Werkzeug Detail ${n}" class="gallery-item" id="main${n}">`);
+          }
+          
+          // 5. Add new thumbnails
+          const thumbnailsContainer = $('.thumbnail-set.set1');
+          for (let i = existingCount; i < totalImages; i++) {
+            const n = i + 1;
+            thumbnailsContainer.append(`
+              <label class="thumbnail" for="img${n}">
+                <img src="${templateData.images[i].url}" alt="Thumbnail ${n}">
+              </label>
+            `);
+          }
+          
+          // Ensure first radio is checked by default
+          $('input[type="radio"][name="gallery"]').prop('checked', false);
+          $('#img1').prop('checked', true);
+        }
+      } else {
+        // Handle other gallery types
+        const mainImages = $('.gallery-item');
+        const thumbnailImages = $('.thumbnail img');
+        const imgMap = new Map<string, string>();
+        
+        // Update existing main images
+        mainImages.each((i: number, el: any) => {
+          if (i < templateData.images.length) {
+            const newUrl = templateData.images[i].url;
+            const id = $(el).attr('id');
+            
+            if (id) {
+              imgMap.set(id, newUrl);
+            }
+            
+            if ($(el).is('img')) {
+              $(el).attr('src', newUrl);
+            } else {
+              $(el).find('img').attr('src', newUrl);
+            }
+          }
+        });
+        
+        // Update thumbnails
+        thumbnailImages.each((i: number, el: any) => {
+          if (i < templateData.images.length) {
+            $(el).attr('src', templateData.images[i].url);
+            
+            // Check if this thumbnail links to a main image
+            const label = $(el).closest('label').attr('for');
+            if (label && label.startsWith('img')) {
+              const imgNum = label.replace('img', '');
+              const mainId = `main${imgNum}`;
+              imgMap.set(mainId, templateData.images[i].url);
+            }
+          }
+        });
+        
+        // Add new images if needed
+        if (mainImages.length < templateData.images.length) {
+          const galleryContainer = $('.gallery-container').first();
+          if (galleryContainer.length) {
+            for (let i = mainImages.length; i < templateData.images.length; i++) {
+              const newId = `main${i + 1}`;
+              const newUrl = templateData.images[i].url;
+              
+              if ($('.gallery-item').first().is('img')) {
+                galleryContainer.append(`<img src="${newUrl}" alt="Product image ${i + 1}" class="gallery-item" id="${newId}">`);
+              } else {
+                galleryContainer.append(`
+                  <div class="gallery-item" id="${newId}">
+                    <img src="${newUrl}" alt="Product image ${i + 1}" />
+                  </div>
+                `);
+              }
+            }
+          }
+          
+          // Add thumbnails
+          const thumbnailContainer = $('.thumbnail-set, .thumbnail-sets').first();
+          if (thumbnailContainer.length) {
+            for (let i = thumbnailImages.length; i < templateData.images.length; i++) {
+              const newUrl = templateData.images[i].url;
+              thumbnailContainer.append(`
+                <div class="thumbnail">
+                  <img src="${newUrl}" alt="Thumbnail ${i + 1}" />
+                </div>
+              `);
+            }
+          }
+        }
       }
-      
-      // First update main gallery images
       mainImages.each((i, el) => {
         if (i < templateData.images.length) {
           const newUrl = templateData.images[i].url;
@@ -242,103 +366,154 @@ export function generateTemplate(templateData: TemplateData): string {
       }
       
       // Helper function to update a radio button gallery with arrows (like in the user's example)
-      function updateRadioButtonGallery($: CheerioStatic, templateData: TemplateData) {
+      const updateRadioButtonGallery = ($: any, templateData: TemplateData) => {
         const totalImages = templateData.images.length;
         const existingRadios = $('input[type="radio"][name="gallery"]').length;
         
-        // 1. Update existing radio buttons and add new ones if needed
-        if (existingRadios < totalImages) {
-          const radioParent = $('input[type="radio"][name="gallery"]').first().parent();
+        // First let's understand the exact structure of the gallery
+        const galleryContainer = $('.gallery-container').first();
+        const radioParent = $('input[type="radio"][name="gallery"]').first().parent();
+        
+        // Update existing images first
+        for (let i = 0; i < Math.min(existingRadios, totalImages); i++) {
+          const imgNumber = i + 1;
+          // Update radio button (nothing to change except ensuring the first is checked)
+          if (imgNumber === 1) {
+            $(`#img${imgNumber}`).prop('checked', true);
+          }
           
-          // Add new radio buttons for each additional image
+          // Update main image
+          const mainImage = $(`#main${imgNumber}`);
+          if (mainImage.length > 0) {
+            mainImage.attr('src', templateData.images[i].url);
+          }
+          
+          // Update thumbnail
+          const thumbnail = $(`.thumbnail[for="img${imgNumber}"] img`);
+          if (thumbnail.length > 0) {
+            thumbnail.attr('src', templateData.images[i].url);
+          }
+        }
+        
+        // Now add new elements if we have more images than existing ones
+        if (existingRadios < totalImages) {
+          // 1. First add new radio buttons in the same position as existing ones
           for (let i = existingRadios; i < totalImages; i++) {
             const imgNumber = i + 1;
             const newRadio = $(`<input type="radio" name="gallery" id="img${imgNumber}">`);
             radioParent.append(newRadio);
           }
-        }
-        
-        // 2. Update existing main images and add new ones if needed
-        const existingMainImages = $('.gallery-item, [id^="main"]').length;
-        
-        if (existingMainImages < totalImages) {
-          const mainContainer = $('.gallery-container').first();
           
-          // Add new main images
-          for (let i = existingMainImages; i < totalImages; i++) {
+          // 2. Now add new navigation arrows following the exact pattern in the example
+          // First let's understand the structure by examining existing arrows
+          const prevArrows = $('.gallery-arrow.prev');
+          const nextArrows = $('.gallery-arrow.next');
+          
+          // Add new 'prev' arrows
+          for (let i = existingRadios; i < totalImages; i++) {
+            const imgNumber = i + 1;
+            // The "for" attribute points to the previous image, with special case for img1->imgN
+            const prevImgNumber = imgNumber === 1 ? totalImages : imgNumber - 1;
+            const prevArrow = $(`<label class="gallery-arrow prev" for="img${prevImgNumber}"></label>`);
+            
+            // Insert it after the last prev arrow
+            if (prevArrows.length > 0) {
+              prevArrows.last().after(prevArrow);
+            } else {
+              // If no existing arrows, add at beginning of gallery container
+              galleryContainer.prepend(prevArrow);
+            }
+          }
+          
+          // Add new 'next' arrows
+          for (let i = existingRadios; i < totalImages; i++) {
+            const imgNumber = i + 1;
+            // The "for" attribute points to the next image, with special case for imgN->img1
+            const nextImgNumber = imgNumber === totalImages ? 1 : imgNumber + 1;
+            const nextArrow = $(`<label class="gallery-arrow next" for="img${nextImgNumber}"></label>`);
+            
+            // Insert it after the last next arrow
+            if (nextArrows.length > 0) {
+              nextArrows.last().after(nextArrow);
+            } else {
+              // If no existing next arrows, add after all prev arrows
+              const allPrevArrows = $('.gallery-arrow.prev');
+              if (allPrevArrows.length > 0) {
+                allPrevArrows.last().after(nextArrow);
+              } else {
+                galleryContainer.prepend(nextArrow);
+              }
+            }
+          }
+          
+          // 3. Add new main images
+          for (let i = existingRadios; i < totalImages; i++) {
             const imgNumber = i + 1;
             const newImage = templateData.images[i];
             // Follow exact structure from example
             const mainImg = $(`<img src="${newImage.url}" alt="Werkzeug Detail ${imgNumber}" class="gallery-item" id="main${imgNumber}">`);
-            mainContainer.append(mainImg);
-          }
-        } else {
-          // Update existing main images
-          for (let i = 0; i < totalImages; i++) {
-            const imgNumber = i + 1;
-            const mainImage = $(`#main${imgNumber}`);
-            if (mainImage.length > 0) {
-              if (mainImage.is('img')) {
-                mainImage.attr('src', templateData.images[i].url);
-              } else {
-                mainImage.find('img').attr('src', templateData.images[i].url);
-              }
+            
+            // Add it after the last main image
+            const lastMainImage = $('[id^="main"]:last');
+            if (lastMainImage.length > 0) {
+              lastMainImage.after(mainImg);
+            } else {
+              // If no existing main images, add at the end of gallery container
+              galleryContainer.append(mainImg);
             }
           }
-        }
-        
-        // 3. Update existing arrows or add new ones
-        // Find containers for prev and next arrows
-        const galleryContainer = $('.gallery-container').first();
-        
-        // First, remove any existing arrows
-        const existingPrevArrows = galleryContainer.find('.gallery-arrow.prev');
-        const existingNextArrows = galleryContainer.find('.gallery-arrow.next');
-        
-        // Create new arrows for all images
-        for (let i = 1; i <= totalImages; i++) {
-          // Previous arrows - each points to previous image, except first points to last
-          const prevImgNumber = i === 1 ? totalImages : i - 1;
-          const prevArrow = $(`<label class="gallery-arrow prev" for="img${prevImgNumber}"></label>`);
-          galleryContainer.append(prevArrow);
           
-          // Next arrows - each points to next image, except last points to first
-          const nextImgNumber = i === totalImages ? 1 : i + 1;
-          const nextArrow = $(`<label class="gallery-arrow next" for="img${nextImgNumber}"></label>`);
-          galleryContainer.append(nextArrow);
-        }
-        
-        // 4. Update or add thumbnails
-        const existingThumbnails = $('.thumbnail').length;
-        const thumbnailContainer = $('.thumbnail-set.set1').first();
-        
-        if (existingThumbnails < totalImages) {
-          // Add new thumbnails for all images
-          for (let i = existingThumbnails; i < totalImages; i++) {
+          // 4. Add new thumbnails
+          const thumbnailContainer = $('.thumbnail-set.set1').first();
+          for (let i = existingRadios; i < totalImages; i++) {
             const imgNumber = i + 1;
             const newImage = templateData.images[i];
             
-            // Follow exact structure from example
+            // Create exactly the same structure as in the example
             const thumbnail = $(`
               <label class="thumbnail" for="img${imgNumber}">
                 <img src="${newImage.url}" alt="Thumbnail ${imgNumber}">
               </label>
             `);
             
+            // Add to the thumbnail container
             thumbnailContainer.append(thumbnail);
           }
-        } else {
-          // Update existing thumbnails
-          thumbnailContainer.find('.thumbnail').each((i, el) => {
-            if (i < totalImages) {
-              $(el).find('img').attr('src', templateData.images[i].url);
+          
+          // 5. Update CSS if needed for the arrows to work properly
+          let styleElement = $('style').filter((index: number, el: any) => $(el).text().includes('.gallery-arrow'));
+          
+          if (styleElement.length === 0) {
+            const newStyle = $('<style></style>');
+            $('head').append(newStyle);
+            styleElement = $('style').last();
+          }
+          
+          let cssRules = '';
+          for (let i = 1; i <= totalImages; i++) {
+            cssRules += `
+              #img${i}:checked ~ .gallery-container #main${i} {
+                display: block;
+              }
+              #img${i}:checked ~ .gallery-container .gallery-arrow.prev[for="img${i === 1 ? totalImages : i - 1}"],
+              #img${i}:checked ~ .gallery-container .gallery-arrow.next[for="img${i === totalImages ? 1 : i + 1}"] {
+                display: block;
+              }
+            `;
+          }
+          
+          // Basic rules for all images
+          cssRules += `
+            .gallery-container .gallery-item {
+              display: none;
             }
-          });
+            .gallery-container .gallery-arrow {
+              display: none;
+            }
+          `;
+          
+          styleElement.text(styleElement.text() + cssRules);
         }
-        
-        // 5. Make sure first radio button is checked to show first image
-        $('input[type="radio"][name="gallery"]').prop('checked', false);
-        $('input[type="radio"][name="gallery"]:first').prop('checked', true);
       }
       
       // For any remaining images that couldn't be added to galleries, update other image patterns
