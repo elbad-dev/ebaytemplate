@@ -58,11 +58,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
   // API routes
-  // Get all templates
+  // Get all templates (filtered by access control)
   app.get("/api/templates", async (req: Request, res: Response) => {
     try {
-      // If user is authenticated, get their userId from session
-      const userId = req.isAuthenticated() ? (req.user as Express.User).id.toString() : req.query.userId as string | undefined;
+      let userId: string | undefined;
+      
+      // If a specific user's templates were requested in the query
+      const requestedUserId = req.query.userId as string | undefined;
+      
+      if (requestedUserId) {
+        // If specific user's templates were requested, use that ID
+        userId = requestedUserId;
+      } else if (req.isAuthenticated()) {
+        // Otherwise, if user is authenticated, get their templates
+        userId = (req.user as Express.User).id.toString();
+      }
+      
+      // Get templates - showing only public templates or those owned by the requested/authenticated user
       const templates = await storage.getTemplates(userId);
       res.json(templates);
     } catch (error: any) {
@@ -70,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get template by ID
+  // Get template by ID (with access control)
   app.get("/api/templates/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -78,6 +90,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // If template has an owner (userId is not null), check if the current user is the owner
+      if (template.userId !== null && (!req.isAuthenticated() || template.userId !== (req.user as Express.User).id)) {
+        // For non-public templates, verify the user has access
+        return res.status(403).json({ message: "You don't have permission to access this template" });
       }
       
       res.json(template);
@@ -140,16 +158,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete template
+  // Delete template (requires authentication and ownership)
   app.delete("/api/templates/:id", async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      const success = await storage.deleteTemplate(id);
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       
-      if (!success) {
+      const id = parseInt(req.params.id);
+      
+      // Get the template to check ownership
+      const template = await storage.getTemplate(id);
+      if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
       
+      // Check if the template belongs to the authenticated user
+      const userId = (req.user as Express.User).id;
+      if (template.userId !== userId) {
+        return res.status(403).json({ message: "You don't have permission to delete this template" });
+      }
+      
+      const success = await storage.deleteTemplate(id);
       res.status(204).end();
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -179,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload image
+  // Upload image (uses authenticated user ID if available)
   app.post("/api/upload/image", upload.single("file"), async (req: MulterRequest, res: Response) => {
     try {
       if (!req.file) {
@@ -187,7 +218,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Generate URL for the image
-      const userId = req.body.userId || null;
+      // Use the authenticated user's ID if available, otherwise use from request body or null
+      const userId = req.isAuthenticated() ? (req.user as Express.User).id : (req.body.userId || null);
       const serverUrl = `${req.protocol}://${req.get("host")}`;
       const relativePath = `/uploads/${req.file.filename}`;
       const imageUrl = `${serverUrl}${relativePath}`;
@@ -209,10 +241,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all images
+  // Get all images (filtered by access control)
   app.get("/api/images", async (req: Request, res: Response) => {
     try {
-      const userId = req.query.userId as string | undefined;
+      let userId: string | undefined;
+      
+      // If a specific user's images were requested in the query
+      const requestedUserId = req.query.userId as string | undefined;
+      
+      if (requestedUserId) {
+        // If specific user's images were requested, use that ID
+        userId = requestedUserId;
+      } else if (req.isAuthenticated()) {
+        // Otherwise, if user is authenticated, get their images
+        userId = (req.user as Express.User).id.toString();
+      }
+      
+      // Get images - showing only those owned by the requested/authenticated user
       const images = await storage.getImages(userId);
       res.json(images);
     } catch (error: any) {
@@ -250,9 +295,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create template style
+  // Create template style (requires authentication)
   app.post("/api/template-styles", async (req: Request, res: Response) => {
     try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const styleData = insertTemplateStyleSchema.parse({
         ...req.body,
         createdAt: new Date().toISOString(),
@@ -293,9 +343,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create SVG icon
+  // Create SVG icon (requires authentication)
   app.post("/api/svg-icons", async (req: Request, res: Response) => {
     try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const iconData = insertSvgIconSchema.parse({
         ...req.body,
         createdAt: new Date().toISOString(),
@@ -309,9 +364,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // TEMPLATE GENERATION API ROUTE
-  // Generate a new template based on provided data and style
+  // Generate a new template based on provided data and style (requires authentication)
   app.post("/api/generate-template", async (req: Request, res: Response) => {
     try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       // Validate the incoming template data
       const templateData = templateDataSchema.parse(req.body);
       
@@ -338,9 +398,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         generatedHtml = generateDefaultTemplate(templateData);
       }
       
-      // Create the template in the database
+      // Create the template in the database with the authenticated user's ID
       const templateName = templateData.title || "Generated Template";
-      const userId = req.body.userId || null;
+      const userId = (req.user as Express.User).id;
       
       const newTemplate = await storage.createTemplate({
         name: templateName,
