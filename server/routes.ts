@@ -11,6 +11,7 @@ import {
   insertSvgIconSchema,
   templateDataSchema
 } from "@shared/schema";
+import { setupAuth } from "./auth";
 import { nanoid } from "nanoid";
 
 // Add type for request with file from multer
@@ -50,6 +51,9 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  setupAuth(app);
+
   // Create HTTP server
   const httpServer = createServer(app);
 
@@ -57,7 +61,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all templates
   app.get("/api/templates", async (req: Request, res: Response) => {
     try {
-      const userId = req.query.userId as string | undefined;
+      // If user is authenticated, get their userId from session
+      const userId = req.isAuthenticated() ? (req.user as Express.User).id.toString() : req.query.userId as string | undefined;
       const templates = await storage.getTemplates(userId);
       res.json(templates);
     } catch (error: any) {
@@ -81,11 +86,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create template
+  // Create template (requires authentication)
   app.post("/api/templates", async (req: Request, res: Response) => {
     try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Add the authenticated user's ID to the template data
+      const userId = (req.user as Express.User).id;
       const templateData = insertTemplateSchema.parse({
         ...req.body,
+        userId,
         createdAt: new Date().toISOString(),
       });
       
@@ -96,17 +109,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update template
+  // Update template (requires authentication and ownership)
   app.put("/api/templates/:id", async (req: Request, res: Response) => {
     try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const id = parseInt(req.params.id);
-      const templateData = req.body;
       
-      const updatedTemplate = await storage.updateTemplate(id, templateData);
-      
-      if (!updatedTemplate) {
+      // Get the template to check ownership
+      const template = await storage.getTemplate(id);
+      if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
+      
+      // Check if the template belongs to the authenticated user
+      const userId = (req.user as Express.User).id;
+      if (template.userId !== userId) {
+        return res.status(403).json({ message: "You don't have permission to update this template" });
+      }
+      
+      const templateData = req.body;
+      const updatedTemplate = await storage.updateTemplate(id, templateData);
       
       res.json(updatedTemplate);
     } catch (error: any) {

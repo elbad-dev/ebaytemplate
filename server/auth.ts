@@ -4,7 +4,7 @@ import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { users, User } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
@@ -37,7 +37,7 @@ async function comparePasswords(supplied: string, stored: string) {
 // Create session store
 export function getSessionStore() {
   return new PostgresSessionStore({
-    pool: db.config.client,
+    pool: pool,
     createTableIfMissing: true,
   });
 }
