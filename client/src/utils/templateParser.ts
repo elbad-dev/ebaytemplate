@@ -9,7 +9,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
   try {
     const $ = cheerio.load(htmlContent);
     
-    // Extract title from specific product info section (eBay templates)
+    // Extract title from specific product info section (templates)
     let title = '';
     
     // Method 1: Try to find product title from h2 in product-info section
@@ -76,7 +76,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
       const src = $(el).attr('src');
       const label = $(el).closest('label').attr('for');
       
-      // If this thumbnail corresponds to a main image and it's an eBay image, remember it
+      // If this thumbnail corresponds to a main image and it's from the target platform, remember it
       if (label && src && src.includes('i.ebayimg.com/images/') && !src.includes('ebay-logo')) {
         thumbnailImages.set(label, src);
       }
@@ -94,7 +94,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
       }
     });
     
-    // If no product images found, try finding any img tags with eBay URLs
+    // If no product images found, try finding any img tags with the target platform URLs
     if (images.length === 0) {
       $('img').each((i, el) => {
         const src = $(el).attr('src');
@@ -183,7 +183,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
       }
     }
     
-    // Extract the eBay logo
+    // Extract the logo
     let logo = '';
     
     // Look for logo images specifically with 'ebay-logo' in their URL or class

@@ -45,7 +45,7 @@ export function generateTemplate(templateData: TemplateData): string {
       const logoStr = templateData.logo; // Local constant to avoid undefined errors
       
       // Update image-based logos
-      $('img[src*="ebay-logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img').each((_, el) => {
+      $('img[src*="logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img').each((_, el) => {
         // If the logo is a URL to an image
         if (!logoStr.includes('<svg')) {
           $(el).attr('src', logoStr);
@@ -132,7 +132,7 @@ export function generateTemplate(templateData: TemplateData): string {
         }
       });
       
-      // Special handling for eBay templates - update all main gallery images
+      // Special handling for templates - update all main gallery images
       // with correctly matched thumbnails
       $('.gallery-item').each((_, el) => {
         const id = $(el).attr('id');

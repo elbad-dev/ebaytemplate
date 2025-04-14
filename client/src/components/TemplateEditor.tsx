@@ -128,7 +128,7 @@ const TemplateEditor: React.FC = () => {
       <header className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">eBay Template Editor</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Template Editor</h1>
             <p className="text-sm text-gray-600">Edit your template without modifying HTML directly</p>
           </div>
           <div className="flex space-x-3">
