@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Textarea } from '@/components/ui/textarea';
+import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { TemplateData, TemplateStyle } from '@shared/schema';
-import { apiRequest } from '@/lib/queryClient';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TemplateData, type TemplateStyle } from '@shared/schema';
+import { Sparkles, Palette, ThumbsUp, Loader2, Send } from 'lucide-react';
 import { nanoid } from 'nanoid';
 
 interface AITemplateRecommenderProps {
@@ -19,476 +16,315 @@ interface AITemplateRecommenderProps {
 export default function AITemplateRecommender({ 
   templateData, 
   onStyleSelect,
-  onSuggestionsApplied 
+  onSuggestionsApplied
 }: AITemplateRecommenderProps) {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [productDescription, setProductDescription] = useState('');
-  const [recommendedStyles, setRecommendedStyles] = useState<TemplateStyle[]>([]);
-  const [suggestedData, setSuggestedData] = useState<Partial<TemplateData> | null>(null);
-  
-  // Load available template styles
-  useEffect(() => {
-    async function fetchStyles() {
-      try {
-        const response = await apiRequest('/api/template-styles');
-        const styles = await response.json();
-        if (styles && styles.length > 0) {
-          // Keep for recommendations
-          setRecommendedStyles(styles);
-        }
-      } catch (error) {
-        console.error('Error fetching template styles:', error);
-      }
-    }
-    
-    fetchStyles();
-  }, []);
-  
-  // Analyze product description to recommend template styles and suggest template data
-  const analyzeDescription = async () => {
-    if (!productDescription.trim()) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<string>('colors');
+
+  // Request AI-powered template suggestions based on company name and logo
+  const fetchSuggestions = async () => {
+    if (!templateData.title) {
       toast({
-        title: 'Description Required',
-        description: 'Please enter a product description to get recommendations.',
-        variant: 'destructive'
+        title: 'Company name required',
+        description: 'Please enter a company name first',
+        variant: 'destructive',
       });
       return;
     }
-    
-    setLoading(true);
+
+    setIsLoading(true);
     
     try {
-      // Analyze the product type and characteristics
-      const productType = determineProductType(productDescription);
-      const productStyle = determineProductStyle(productDescription);
-      const productCharacteristics = extractProductCharacteristics(productDescription);
-      
-      // Find matching styles from the available template styles
-      const matchingStyles = findMatchingStyles(productType, productStyle);
-      
-      // Create suggested template data based on the description
-      const suggestions = createTemplateSuggestions(productDescription, productCharacteristics);
-      
-      // Update state with recommendations
-      setSuggestedData(suggestions);
-      
-      toast({
-        title: 'Analysis Complete',
-        description: 'Template recommendations are ready. Review and apply suggestions as needed.',
+      const response = await fetch('/api/suggest-template', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyName: templateData.title,
+          description: templateData.description || '',
+          logoUrl: templateData.logo || undefined
+        }),
       });
-    } catch (error) {
-      console.error('Error analyzing description:', error);
+
+      if (!response.ok) {
+        throw new Error(`Error getting suggestions: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      setSuggestions(data.suggestions);
+      
       toast({
-        title: 'Analysis Failed',
-        description: 'Failed to analyze product description. Please try again.',
-        variant: 'destructive'
+        title: 'AI suggestions generated',
+        description: 'Template suggestions have been created based on your company information',
+      });
+    } catch (error: any) {
+      console.error('Error fetching suggestions:', error);
+      toast({
+        title: 'Error generating suggestions',
+        description: error.message || 'Failed to get AI suggestions',
+        variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
   
-  // Determine product type from description
-  const determineProductType = (description: string): string => {
-    const lowerDesc = description.toLowerCase();
+  // Apply all AI suggestions to the template
+  const applyAllSuggestions = () => {
+    if (!suggestions) return;
     
-    // Check for common product types
-    if (lowerDesc.includes('electronics') || lowerDesc.includes('computer') || 
-        lowerDesc.includes('phone') || lowerDesc.includes('tablet') || 
-        lowerDesc.includes('device') || lowerDesc.includes('gadget')) {
-      return 'electronics';
-    }
+    const companyInfoWithIds = suggestions.companyInfo.map((section: any) => ({
+      ...section,
+      id: section.id || nanoid(8)
+    }));
     
-    if (lowerDesc.includes('clothing') || lowerDesc.includes('shirt') || 
-        lowerDesc.includes('pants') || lowerDesc.includes('dress') || 
-        lowerDesc.includes('apparel') || lowerDesc.includes('fashion')) {
-      return 'clothing';
-    }
-    
-    if (lowerDesc.includes('tool') || lowerDesc.includes('machinery') || 
-        lowerDesc.includes('equipment') || lowerDesc.includes('hardware')) {
-      return 'tools';
-    }
-    
-    if (lowerDesc.includes('furniture') || lowerDesc.includes('chair') || 
-        lowerDesc.includes('table') || lowerDesc.includes('sofa') || 
-        lowerDesc.includes('desk')) {
-      return 'furniture';
-    }
-    
-    if (lowerDesc.includes('food') || lowerDesc.includes('beverage') || 
-        lowerDesc.includes('drink') || lowerDesc.includes('snack') || 
-        lowerDesc.includes('meal')) {
-      return 'food';
-    }
-    
-    // Default to generic product
-    return 'product';
-  };
-  
-  // Determine product style/aesthetic from description
-  const determineProductStyle = (description: string): string => {
-    const lowerDesc = description.toLowerCase();
-    
-    // Check for style indicators
-    if (lowerDesc.includes('modern') || lowerDesc.includes('contemporary') || 
-        lowerDesc.includes('sleek') || lowerDesc.includes('innovative')) {
-      return 'modern';
-    }
-    
-    if (lowerDesc.includes('classic') || lowerDesc.includes('traditional') || 
-        lowerDesc.includes('timeless') || lowerDesc.includes('vintage')) {
-      return 'classic';
-    }
-    
-    if (lowerDesc.includes('minimalist') || lowerDesc.includes('simple') || 
-        lowerDesc.includes('clean') || lowerDesc.includes('elegant')) {
-      return 'minimalist';
-    }
-    
-    if (lowerDesc.includes('bold') || lowerDesc.includes('vibrant') || 
-        lowerDesc.includes('colorful') || lowerDesc.includes('striking')) {
-      return 'bold';
-    }
-    
-    if (lowerDesc.includes('luxury') || lowerDesc.includes('premium') || 
-        lowerDesc.includes('high-end') || lowerDesc.includes('sophisticated')) {
-      return 'elegant';
-    }
-    
-    // Default to modern
-    return 'modern';
-  };
-  
-  // Extract product characteristics
-  const extractProductCharacteristics = (description: string) => {
-    // Extract potential features
-    const features = [];
-    const sentences = description.split(/[.!?]+/);
-    
-    for (const sentence of sentences) {
-      if (sentence.trim().length < 3) continue;
-      
-      if (sentence.toLowerCase().includes('feature') || 
-          sentence.toLowerCase().includes('include') ||
-          sentence.toLowerCase().includes('offer') ||
-          sentence.toLowerCase().includes('provide') ||
-          sentence.toLowerCase().includes('comes with')) {
-        features.push(sentence.trim());
-      }
-    }
-    
-    // Extract potential specifications using regex patterns
-    const specs = [];
-    
-    // Look for dimensions
-    const dimensionsMatch = description.match(/(\d+(\.\d+)?)\s*x\s*(\d+(\.\d+)?)\s*x\s*(\d+(\.\d+)?)\s*(cm|mm|in|inches|inch)/i);
-    if (dimensionsMatch) {
-      specs.push({ label: 'Dimensions', value: dimensionsMatch[0] });
-    }
-    
-    // Look for weight
-    const weightMatch = description.match(/(\d+(\.\d+)?)\s*(kg|g|lbs|pounds|oz|ounces)/i);
-    if (weightMatch) {
-      specs.push({ label: 'Weight', value: weightMatch[0] });
-    }
-    
-    // Look for materials
-    const materialsMatch = description.match(/made of\s+([^.,:;]+)/i) || 
-                          description.match(/materials?:\s+([^.,:;]+)/i) ||
-                          description.match(/constructed from\s+([^.,:;]+)/i);
-    if (materialsMatch) {
-      specs.push({ label: 'Material', value: materialsMatch[1].trim() });
-    }
-    
-    // Look for color
-    const colorMatch = description.match(/colou?r:\s+([^.,:;]+)/i) ||
-                       description.match(/available in\s+([^.,:;]+)/i) ||
-                       description.match(/comes in\s+([^.,:;]+)/i);
-    if (colorMatch) {
-      specs.push({ label: 'Color', value: colorMatch[1].trim() });
-    }
-    
-    return { features, specs };
-  };
-  
-  // Find matching styles from available templates
-  const findMatchingStyles = (productType: string, productStyle: string): TemplateStyle[] => {
-    if (!recommendedStyles.length) return [];
-    
-    // First try to match both product type and style
-    let matches = recommendedStyles.filter(style => 
-      style.type.toLowerCase() === productType.toLowerCase() && 
-      style.style.toLowerCase() === productStyle.toLowerCase()
-    );
-    
-    // If no exact matches, try matching just the style
-    if (!matches.length) {
-      matches = recommendedStyles.filter(style => 
-        style.style.toLowerCase() === productStyle.toLowerCase()
-      );
-    }
-    
-    // If still no matches, try matching just the product type
-    if (!matches.length) {
-      matches = recommendedStyles.filter(style => 
-        style.type.toLowerCase() === productType.toLowerCase()
-      );
-    }
-    
-    // If still no matches, return a default style
-    if (!matches.length && recommendedStyles.length > 0) {
-      // Return first modern style, or just the first style if no modern style exists
-      const modernStyle = recommendedStyles.find(style => 
-        style.style.toLowerCase() === 'modern'
-      );
-      
-      if (modernStyle) {
-        matches = [modernStyle];
-      } else {
-        matches = [recommendedStyles[0]];
-      }
-    }
-    
-    return matches;
-  };
-  
-  // Create template data suggestions based on the description and extracted characteristics
-  const createTemplateSuggestions = (description: string, characteristics: any): Partial<TemplateData> => {
-    // Extract potential title
-    const sentences = description.split(/[.!?]+/);
-    let title = sentences[0].trim();
-    
-    // If first sentence is too long, try to find a shorter phrase that could be a title
-    if (title.length > 50) {
-      // Look for product name patterns
-      const productNameMatch = description.match(/(?:the|our|new)\s+([A-Z][a-zA-Z0-9\s]{2,30})/);
-      if (productNameMatch) {
-        title = productNameMatch[1].trim();
-      } else {
-        // Just truncate to a reasonable length
-        title = title.substring(0, 50);
-      }
-    }
-    
-    // Extract potential company info sections
-    const companyInfo = [];
-    
-    // Quality section
-    if (description.toLowerCase().includes('quality') || 
-        description.toLowerCase().includes('warranty') ||
-        description.toLowerCase().includes('guarantee')) {
-      companyInfo.push({
-        id: nanoid(),
-        title: 'Quality Guarantee',
-        description: 'We stand behind the quality of our products with a satisfaction guarantee.',
-        svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>'
-      });
-    }
-    
-    // Shipping section
-    if (description.toLowerCase().includes('ship') || 
-        description.toLowerCase().includes('delivery') ||
-        description.toLowerCase().includes('fast')) {
-      companyInfo.push({
-        id: nanoid(),
-        title: 'Fast Shipping',
-        description: 'We offer quick and reliable shipping options to get your product to you without delay.',
-        svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>'
-      });
-    }
-    
-    // Support section
-    if (description.toLowerCase().includes('support') || 
-        description.toLowerCase().includes('service') ||
-        description.toLowerCase().includes('help')) {
-      companyInfo.push({
-        id: nanoid(),
-        title: 'Customer Support',
-        description: 'Our dedicated support team is available to assist you with any questions or concerns.',
-        svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c-4.97 0-9-4.03-9-9m9 9a9 9 0 0 0 9-9m-9 0a9 9 0 0 0-9 9m0 0a9 9 0 0 1 9-9"></path><circle cx="12" cy="12" r="1"></circle></svg>'
-      });
-    }
-    
-    // Return the suggestions
-    return {
-      title,
-      subtitle: title.length > 20 ? '' : 'Premium Quality Product',
-      description: description,
-      specs: characteristics.specs || [],
-      companyInfo: companyInfo
-    };
-  };
-  
-  // Apply the suggested style
-  const handleApplyStyle = (style: TemplateStyle) => {
-    onStyleSelect(style);
+    onSuggestionsApplied({
+      colorPrimary: suggestions.colorPrimary,
+      colorSecondary: suggestions.colorSecondary,
+      colorAccent: suggestions.colorAccent,
+      colorBackground: suggestions.colorBackground,
+      colorText: suggestions.colorText,
+      companyInfo: companyInfoWithIds,
+      ...(suggestions.description ? { description: suggestions.description } : {}),
+    });
     
     toast({
-      title: 'Style Applied',
-      description: `Applied the "${style.name}" template style.`,
+      title: 'Suggestions applied',
+      description: 'AI suggestions have been applied to your template',
     });
   };
-  
-  // Apply the suggested data updates
-  const handleApplySuggestions = () => {
-    if (!suggestedData) return;
+
+  // Apply just the color scheme
+  const applyColors = () => {
+    if (!suggestions) return;
     
-    onSuggestionsApplied(suggestedData);
+    onSuggestionsApplied({
+      colorPrimary: suggestions.colorPrimary,
+      colorSecondary: suggestions.colorSecondary,
+      colorAccent: suggestions.colorAccent,
+      colorBackground: suggestions.colorBackground,
+      colorText: suggestions.colorText,
+    });
     
     toast({
-      title: 'Suggestions Applied',
-      description: 'Template data has been updated with the suggestions.',
+      title: 'Color scheme applied',
+      description: 'AI-suggested colors have been applied to your template',
     });
   };
-  
+
+  // Apply just the company sections
+  const applySections = () => {
+    if (!suggestions || !suggestions.companyInfo) return;
+    
+    const companyInfoWithIds = suggestions.companyInfo.map((section: any) => ({
+      ...section,
+      id: section.id || nanoid(8)
+    }));
+    
+    onSuggestionsApplied({
+      companyInfo: companyInfoWithIds,
+    });
+    
+    toast({
+      title: 'Company sections applied',
+      description: 'AI-suggested company sections have been applied to your template',
+    });
+  };
+
+  // Apply the description if available
+  const applyDescription = () => {
+    if (!suggestions || !suggestions.description) return;
+    
+    onSuggestionsApplied({
+      description: suggestions.description,
+    });
+    
+    toast({
+      title: 'Description applied',
+      description: 'AI-enhanced company description has been applied',
+    });
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="productDescription">Describe your product or service</Label>
-          <Textarea 
-            id="productDescription"
-            value={productDescription}
-            onChange={(e) => setProductDescription(e.target.value)}
-            placeholder="Enter details about your product including features, specifications, materials, and any special selling points..."
-            className="mt-1"
-            rows={5}
-          />
-        </div>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium flex items-center">
+          <Sparkles className="mr-2 h-5 w-5 text-yellow-500" />
+          AI Template Suggestions
+        </h3>
         
-        <Button 
-          onClick={analyzeDescription} 
-          disabled={loading || productDescription.trim().length < 10}
-          className="w-full"
+        <Button
+          onClick={fetchSuggestions}
+          disabled={isLoading}
+          className="flex items-center gap-2"
         >
-          {loading ? 'Analyzing...' : 'Analyze & Suggest Templates'}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Send className="mr-1 h-4 w-4" />
+              Get Suggestions
+            </>
+          )}
         </Button>
       </div>
-      
-      {suggestedData && (
-        <>
-          <Separator />
+
+      {suggestions ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>AI-Generated Template Suggestions</CardTitle>
+            <CardDescription>
+              Based on your company name{templateData.logo ? ', logo,' : ''} 
+              {templateData.description ? ' and description' : ''}
+            </CardDescription>
+          </CardHeader>
           
-          <div className="space-y-4">
-            <CardTitle className="text-lg">Suggested Information</CardTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Title & Description</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div>
-                      <Label>Suggested Title</Label>
-                      <div className="p-2 bg-muted rounded mt-1">{suggestedData.title}</div>
+          <CardContent>
+            <Tabs defaultValue="colors" value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-3 mb-4">
+                <TabsTrigger value="colors">Colors</TabsTrigger>
+                <TabsTrigger value="sections">Company Sections</TabsTrigger>
+                <TabsTrigger value="description">Description</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="colors" className="space-y-4">
+                <div className="grid grid-cols-5 gap-2">
+                  <div>
+                    <div 
+                      className="h-16 rounded-md border"
+                      style={{ backgroundColor: suggestions.colorPrimary }}
+                    ></div>
+                    <p className="text-xs mt-1 text-center">Primary</p>
+                  </div>
+                  <div>
+                    <div 
+                      className="h-16 rounded-md border"
+                      style={{ backgroundColor: suggestions.colorSecondary }}
+                    ></div>
+                    <p className="text-xs mt-1 text-center">Secondary</p>
+                  </div>
+                  <div>
+                    <div 
+                      className="h-16 rounded-md border"
+                      style={{ backgroundColor: suggestions.colorAccent }}
+                    ></div>
+                    <p className="text-xs mt-1 text-center">Accent</p>
+                  </div>
+                  <div>
+                    <div 
+                      className="h-16 rounded-md border"
+                      style={{ backgroundColor: suggestions.colorBackground }}
+                    ></div>
+                    <p className="text-xs mt-1 text-center">Background</p>
+                  </div>
+                  <div>
+                    <div 
+                      className="h-16 rounded-md border"
+                      style={{ backgroundColor: suggestions.colorText }}
+                    ></div>
+                    <p className="text-xs mt-1 text-center">Text</p>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={applyColors} size="sm">
+                    <Palette className="mr-2 h-4 w-4" />
+                    Apply Colors
+                  </Button>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="sections" className="space-y-4">
+                {suggestions.companyInfo && suggestions.companyInfo.map((section: any, index: number) => (
+                  <Card key={index} className="overflow-hidden">
+                    <div className="p-4 grid grid-cols-[auto_1fr] gap-4">
+                      <div 
+                        className="flex items-center justify-center p-3 rounded-md"
+                        style={{ backgroundColor: suggestions.colorPrimary + '20' }}
+                        dangerouslySetInnerHTML={{ __html: section.svg }}
+                      ></div>
+                      <div>
+                        <h4 className="font-medium">{section.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+                
+                <div className="flex justify-end">
+                  <Button onClick={applySections} size="sm">
+                    <ThumbsUp className="mr-2 h-4 w-4" />
+                    Apply Sections
+                  </Button>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="description" className="space-y-4">
+                {suggestions.description ? (
+                  <>
+                    <div className="border rounded-md p-4 text-sm">
+                      {suggestions.description}
                     </div>
                     
-                    {suggestedData.subtitle && (
-                      <div>
-                        <Label>Suggested Subtitle</Label>
-                        <div className="p-2 bg-muted rounded mt-1">{suggestedData.subtitle}</div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Specifications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {suggestedData.specs && suggestedData.specs.length > 0 ? (
-                    <div className="space-y-2">
-                      {suggestedData.specs.map((spec, index) => (
-                        <div key={index} className="flex">
-                          <div className="font-medium w-1/3">{spec.label}:</div>
-                          <div>{spec.value}</div>
-                        </div>
-                      ))}
+                    <div className="flex justify-end">
+                      <Button onClick={applyDescription} size="sm">
+                        <ThumbsUp className="mr-2 h-4 w-4" />
+                        Apply Description
+                      </Button>
                     </div>
-                  ) : (
-                    <CardDescription>No specifications detected</CardDescription>
-                  )}
-                </CardContent>
-              </Card>
-              
-              {suggestedData.companyInfo && suggestedData.companyInfo.length > 0 && (
-                <Card className="md:col-span-2">
-                  <CardHeader>
-                    <CardTitle className="text-base">Company Sections</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {suggestedData.companyInfo.map((section, index) => (
-                        <div key={index} className="p-4 border rounded">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 text-primary" dangerouslySetInnerHTML={{ __html: section.svg }} />
-                            <div className="font-medium">{section.title}</div>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{section.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-            
+                  </>
+                ) : (
+                  <p className="text-muted-foreground text-sm">No description suggestions available.</p>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+          
+          <CardFooter className="flex justify-between">
+            <Button variant="outline" onClick={() => setSuggestions(null)}>Cancel</Button>
+            <Button onClick={applyAllSuggestions}>Apply All Suggestions</Button>
+          </CardFooter>
+        </Card>
+      ) : (
+        <Card className="border-dashed border-2">
+          <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+            <Sparkles className="h-10 w-10 text-yellow-500 mb-4" />
+            <h3 className="font-medium text-lg mb-2">AI-Powered Template Suggestions</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Get AI-generated color schemes, company sections, and content improvements
+              based on your company name{templateData.logo ? ', logo' : ''}{templateData.description ? ', and description' : ''}.
+            </p>
             <Button 
-              onClick={handleApplySuggestions}
-              className="w-full"
+              onClick={fetchSuggestions} 
+              disabled={isLoading}
+              variant="outline"
+              className="mt-2"
             >
-              Apply All Suggestions
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating suggestions...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate AI suggestions
+                </>
+              )}
             </Button>
-          </div>
-          
-          <Separator />
-          
-          <div className="space-y-4">
-            <CardTitle className="text-lg">Recommended Template Styles</CardTitle>
-            
-            {recommendedStyles.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {findMatchingStyles(determineProductType(productDescription), determineProductStyle(productDescription))
-                  .map((style) => (
-                    <Card key={style.id} className="cursor-pointer hover:border-primary transition-colors">
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base">{style.name}</CardTitle>
-                        <CardDescription className="line-clamp-2">{style.description}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <div className="aspect-video bg-muted rounded overflow-hidden mb-4">
-                          {style.thumbnail && (
-                            <img 
-                              src={style.thumbnail} 
-                              alt={style.name} 
-                              className="w-full h-full object-cover"
-                            />
-                          )}
-                        </div>
-                        <Button 
-                          onClick={() => handleApplyStyle(style)}
-                          variant="outline"
-                          className="w-full"
-                        >
-                          Apply This Style
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-              </div>
-            ) : (
-              <Alert>
-                <AlertDescription>
-                  No template styles are available. Please check your database connection or seed the database with template styles.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-        </>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

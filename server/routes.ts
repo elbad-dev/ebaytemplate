@@ -228,17 +228,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const relativePath = `/uploads/${req.file.filename}`;
       const imageUrl = `${serverUrl}${relativePath}`;
       
-      // Create a timestamp for upload
-      const uploadTime = new Date().toISOString();
+      // Create a Date object for upload timestamp
+      const uploadDate = new Date();
       
-      // Save image to database
+      // Save image to database with proper typing
       const imageData = {
         fileName: req.file.originalname,
         fileType: req.file.mimetype,
         fileSize: req.file.size,
         url: imageUrl,
         userId: userId,
-        uploadedAt: uploadTime
+        uploadedAt: uploadDate
       };
       
       console.log("Saving image with data:", imageData);
