@@ -85,6 +85,15 @@ export function generateTemplate(templateData: TemplateData): string {
         const existingRadios = $('input[type="radio"][name="gallery"]').length;
         const totalImages = templateData.images.length;
         
+        // Get container references for all four components
+        const galleryContainer = $('.gallery-container');
+        const radioContainer = $('input[type="radio"][name="gallery"]').first().parent();
+        const thumbnailContainer = $('.thumbnail-set.set1');
+        
+        // Before updating, get references to existing CSS that manages the image visibility
+        const styleElement = $('style:contains("#img")');
+        let cssContent = styleElement.html() || '';
+        
         // 1. First update existing images
         for (let i = 0; i < Math.min(existingRadios, totalImages); i++) {
           const n = i + 1; // Use 1-based indexing as in the example
@@ -104,38 +113,81 @@ export function generateTemplate(templateData: TemplateData): string {
         
         // 2. Add new elements for additional images
         if (totalImages > existingRadios) {
-          // a. Add new radio buttons
-          const radioContainer = $('input[type="radio"][name="gallery"]').first().parent();
+          // a. Add new radio buttons first
           for (let i = existingRadios; i < totalImages; i++) {
             const n = i + 1;
             radioContainer.append(`<input type="radio" name="gallery" id="img${n}">`);
           }
           
-          // b. Add new "prev" navigation arrows
-          const galleryContainer = $('.gallery-container');
-          for (let i = existingRadios; i < totalImages; i++) {
+          // b. Add CSS selectors for new images (up to 20 images allowed)
+          // This is the important part - making sure the correct CSS is in place for selectors
+          let newCSS = '';
+          for (let i = existingRadios; i < Math.min(totalImages, 20); i++) {
             const n = i + 1;
-            // Each "prev" arrow points to the previous image (or to the last image if it's the first)
+            newCSS += `
+            #img${n}:checked ~ .gallery-container #main${n} {
+              display: block;
+            }
+            `;
+          }
+          
+          // Add directional selectors for new arrows
+          for (let i = 0; i < totalImages; i++) {
+            const n = i + 1;
+            const prevN = n === 1 ? totalImages : n - 1;
+            const nextN = n === totalImages ? 1 : n + 1;
+            
+            newCSS += `
+            #img${n}:checked ~ .gallery-container .gallery-arrow.prev[for="img${prevN}"],
+            #img${n}:checked ~ .gallery-container .gallery-arrow.next[for="img${nextN}"] {
+              display: block;
+            }
+            `;
+          }
+          
+          // Append the new CSS
+          if (styleElement.length) {
+            styleElement.append(newCSS);
+          } else {
+            // If no style element exists, create one
+            $('head').append(`<style>${newCSS}</style>`);
+          }
+          
+          // c. Add/Update prev arrow navigation for ALL images (not just new ones)
+          // First remove existing arrows to avoid duplicates
+          $('.gallery-arrow.prev').remove();
+          
+          // Add all arrows fresh to ensure consistency
+          for (let i = 0; i < totalImages; i++) {
+            const n = i + 1;
             const prevTarget = n === 1 ? totalImages : n - 1;
-            galleryContainer.append(`<label class="gallery-arrow prev" for="img${prevTarget}"></label>`);
+            
+            galleryContainer.append(`
+              <label class="gallery-arrow prev" for="img${prevTarget}"></label>
+            `);
           }
           
-          // c. Add new "next" navigation arrows
-          for (let i = existingRadios; i < totalImages; i++) {
+          // d. Add/Update next arrow navigation for ALL images
+          $('.gallery-arrow.next').remove();
+          
+          for (let i = 0; i < totalImages; i++) {
             const n = i + 1;
-            // Each "next" arrow points to the next image (or to the first image if it's the last)
             const nextTarget = n === totalImages ? 1 : n + 1;
-            galleryContainer.append(`<label class="gallery-arrow next" for="img${nextTarget}"></label>`);
+            
+            galleryContainer.append(`
+              <label class="gallery-arrow next" for="img${nextTarget}"></label>
+            `);
           }
           
-          // d. Add new main images
+          // e. Add new main images
           for (let i = existingRadios; i < totalImages; i++) {
             const n = i + 1;
-            galleryContainer.append(`<img src="${templateData.images[i].url}" alt="Werkzeug Detail ${n}" class="gallery-item" id="main${n}">`);
+            galleryContainer.append(`
+              <img src="${templateData.images[i].url}" alt="Product Detail ${n}" class="gallery-item" id="main${n}">
+            `);
           }
           
-          // e. Add new thumbnails
-          const thumbnailContainer = $('.thumbnail-set.set1');
+          // f. Add new thumbnails
           for (let i = existingRadios; i < totalImages; i++) {
             const n = i + 1;
             thumbnailContainer.append(`
@@ -627,6 +679,18 @@ function createBasicTemplate(data: TemplateData): string {
             #img${i}:checked ~ .gallery-container .gallery-arrow.prev[for="img${prev}"],
             #img${i}:checked ~ .gallery-container .gallery-arrow.next[for="img${next}"] {
               display: block;
+            }
+          `;
+        }).join('')}
+        
+        /* Make thumbnails for selected image stand out */
+        ${data.images.map((img, index) => {
+          const i = index + 1;
+          return `
+            #img${i}:checked ~ .thumbnail-sets .thumbnail[for="img${i}"] {
+              border-color: var(--color-primary);
+              transform: translateY(-2px);
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
           `;
         }).join('')}
