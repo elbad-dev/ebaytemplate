@@ -8,17 +8,49 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
+  urlOrOptions: string | RequestInit & { url?: string },
+  optionsOrData?: RequestInit | unknown,
+  data?: unknown
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  let url: string;
+  let options: RequestInit;
 
+  // Handle different parameter combinations
+  if (typeof urlOrOptions === 'string') {
+    // First form: apiRequest(url, options?, data?)
+    url = urlOrOptions;
+    if (optionsOrData && typeof optionsOrData === 'object' && !Array.isArray(optionsOrData)) {
+      options = optionsOrData as RequestInit;
+    } else {
+      // Second form: apiRequest(url, data?)
+      options = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: optionsOrData ? JSON.stringify(optionsOrData) : undefined
+      };
+    }
+  } else {
+    // Third form: apiRequest({ url, ...options })
+    url = urlOrOptions.url || '';
+    options = { ...urlOrOptions };
+    delete (options as any).url;
+  }
+
+  // Add data to body if provided as third parameter
+  if (data !== undefined) {
+    options.body = JSON.stringify(data);
+    if (!options.headers) {
+      options.headers = {};
+    }
+    if (typeof options.headers === 'object') {
+      (options.headers as Record<string, string>)['Content-Type'] = 'application/json';
+    }
+  }
+
+  // Always include credentials
+  options.credentials = 'include';
+
+  const res = await fetch(url, options);
   await throwIfResNotOk(res);
   return res;
 }

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import TemplateUploader from './TemplateUploader';
-import { Image, TechSpec, CompanySection, EditorTab, PreviewMode, TemplateData } from '../types';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EditorTab, PreviewMode, TemplateData } from '../types';
+import { Template } from '@shared/schema';
 import PreviewPanel from './PreviewPanel';
 import ImageEditor from './ImageEditor';
 import TitleEditor from './TitleEditor';
@@ -11,10 +12,18 @@ import TechSpecsEditor from './TechSpecsEditor';
 import CompanyEditor from './CompanyEditor';
 import SvgEditor from './SvgEditor';
 import { generateTemplate } from '../utils/templateGenerator';
+import { parseTemplate } from '../utils/templateParser';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { ArrowLeft, Save, DownloadCloud } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 
-const TemplateEditor: React.FC = () => {
+interface TemplateEditorProps {
+  template?: Template;
+  onBack?: () => void;
+}
+
+const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<EditorTab>('images');
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
@@ -22,7 +31,7 @@ const TemplateEditor: React.FC = () => {
     title: '',
     subtitle: '',
     price: '',
-    currency: 'EUR',
+    currency: 'USD',
     description: '',
     images: [],
     specs: [],
@@ -31,6 +40,26 @@ const TemplateEditor: React.FC = () => {
   const [generatedHtml, setGeneratedHtml] = useState<string>('');
   const [showSvgEditor, setShowSvgEditor] = useState(false);
   const [currentSvgData, setCurrentSvgData] = useState({ svg: '', sectionId: '' });
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Initialize with template if provided
+  useEffect(() => {
+    if (template) {
+      try {
+        // Parse the template HTML to extract editable data
+        const extractedData = parseTemplate(template.html);
+        setTemplateData(extractedData);
+        setGeneratedHtml(template.html);
+      } catch (error) {
+        console.error('Error parsing template:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to parse the template. It may be in an unsupported format.',
+          variant: 'destructive'
+        });
+      }
+    }
+  }, [template, toast]);
 
   // Handle template upload/import
   const handleTemplateImport = (newTemplateData: TemplateData) => {

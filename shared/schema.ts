@@ -139,3 +139,12 @@ export const templateDataSchema = z.object({
 });
 
 export type TemplateData = z.infer<typeof templateDataSchema>;
+
+// Editor section props interface
+export interface EditorSectionProps {
+  data: TemplateData;
+  onUpdate: (updatedData: Partial<TemplateData>) => void;
+}
+
+// Preview mode type
+export type PreviewMode = "desktop" | "tablet" | "mobile";
