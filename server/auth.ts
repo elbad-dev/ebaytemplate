@@ -188,6 +188,7 @@ export function setupAuth(app: Express) {
       // Log user in
       req.login(user, (err) => {
         if (err) return next(err);
+        res.setHeader('Content-Type', 'application/json');
         return res.status(201).json(user);
       });
     } catch (error) {
@@ -204,6 +205,7 @@ export function setupAuth(app: Express) {
       
       req.login(user, (err) => {
         if (err) return next(err);
+        res.setHeader('Content-Type', 'application/json');
         return res.status(200).json(user);
       });
     })(req, res, next);
@@ -213,6 +215,7 @@ export function setupAuth(app: Express) {
   app.post("/api/logout", (req: Request, res: Response, next: NextFunction) => {
     req.logout((err) => {
       if (err) return next(err);
+      res.setHeader('Content-Type', 'application/json');
       res.status(200).json({ message: "Logged out successfully" });
     });
   });
@@ -222,6 +225,8 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
     }
+    // Ensure we're returning a valid JSON object
+    res.setHeader('Content-Type', 'application/json');
     res.status(200).json(req.user);
   });
 
