@@ -72,32 +72,6 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
             placeholder="Enter product subtitle"
           />
         </div>
-        
-        <div>
-          <label className="block text-xs text-gray-600 mb-1">Product Price</label>
-          <div className="flex items-center space-x-2">
-            <Input 
-              type="text" 
-              className="w-24 p-2 border border-gray-300 rounded-md text-sm" 
-              value={data.price || ''} 
-              onChange={(e) => onUpdate({ price: e.target.value })}
-              placeholder="0.00"
-            />
-            <Select 
-              defaultValue={data.currency || 'EUR'} 
-              onValueChange={(value) => onUpdate({ currency: value })}
-            >
-              <SelectTrigger className="w-24">
-                <SelectValue placeholder="EUR" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="EUR">EUR</SelectItem>
-                <SelectItem value="USD">USD</SelectItem>
-                <SelectItem value="GBP">GBP</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
       </div>
     </div>
   );
