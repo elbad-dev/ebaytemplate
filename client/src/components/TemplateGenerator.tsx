@@ -9,6 +9,7 @@ import ProductDescriptionEditor from './ProductDescriptionEditor';
 import TechSpecsEditor from './TechSpecsEditor';
 import CompanyEditor from './CompanyEditor';
 import PreviewPanel from './PreviewPanel';
+import AITemplateRecommender from './AITemplateRecommender';
 import { TemplateData, TemplateStyle } from '@shared/schema';
 import { PreviewMode } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
@@ -195,7 +196,8 @@ export default function TemplateGenerator({ onTemplateGenerated }: TemplateGener
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
         <div className="bg-card border rounded-lg shadow-sm overflow-auto">
           <Tabs defaultValue="style" value={activeTab} onValueChange={setActiveTab} className="p-4">
-            <TabsList className="grid grid-cols-6 w-full">
+            <TabsList className="grid grid-cols-7 w-full">
+              <TabsTrigger value="suggest">Suggest</TabsTrigger>
               <TabsTrigger value="style">Style</TabsTrigger>
               <TabsTrigger value="colors">Colors</TabsTrigger>
               <TabsTrigger value="title">Title</TabsTrigger>
@@ -205,6 +207,14 @@ export default function TemplateGenerator({ onTemplateGenerated }: TemplateGener
             </TabsList>
             
             <div className="mt-4 pb-4">
+              <TabsContent value="suggest" className="mt-0">
+                <AITemplateRecommender
+                  templateData={templateData}
+                  onStyleSelect={handleStyleSelect}
+                  onSuggestionsApplied={handleTemplateUpdate}
+                />
+              </TabsContent>
+              
               <TabsContent value="style" className="mt-0">
                 <TemplateStyleSelector 
                   onStyleSelect={handleStyleSelect} 

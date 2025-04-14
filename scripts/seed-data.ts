@@ -771,9 +771,23 @@ async function seedTemplateStyles() {
     }
   ];
   
-  // Insert the template styles
+  // Insert the template styles - one by one
   for (const style of styles) {
-    const result = await db.insert(templateStyles).values(style).returning();
+    // Convert style to proper format expected by drizzle
+    const styleData = {
+      name: style.name,
+      description: style.description,
+      thumbnail: style.thumbnail,
+      type: style.type,
+      style: style.style,
+      colorScheme: style.colorScheme,
+      htmlStructure: style.htmlStructure,
+      cssStyles: style.cssStyles,
+      jsInteractions: style.jsInteractions,
+      createdAt: style.createdAt
+    };
+    
+    const result = await db.insert(templateStyles).values(styleData).returning();
     console.log(`Added template style: ${style.name}`);
   }
 }
@@ -829,7 +843,16 @@ async function seedSvgIcons() {
   
   // Insert the SVG icons
   for (const icon of icons) {
-    const result = await db.insert(svgIcons).values(icon).returning();
+    // Convert icon to proper format expected by drizzle
+    const iconData = {
+      name: icon.name,
+      category: icon.category,
+      tags: icon.tags,
+      svg: icon.svg,
+      createdAt: icon.createdAt
+    };
+    
+    const result = await db.insert(svgIcons).values(iconData).returning();
     console.log(`Added SVG icon: ${icon.name}`);
   }
 }
