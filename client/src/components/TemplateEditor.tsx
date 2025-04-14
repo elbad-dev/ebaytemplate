@@ -204,38 +204,27 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
           {/* Editor Tabs */}
           <Card>
             <div className="border-b border-gray-200">
-              <nav className="flex -mb-px">
-                <button 
-                  className={`tab-button ${activeTab === 'images' ? 'tab-button-active' : 'tab-button-inactive'}`}
-                  onClick={() => setActiveTab('images')}
-                >
-                  Images
-                </button>
-                <button 
-                  className={`tab-button ${activeTab === 'title' ? 'tab-button-active' : 'tab-button-inactive'}`}
-                  onClick={() => setActiveTab('title')}
-                >
-                  Company name
-                </button>
-                <button 
-                  className={`tab-button ${activeTab === 'description' ? 'tab-button-active' : 'tab-button-inactive'}`}
-                  onClick={() => setActiveTab('description')}
-                >
-                  Description
-                </button>
-                <button 
-                  className={`tab-button ${activeTab === 'specs' ? 'tab-button-active' : 'tab-button-inactive'}`}
-                  onClick={() => setActiveTab('specs')}
-                >
-                  Tech Specs
-                </button>
-                <button 
-                  className={`tab-button ${activeTab === 'company' ? 'tab-button-active' : 'tab-button-inactive'}`}
-                  onClick={() => setActiveTab('company')}
-                >
-                  About Us
-                </button>
-              </nav>
+              <div className="flex flex-wrap">
+                <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as EditorTab)}>
+                  <TabsList className="grid grid-cols-5 w-full">
+                    <TabsTrigger value="images" className="text-xs sm:text-sm">
+                      Images
+                    </TabsTrigger>
+                    <TabsTrigger value="title" className="text-xs sm:text-sm">
+                      Info
+                    </TabsTrigger>
+                    <TabsTrigger value="description" className="text-xs sm:text-sm">
+                      Desc
+                    </TabsTrigger>
+                    <TabsTrigger value="specs" className="text-xs sm:text-sm">
+                      Specs
+                    </TabsTrigger>
+                    <TabsTrigger value="company" className="text-xs sm:text-sm">
+                      About
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
             </div>
 
             <CardContent className="p-0">
