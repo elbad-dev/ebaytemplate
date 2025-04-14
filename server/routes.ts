@@ -210,33 +210,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload image (uses authenticated user ID if available)
+  // Upload image (requires authentication)
   app.post("/api/upload/image", upload.single("file"), async (req: MulterRequest, res: Response) => {
     try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
-      // Generate URL for the image
-      // Use the authenticated user's ID if available, otherwise use from request body or null
-      const userId = req.isAuthenticated() ? (req.user as Express.User).id : (req.body.userId || null);
+      // Get the authenticated user's ID
+      const userId = (req.user as Express.User).id;
       const serverUrl = `${req.protocol}://${req.get("host")}`;
       const relativePath = `/uploads/${req.file.filename}`;
       const imageUrl = `${serverUrl}${relativePath}`;
       
+      // Create a timestamp for upload
+      const uploadTime = new Date().toISOString();
+      
       // Save image to database
-      const imageData = insertImageSchema.parse({
+      const imageData = {
         fileName: req.file.originalname,
         fileType: req.file.mimetype,
         fileSize: req.file.size,
         url: imageUrl,
-        userId,
-        uploadedAt: new Date().toISOString()
-      });
+        userId: userId,
+        uploadedAt: uploadTime
+      };
       
+      console.log("Saving image with data:", imageData);
       const newImage = await storage.createImage(imageData);
-      res.status(201).json({ ...newImage });
+      res.status(201).json(newImage);
     } catch (error: any) {
+      console.error("Image upload error:", error);
       res.status(400).json({ message: error.message });
     }
   });
@@ -360,6 +369,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(newIcon);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
+    }
+  });
+
+  // AI TEMPLATE SUGGESTIONS API ROUTE
+  // Get AI-powered template suggestions based on company name, description and logo
+  app.post("/api/suggest-template", async (req: Request, res: Response) => {
+    try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const { companyName, description, logoUrl } = req.body;
+      
+      if (!companyName) {
+        return res.status(400).json({ message: "Company name is required" });
+      }
+      
+      // Import the AI analysis function
+      const { analyzeTemplateText } = await import("./openai");
+      
+      // Get AI suggestions
+      const result = await analyzeTemplateText(companyName, description, logoUrl);
+      
+      res.json(result);
+    } catch (error: any) {
+      console.error("Template suggestion error:", error);
+      res.status(500).json({ message: error.message });
     }
   });
 

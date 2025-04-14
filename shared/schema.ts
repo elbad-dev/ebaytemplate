@@ -123,6 +123,7 @@ export const insertImageSchema = createInsertSchema(images).pick({
   fileSize: true,
   url: true,
   userId: true,
+  uploadedAt: true,
 });
 
 export const insertSvgIconSchema = createInsertSchema(svgIcons).pick({
@@ -180,6 +181,18 @@ export const templateDataSchema = z.object({
       svg: z.string(),
     })
   ),
+  // Color scheme properties
+  colorPrimary: z.string().optional(),
+  colorSecondary: z.string().optional(),
+  colorAccent: z.string().optional(),
+  colorBackground: z.string().optional(),
+  colorText: z.string().optional(),
+  // Font properties
+  fontHeading: z.string().optional(),
+  fontBody: z.string().optional(),
+  // Template style ID for the selected style
+  templateStyleId: z.number().optional(),
+  // Raw HTML content
   rawHtml: z.string().optional(),
 });
 
