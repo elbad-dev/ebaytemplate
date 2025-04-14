@@ -151,11 +151,30 @@ export function generateTemplate(templateData: TemplateData): string {
       const existingMainImages = mainImages.length;
       const existingThumbnails = thumbnailImages.length;
       
+      // Handle templates with arrow navigation
+      const hasArrowNavigation = $('.gallery-arrow').length > 0;
+      
       if (existingMainImages < templateData.images.length) {
         // Find the main gallery container to add new images
         const galleryContainer = $('.gallery-container').first();
         
         if (galleryContainer.length) {
+          // First check if we need to add new radio inputs for image selection
+          const hasRadioButtons = $('input[type="radio"][name="gallery"]').length > 0;
+          
+          // If this template uses radio buttons for image selection, add the needed input elements
+          if (hasRadioButtons) {
+            // Get the parent container for radio buttons
+            const radioButtonsContainer = $('input[type="radio"][name="gallery"]').first().parent();
+            
+            // Add new radio buttons for each additional image
+            for (let i = existingMainImages; i < templateData.images.length; i++) {
+              const imgNumber = i + 1;
+              const newRadioButton = $(`<input type="radio" name="gallery" id="img${imgNumber}">`);
+              radioButtonsContainer.append(newRadioButton);
+            }
+          }
+          
           // Add new gallery items for each additional image
           for (let i = existingMainImages; i < templateData.images.length; i++) {
             const newImage = templateData.images[i];
@@ -170,6 +189,53 @@ export function generateTemplate(templateData: TemplateData): string {
             
             // Add to gallery container
             galleryContainer.append(newGalleryItem);
+          }
+          
+          // Handle arrow navigation if needed
+          if (hasArrowNavigation) {
+            // Find the highest img number in the existing navigation arrows
+            let maxExistingImg = 0;
+            $('.gallery-arrow').each((_, el) => {
+              const forAttr = $(el).attr('for');
+              if (forAttr && forAttr.startsWith('img')) {
+                const imgNum = parseInt(forAttr.replace('img', ''), 10);
+                if (!isNaN(imgNum) && imgNum > maxExistingImg) {
+                  maxExistingImg = imgNum;
+                }
+              }
+            });
+            
+            // Get containers for prev and next arrows
+            const arrowsContainer = $('.gallery-arrow').first().parent();
+            
+            // Add "previous" arrow for each new image
+            for (let i = existingMainImages; i < templateData.images.length; i++) {
+              const imgNumber = i + 1;
+              const prevImgNumber = imgNumber === 1 ? templateData.images.length : imgNumber - 1; 
+              const newPrevArrow = $(`<label class="gallery-arrow prev" for="img${prevImgNumber}"></label>`);
+              arrowsContainer.append(newPrevArrow);
+            }
+            
+            // Add "next" arrow for each new image (except the last one, which should circle back to the first)
+            for (let i = existingMainImages; i < templateData.images.length - 1; i++) {
+              const imgNumber = i + 1;
+              const nextImgNumber = imgNumber + 1;
+              const newNextArrow = $(`<label class="gallery-arrow next" for="img${nextImgNumber}"></label>`);
+              arrowsContainer.append(newNextArrow);
+            }
+            
+            // Add a "next" arrow for the last image that points to the first image
+            const lastNextArrow = $(`<label class="gallery-arrow next" for="img1"></label>`);
+            arrowsContainer.append(lastNextArrow);
+            
+            // Also update the last existing arrow to point to the right image if needed
+            if (maxExistingImg > 0) {
+              const lastExistingNextArrow = $(`.gallery-arrow.next[for="img${maxExistingImg}"]`);
+              if (lastExistingNextArrow.length) {
+                // Update it to point to the first new image
+                lastExistingNextArrow.attr('for', `img${maxExistingImg + 1}`);
+              }
+            }
           }
         }
         
