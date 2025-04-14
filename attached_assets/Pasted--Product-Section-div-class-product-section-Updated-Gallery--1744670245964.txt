@@ -1,0 +1,55 @@
+ <!-- Product Section -->
+        <div class="product-section">
+            <!-- Updated Gallery -->
+            <div class="gallery">
+                <!-- Image Selection Radio Buttons -->
+                <input type="radio" name="gallery" id="img1" checked="">
+                <input type="radio" name="gallery" id="img2">
+                <input type="radio" name="gallery" id="img3">
+                <input type="radio" name="gallery" id="img4">
+                <input type="radio" name="gallery" id="img5">
+
+                <!-- Main Image Container -->
+                <div class="gallery-container">
+                    <!-- Navigation Arrows -->
+                    <label class="gallery-arrow prev" for="img1"></label>
+                    <label class="gallery-arrow prev" for="img2"></label>
+                    <label class="gallery-arrow prev" for="img3"></label>
+                    <label class="gallery-arrow prev" for="img4"></label>
+                    <label class="gallery-arrow prev" for="img5"></label>
+
+                    <label class="gallery-arrow next" for="img2"></label>
+                    <label class="gallery-arrow next" for="img3"></label>
+                    <label class="gallery-arrow next" for="img4"></label>
+                    <label class="gallery-arrow next" for="img5"></label>
+
+                    <!-- Main Images -->
+                    <img src="https://i.ebayimg.com/images/g/0ycAAOSwzO1nlnAl/s-l1600.webp" alt="Werkzeug Detail 1" class="gallery-item" id="main1">
+                    <img src="https://i.ebayimg.com/images/g/9R8AAOSw4ORnlnAS/s-l1600.webp" alt="Werkzeug Detail 2" class="gallery-item" id="main2">
+                    <img src="https://i.ebayimg.com/images/g/O1gAAOSw8rhnlnJD/s-l1600.webp" alt="Werkzeug Detail 3" class="gallery-item" id="main3">
+                    <img src="https://i.ebayimg.com/images/g/6poAAOSw3E1nlnJF/s-l1600.webp" alt="Werkzeug Detail 4" class="gallery-item" id="main4">
+                    <img src="https://i.ebayimg.com/images/g/example5.jpg" alt="Werkzeug Detail 5" class="gallery-item" id="main5">
+                </div>
+
+                <!-- Thumbnail Sets -->
+                <div class="thumbnail-sets">
+                    <!-- Set 1: Images 1-5 -->
+                    <div class="thumbnail-set set1">
+                        <label class="thumbnail" for="img1">
+                            <img src="https://i.ebayimg.com/images/g/0ycAAOSwzO1nlnAl/s-l1600.webp" alt="Thumbnail 1">
+                        </label>
+                        <label class="thumbnail" for="img2">
+                            <img src="https://i.ebayimg.com/images/g/9R8AAOSw4ORnlnAS/s-l1600.webp" alt="Thumbnail 2">
+                        </label>
+                        <label class="thumbnail" for="img3">
+                            <img src="https://i.ebayimg.com/images/g/O1gAAOSw8rhnlnJD/s-l1600.webp" alt="Thumbnail 3">
+                        </label>
+                        <label class="thumbnail" for="img4">
+                            <img src="https://i.ebayimg.com/images/g/6poAAOSw3E1nlnJF/s-l1600.webp" alt="Thumbnail 4">
+                        </label>
+                        <label class="thumbnail" for="img5">
+                            <img src="https://i.ebayimg.com/images/g/example5.jpg" alt="Thumbnail 5">
+                        </label>
+                    </div>
+                </div>
+            </div>
