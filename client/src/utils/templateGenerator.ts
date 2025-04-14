@@ -234,17 +234,37 @@ export function generateTemplate(templateData: TemplateData): string {
       for (const container of techSpecContainers) {
         const specTable = $(container);
         if (specTable.length) {
-          // Clear existing rows and add new ones
-          specTable.find('tr:not(:first-child)').remove(); // Keep header row if exists
+          // Check if it's a table or a div-based structure
+          const isTable = specTable.is('table') || specTable.find('table').length > 0;
           
-          templateData.specs.forEach(spec => {
-            specTable.append(`
-              <tr>
-                <td class="tech-label">${spec.label}</td>
-                <td class="tech-value">${spec.value}</td>
-              </tr>
-            `);
-          });
+          if (isTable) {
+            // For table structure - clear existing rows (except header) and add new ones
+            const tableEl = specTable.is('table') ? specTable : specTable.find('table');
+            tableEl.find('tr:not(:first-child)').remove(); // Keep header row if exists
+            
+            templateData.specs.forEach(spec => {
+              tableEl.append(`
+                <tr>
+                  <td class="tech-label">${spec.label}</td>
+                  <td class="tech-value">${spec.value}</td>
+                </tr>
+              `);
+            });
+          } else {
+            // For div-based structure that might use the same class
+            // First remove all existing specs
+            specTable.empty();
+            
+            // Then add all new specs
+            templateData.specs.forEach(spec => {
+              specTable.append(`
+                <div class="tech-row">
+                  <div class="tech-label">${spec.label}</div>
+                  <div class="tech-value">${spec.value}</div>
+                </div>
+              `);
+            });
+          }
           
           specsUpdated = true;
           break;
@@ -255,6 +275,7 @@ export function generateTemplate(templateData: TemplateData): string {
       if (!specsUpdated) {
         const specDivs = $('.spec-item, .tech-item');
         if (specDivs.length) {
+          // First, update existing spec items
           specDivs.each((i, el) => {
             if (i < templateData.specs.length) {
               const spec = templateData.specs[i];
@@ -262,6 +283,50 @@ export function generateTemplate(templateData: TemplateData): string {
               $(el).find('.tech-value, .spec-value').text(spec.value);
             }
           });
+          
+          // Then, if we have more specs than existing items, add new ones
+          if (specDivs.length < templateData.specs.length) {
+            const specContainer = specDivs.first().parent();
+            
+            // Get the structure of an existing spec item to create new ones with same format
+            const existingSpecItem = specDivs.first();
+            
+            for (let i = specDivs.length; i < templateData.specs.length; i++) {
+              const spec = templateData.specs[i];
+              // Clone the existing item, but replace its content
+              const newSpecItem = existingSpecItem.clone();
+              newSpecItem.find('.tech-label, .spec-label').text(spec.label);
+              newSpecItem.find('.tech-value, .spec-value').text(spec.value);
+              
+              // Add to the container
+              specContainer.append(newSpecItem);
+            }
+          }
+          
+          specsUpdated = true;
+        }
+      }
+      
+      // If still no specs container found, create a new one with div format
+      if (!specsUpdated) {
+        // Find a good place to add the tech specs
+        const techSection = $('.tech-section');
+        if (techSection.length) {
+          // Create a container for the specs
+          const specContainer = $('<div class="tech-items"></div>');
+          
+          // Add each spec to the container
+          templateData.specs.forEach(spec => {
+            specContainer.append(`
+              <div class="tech-item">
+                <div class="tech-label">${spec.label}</div>
+                <div class="tech-value">${spec.value}</div>
+              </div>
+            `);
+          });
+          
+          // Add the container to the tech section
+          techSection.append(specContainer);
           specsUpdated = true;
         }
       }
