@@ -216,7 +216,8 @@ export class MemStorage implements IStorage {
     const template: Template = { 
       ...insertTemplate, 
       id,
-      userId: insertTemplate.userId || null 
+      userId: insertTemplate.userId || null,
+      styleId: insertTemplate.styleId || null
     };
     this.templatesMap.set(id, template);
     return template;

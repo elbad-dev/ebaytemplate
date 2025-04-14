@@ -4,7 +4,13 @@ import { storage } from "./storage";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { insertTemplateSchema, insertImageSchema } from "@shared/schema";
+import { 
+  insertTemplateSchema, 
+  insertImageSchema, 
+  insertTemplateStyleSchema,
+  insertSvgIconSchema,
+  templateDataSchema
+} from "@shared/schema";
 import { nanoid } from "nanoid";
 
 // Add type for request with file from multer
@@ -190,6 +196,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Serve uploaded files
   app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
+  // TEMPLATE STYLES API ROUTES
+  // Get all template styles
+  app.get("/api/template-styles", async (req: Request, res: Response) => {
+    try {
+      const styles = await storage.getTemplateStyles();
+      res.json(styles);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get template style by ID
+  app.get("/api/template-styles/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const style = await storage.getTemplateStyle(id);
+      
+      if (!style) {
+        return res.status(404).json({ message: "Template style not found" });
+      }
+      
+      res.json(style);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create template style
+  app.post("/api/template-styles", async (req: Request, res: Response) => {
+    try {
+      const styleData = insertTemplateStyleSchema.parse({
+        ...req.body,
+        createdAt: new Date().toISOString(),
+      });
+      
+      const newStyle = await storage.createTemplateStyle(styleData);
+      res.status(201).json(newStyle);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // SVG ICONS API ROUTES
+  // Get all SVG icons, optionally filtered by category
+  app.get("/api/svg-icons", async (req: Request, res: Response) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const icons = await storage.getSvgIcons(category);
+      res.json(icons);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get SVG icon by ID
+  app.get("/api/svg-icons/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const icon = await storage.getSvgIcon(id);
+      
+      if (!icon) {
+        return res.status(404).json({ message: "SVG icon not found" });
+      }
+      
+      res.json(icon);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create SVG icon
+  app.post("/api/svg-icons", async (req: Request, res: Response) => {
+    try {
+      const iconData = insertSvgIconSchema.parse({
+        ...req.body,
+        createdAt: new Date().toISOString(),
+      });
+      
+      const newIcon = await storage.createSvgIcon(iconData);
+      res.status(201).json(newIcon);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // TEMPLATE GENERATION API ROUTE
+  // Generate a new template based on provided data and style
+  app.post("/api/generate-template", async (req: Request, res: Response) => {
+    try {
+      // Validate the incoming template data
+      const templateData = templateDataSchema.parse(req.body);
+      
+      // If a template style ID is provided, fetch that style
+      let style = null;
+      if (templateData.templateStyleId) {
+        style = await storage.getTemplateStyle(templateData.templateStyleId);
+        if (!style) {
+          return res.status(404).json({ message: "Template style not found" });
+        }
+      }
+      
+      // Import the template generator functions
+      const { generateStyledTemplate, generateDefaultTemplate } = await import("../client/src/utils/templateStyleGenerator");
+      
+      // Generate the HTML template
+      let generatedHtml = '';
+      
+      if (style) {
+        // Use the template style generator with the selected style
+        generatedHtml = generateStyledTemplate(templateData, style);
+      } else {
+        // Use the default template generator
+        generatedHtml = generateDefaultTemplate(templateData);
+      }
+      
+      // Create the template in the database
+      const templateName = templateData.title || "Generated Template";
+      const userId = req.body.userId || null;
+      
+      const newTemplate = await storage.createTemplate({
+        name: templateName,
+        html: generatedHtml,
+        userId,
+        createdAt: new Date().toISOString(),
+        styleId: templateData.templateStyleId || null
+      });
+      
+      // Return both the template record and the generated HTML
+      res.status(201).json({
+        template: newTemplate,
+        html: generatedHtml
+      });
+    } catch (error: any) {
+      console.error("Template generation error:", error);
+      res.status(400).json({ message: error.message });
+    }
+  });
 
   return httpServer;
 }
