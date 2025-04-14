@@ -9,30 +9,66 @@ export function parseTemplate(htmlContent: string): TemplateData {
   try {
     const $ = cheerio.load(htmlContent);
     
-    // Extract title
-    const title = $('title').text() || 'Product Title';
+    // Extract title from specific product info section (eBay templates)
+    let title = '';
+    const productInfoTitle = $('.product-info h2').text().trim();
+    if (productInfoTitle && productInfoTitle.includes('Professioneller Werkzeugsatz Premium')) {
+      title = productInfoTitle;
+    } else {
+      // Fallback to other common title locations
+      title = $('.product-title, h1.title, h1, .product-info h2').first().text().trim() || $('title').text();
+    }
     
-    // Extract images from gallery
+    // Extract images - specifically from eBay product galleries with image URLs from i.ebayimg.com
     const images: Image[] = [];
+    const imageMap = new Map<string, boolean>(); // To track duplicates
+    
+    // Look for both main and thumbnail images
+    const mainImages = new Map<string, string>(); // id -> url mapping for main images
+    const thumbnailImages = new Map<string, string>(); // id -> url mapping for thumbnails
+    
+    // First collect all main gallery images
     $('.gallery-item').each((i, el) => {
-      const imgSrc = $(el).find('img').attr('src');
-      if (imgSrc) {
-        images.push({
-          id: nanoid(),
-          url: imgSrc
-        });
+      const src = $(el).attr('src');
+      const id = $(el).attr('id');
+      
+      if (src && id && src.includes('i.ebayimg.com/images/') && !src.includes('ebay-logo')) {
+        mainImages.set(id, src);
       }
     });
     
-    // If no images found, try finding img tags
+    // Then collect thumbnails that correspond to main images
+    $('.thumbnail img').each((i, el) => {
+      const src = $(el).attr('src');
+      const label = $(el).closest('label').attr('for');
+      
+      // If this thumbnail corresponds to a main image and it's an eBay image, remember it
+      if (label && src && src.includes('i.ebayimg.com/images/') && !src.includes('ebay-logo')) {
+        thumbnailImages.set(label, src);
+      }
+    });
+    
+    // Now add unique images giving preference to main images
+    for (const [id, url] of mainImages.entries()) {
+      if (!imageMap.has(url)) {
+        images.push({
+          id: nanoid(),
+          url
+        });
+        imageMap.set(url, true);
+      }
+    }
+    
+    // If no product images found, try finding any img tags with eBay URLs
     if (images.length === 0) {
       $('img').each((i, el) => {
-        const imgSrc = $(el).attr('src');
-        if (imgSrc) {
+        const src = $(el).attr('src');
+        if (src && src.includes('i.ebayimg.com/images/') && !src.includes('ebay-logo') && !imageMap.has(src)) {
           images.push({
             id: nanoid(),
-            url: imgSrc
+            url: src
           });
+          imageMap.set(src, true);
         }
       });
     }
@@ -41,7 +77,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
     const specs: TechSpec[] = [];
     
     // Try to find tech specs - look for common structures
-    $('.tech-table tr, .specifications tr, .specs tr, .tech-specs tr').each((i, el) => {
+    $('.tech-specs tr, .specifications tr, .specs tr, .tech-specs tr, .tech-table tr').each((i, el) => {
       const label = $(el).find('td:first-child, th:first-child').text().trim();
       const value = $(el).find('td:last-child, th:last-child').text().trim();
       
@@ -115,22 +151,19 @@ export function parseTemplate(htmlContent: string): TemplateData {
     // Extract company info sections
     const companyInfo: CompanySection[] = [];
     
-    // Find company info cards - common class patterns
-    $('.info-card, .company-card, .info-section, .company-section').each((i, el) => {
-      const title = $(el).find('.info-title, .card-title, h3').text().trim();
-      const description = $(el).find('.info-description, .card-content, p').text().trim();
+    // Find company info cards - from eBay template
+    $('.info-cards .card').each((i, el) => {
+      const title = $(el).find('h3').text().trim();
+      const description = $(el).find('p').text().trim();
       
-      // Try to find SVG
-      let svg = $(el).find('svg').toString() || '';
-      if (!svg) {
-        // If no SVG found directly, try finding it in a container
-        const svgContainer = $(el).find('.icon, .svg-container, .card-icon');
-        if (svgContainer.length) {
-          svg = svgContainer.html() || '';
-        }
+      // Extract SVG from the info-icon container
+      let svg = '';
+      const infoIcon = $(el).find('.info-icon');
+      if (infoIcon.length) {
+        svg = infoIcon.html() || '';
       }
       
-      // Add to company sections even if incomplete - user can fill in missing data
+      // Add to company sections
       companyInfo.push({
         id: nanoid(),
         title: title || `Section ${i + 1}`,
@@ -138,6 +171,32 @@ export function parseTemplate(htmlContent: string): TemplateData {
         svg: svg || '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
       });
     });
+    
+    // Fallback to other common info card patterns if none found
+    if (companyInfo.length === 0) {
+      $('.info-card, .company-card, .info-section, .company-section').each((i, el) => {
+        const title = $(el).find('.info-title, .card-title, h3').text().trim();
+        const description = $(el).find('.info-description, .card-content, p').text().trim();
+        
+        // Try to find SVG
+        let svg = $(el).find('svg').toString() || '';
+        if (!svg) {
+          // If no SVG found directly, try finding it in a container
+          const svgContainer = $(el).find('.icon, .svg-container, .card-icon');
+          if (svgContainer.length) {
+            svg = svgContainer.html() || '';
+          }
+        }
+        
+        // Add to company sections even if incomplete - user can fill in missing data
+        companyInfo.push({
+          id: nanoid(),
+          title: title || `Section ${i + 1}`,
+          description: description || '',
+          svg: svg || '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
+        });
+      });
+    }
     
     // If no company sections found, create default placeholder sections
     if (companyInfo.length === 0) {

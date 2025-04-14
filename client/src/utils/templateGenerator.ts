@@ -50,31 +50,83 @@ export function generateTemplate(templateData: TemplateData): string {
     
     // Update gallery images
     if (templateData.images.length > 0) {
-      let imageIndex = 0;
+      // Get all main images and thumbnail images
+      const mainImages = $('.gallery-item');
+      const thumbnailImages = $('.thumbnail img');
       
-      // Update gallery-item images if they exist
-      $('.gallery-item img').each((_, el) => {
-        if (imageIndex < templateData.images.length) {
-          $(el).attr('src', templateData.images[imageIndex].url);
-          imageIndex++;
+      // Create image ID to thumbnail mapping
+      // In eBay templates, there's often a pattern like main1, main2, main3 for IDs
+      // and thumbnails with labels that reference those IDs
+      const mainImageMap = new Map();
+      
+      // First update main gallery images
+      mainImages.each((i, el) => {
+        if (i < templateData.images.length) {
+          const newUrl = templateData.images[i].url;
+          // Store the element ID and the new image URL
+          const elementId = $(el).attr('id');
+          if (elementId) {
+            mainImageMap.set(elementId, newUrl);
+          }
+          
+          // If this is an image element directly, update its src
+          if ($(el).is('img')) {
+            $(el).attr('src', newUrl);
+          } else {
+            // Otherwise look for image inside
+            $(el).find('img').attr('src', newUrl);
+          }
         }
       });
       
-      // Also update thumbnail images if they exist
-      imageIndex = 0;
-      $('.thumbnail img').each((_, el) => {
-        if (imageIndex < templateData.images.length) {
-          $(el).attr('src', templateData.images[imageIndex].url);
-          imageIndex++;
+      // Now handle thumbnails, with knowledge of which image is in which main slot
+      thumbnailImages.each((i, el) => {
+        if (i < templateData.images.length) {
+          // Get the image URL
+          const newUrl = templateData.images[i].url;
+          
+          // Update thumbnail src
+          $(el).attr('src', newUrl);
+          
+          // Check if this thumbnail is linked to a main image through its label
+          const label = $(el).closest('label').attr('for');
+          
+          // If this is a label that targets a specific image (like "img1" for main1),
+          // make sure the URL there is aligned
+          if (label && label.startsWith('img')) {
+            // Extract the number from img1, img2, etc.
+            const imgNumber = label.replace('img', '');
+            // Find corresponding main ID (main1, main2, etc.)
+            const mainId = `main${imgNumber}`;
+            
+            // If we've already mapped this main image with a URL, store that connection
+            mainImageMap.set(mainId, newUrl);
+          }
         }
       });
       
-      // If not all images were updated via gallery-item, look for other image patterns
-      if (imageIndex < templateData.images.length) {
+      // Special handling for eBay templates - update all main gallery images
+      // with correctly matched thumbnails
+      $('.gallery-item').each((_, el) => {
+        const id = $(el).attr('id');
+        if (id && mainImageMap.has(id)) {
+          // If this is a mapped main image, ensure it uses the right URL
+          if ($(el).is('img')) {
+            $(el).attr('src', mainImageMap.get(id));
+          } else {
+            $(el).find('img').attr('src', mainImageMap.get(id));
+          }
+        }
+      });
+      
+      // If we have more images than slots, look for other image patterns
+      const allUpdatedImages = mainImages.length + thumbnailImages.length;
+      if (allUpdatedImages < templateData.images.length) {
+        let extraIndex = allUpdatedImages;
         $('.product-image img, .main-image img').each((_, el) => {
-          if (imageIndex < templateData.images.length) {
-            $(el).attr('src', templateData.images[imageIndex].url);
-            imageIndex++;
+          if (extraIndex < templateData.images.length) {
+            $(el).attr('src', templateData.images[extraIndex].url);
+            extraIndex++;
           }
         });
       }
