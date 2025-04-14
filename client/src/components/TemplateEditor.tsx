@@ -182,7 +182,7 @@ const TemplateEditor: React.FC = () => {
                   className={`tab-button ${activeTab === 'title' ? 'tab-button-active' : 'tab-button-inactive'}`}
                   onClick={() => setActiveTab('title')}
                 >
-                  Title
+                  Company name
                 </button>
                 <button 
                   className={`tab-button ${activeTab === 'description' ? 'tab-button-active' : 'tab-button-inactive'}`}

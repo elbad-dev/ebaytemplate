@@ -19,13 +19,13 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
   useEffect(() => {
     // Check if the title contains the specified text
     if (data.title && data.title.includes('Professioneller Werkzeugsatz Premium')) {
-      setDetectionMethod('Product Title Detection');
+      setDetectionMethod('Company Name Detection');
     }
   }, [data.title]);
   
   return (
     <div className="p-4">
-      <h3 className="text-sm font-semibold mb-3 text-gray-700">Product Title</h3>
+      <h3 className="text-sm font-semibold mb-3 text-gray-700">Company name</h3>
       
       <div className="space-y-4">
         {/* eBay Logo Editor */}
@@ -70,7 +70,7 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
 
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <label className="block text-xs text-gray-600">Main Title</label>
+            <label className="block text-xs text-gray-600">Company name</label>
             
             {detectionMethod && (
               <TooltipProvider>
@@ -85,7 +85,7 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs">
-                      This title was detected using our enhanced detection algorithm 
+                      This company name was detected using our enhanced detection algorithm 
                       for "Professioneller Werkzeugsatz Premium" sections.
                     </p>
                   </TooltipContent>
@@ -99,7 +99,7 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
             className="w-full p-2 border border-gray-300 rounded-md text-sm" 
             value={data.title} 
             onChange={(e) => onUpdate({ title: e.target.value })}
-            placeholder="Enter product title"
+            placeholder="Enter company name"
           />
           <p className="mt-1 text-xs text-gray-500">This updates both the page title and main heading</p>
         </div>
@@ -111,7 +111,7 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
             className="w-full p-2 border border-gray-300 rounded-md text-sm" 
             value={data.subtitle || ''} 
             onChange={(e) => onUpdate({ subtitle: e.target.value })}
-            placeholder="Enter product subtitle"
+            placeholder="Enter company subtitle"
           />
         </div>
       </div>
