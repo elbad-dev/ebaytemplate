@@ -11,12 +11,46 @@ export function parseTemplate(htmlContent: string): TemplateData {
     
     // Extract title from specific product info section (eBay templates)
     let title = '';
+    
+    // Method 1: Try to find product title from h2 in product-info section
     const productInfoTitle = $('.product-info h2').text().trim();
     if (productInfoTitle && productInfoTitle.includes('Professioneller Werkzeugsatz Premium')) {
       title = productInfoTitle;
-    } else {
-      // Fallback to other common title locations
-      title = $('.product-title, h1.title, h1, .product-info h2').first().text().trim() || $('title').text();
+    } 
+    // Method 2: Look for title near the price section
+    else {
+      // Find the text that contains "Professioneller Werkzeugsatz Premium" above price
+      const priceEl = $('.price').first();
+      if (priceEl.length) {
+        // Get all headings and text elements that might contain the title
+        let foundTitle = false;
+        
+        // Try to locate the title by looking at headers and text blocks above the price
+        $('.card h2, .product-title, .card-title, h2').each((_, el) => {
+          const text = $(el).text().trim();
+          if (text.includes('Professioneller Werkzeugsatz Premium')) {
+            title = text;
+            foundTitle = true;
+            return false; // Break the loop
+          }
+        });
+        
+        if (!foundTitle) {
+          // If not found in headers, try paragraphs and other text elements
+          $('.card p, .description, .product-description').each((_, el) => {
+            const text = $(el).text().trim();
+            if (text.includes('Professioneller Werkzeugsatz Premium')) {
+              title = text;
+              return false; // Break the loop
+            }
+          });
+        }
+      }
+      
+      // Fallback to other common title locations if still not found
+      if (!title) {
+        title = $('.product-title, h1.title, h1, .product-info h2').first().text().trim() || $('title').text();
+      }
     }
     
     // Extract images - specifically from eBay product galleries with image URLs from i.ebayimg.com
