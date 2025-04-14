@@ -63,9 +63,11 @@ export default function TemplateLibrary({
   });
   
   // Filter templates based on search query
-  const filteredTemplates = templates?.filter((template: Template) => 
-    template.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTemplates = Array.isArray(templates) 
+    ? templates.filter((template: Template) => 
+        template.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
   
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -163,7 +165,7 @@ export default function TemplateLibrary({
         <div className="flex justify-center py-12">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
-      ) : !templates || templates.length === 0 ? (
+      ) : !templates || !Array.isArray(templates) || templates.length === 0 ? (
         <div className="text-center py-16 bg-muted/30 rounded-lg border border-dashed">
           <h2 className="text-xl font-semibold mb-2">No templates found</h2>
           <p className="text-muted-foreground mb-6">

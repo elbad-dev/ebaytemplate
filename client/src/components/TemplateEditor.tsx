@@ -194,8 +194,12 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Editor Panel */}
         <div className="lg:col-span-1 space-y-5">
-          {/* Template Upload Section */}
-          <TemplateUploader onTemplateImport={handleTemplateImport} />
+          {/* Template Upload Section (if not editing an existing template) */}
+          {!template && <div className="mb-4 p-4 bg-muted/30 rounded-lg border border-dashed">
+            <p className="text-sm text-center text-muted-foreground">
+              No template loaded. Please import a template or create a new one.
+            </p>
+          </div>}
           
           {/* Editor Tabs */}
           <Card>

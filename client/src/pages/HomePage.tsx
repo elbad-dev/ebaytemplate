@@ -72,7 +72,7 @@ export default function HomePage() {
   };
   
   // Render the current view
-  const renderCurrentView = () => {
+  const renderCurrentView = (): React.ReactNode => {
     switch (currentView) {
       case 'welcome':
         return (
@@ -83,7 +83,10 @@ export default function HomePage() {
           />
         );
       case 'editor':
-        if (!selectedTemplate) return handleBackToWelcome();
+        if (!selectedTemplate) {
+          handleBackToWelcome();
+          return null;
+        }
         return <TemplateEditor template={selectedTemplate} onBack={handleBackToWelcome} />;
       case 'library':
         return (
@@ -118,7 +121,8 @@ export default function HomePage() {
           </div>
         );
       default:
-        return handleBackToWelcome();
+        handleBackToWelcome();
+        return null;
     }
   };
 

@@ -31,13 +31,16 @@ export default function TemplateStyleSelector({ onStyleSelect, selectedStyleId }
   }, [error, toast]);
 
   // Group styles by type for the tabs
-  const stylesByType = styles?.reduce((acc: Record<string, TemplateStyle[]>, style: TemplateStyle) => {
-    if (!acc[style.type]) {
-      acc[style.type] = [];
-    }
-    acc[style.type].push(style);
-    return acc;
-  }, {}) || {};
+  const stylesByType: Record<string, TemplateStyle[]> = {};
+  
+  if (styles && Array.isArray(styles)) {
+    styles.forEach((style: TemplateStyle) => {
+      if (!stylesByType[style.type]) {
+        stylesByType[style.type] = [];
+      }
+      stylesByType[style.type].push(style);
+    });
+  }
 
   // Create tabs for each style type
   const typeTabs = Object.keys(stylesByType).map(type => (
@@ -47,18 +50,19 @@ export default function TemplateStyleSelector({ onStyleSelect, selectedStyleId }
   ));
 
   // Create style cards for the active tab
-  const renderStyleCards = (styles: TemplateStyle[] | undefined) => {
-    if (!styles || styles.length === 0) {
+  const renderStyleCards = (stylesArray: any) => {
+    // Ensure we have a valid array of styles
+    if (!stylesArray || !Array.isArray(stylesArray) || stylesArray.length === 0) {
       return <div className="text-center py-6">No template styles found.</div>;
     }
 
     const filteredStyles = activeTab === 'all' 
-      ? styles 
-      : styles.filter(style => style.type === activeTab);
+      ? stylesArray 
+      : stylesArray.filter((style: TemplateStyle) => style.type === activeTab);
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredStyles.map(style => (
+        {filteredStyles.map((style: TemplateStyle) => (
           <Card 
             key={style.id} 
             className={`overflow-hidden cursor-pointer transition-all ${selectedStyleId === style.id ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
