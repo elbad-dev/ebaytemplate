@@ -69,11 +69,17 @@ export default function TemplateStyleSelector({ onStyleSelect, selectedStyleId }
             onClick={() => onStyleSelect(style)}
           >
             <div className="h-40 overflow-hidden bg-muted">
-              <img 
-                src={style.thumbnail} 
-                alt={style.name} 
-                className="w-full h-full object-cover"
-              />
+              {style.thumbnail ? (
+                <img 
+                  src={style.thumbnail} 
+                  alt={style.name} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-muted-foreground/10">
+                  <span className="text-sm text-muted-foreground">{style.style} {style.type} template</span>
+                </div>
+              )}
             </div>
             <CardHeader className="p-4 pb-2">
               <CardTitle className="text-lg">{style.name}</CardTitle>
