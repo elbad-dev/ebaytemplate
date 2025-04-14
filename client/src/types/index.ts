@@ -29,6 +29,7 @@ export interface TemplateData {
   price?: string;
   currency?: string;
   description?: string;
+  logo?: string;
   images: Image[];
   specs: TechSpec[];
   companyInfo: CompanySection[];

@@ -183,6 +183,26 @@ export function parseTemplate(htmlContent: string): TemplateData {
       }
     }
     
+    // Extract the eBay logo
+    let logo = '';
+    
+    // Look for logo images specifically with 'ebay-logo' in their URL or class
+    $('img[src*="ebay-logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img').each((_, el) => {
+      const src = $(el).attr('src');
+      if (src) {
+        logo = src;
+        return false; // Break the loop
+      }
+    });
+    
+    // If no logo found, check for SVG logo
+    if (!logo) {
+      $('.logo svg, .header-logo svg, .brand-logo svg').each((_, el) => {
+        logo = $.html(el);
+        return false; // Break the loop
+      });
+    }
+    
     // Extract product description from "Produktbeschreibung" section
     let description = '';
     
@@ -277,6 +297,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
       price,
       currency,
       description,
+      logo,
       images,
       specs,
       companyInfo,
