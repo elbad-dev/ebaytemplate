@@ -65,8 +65,7 @@ export default function WelcomeScreen({
             </Button>
             <Button
               size="lg" 
-              variant="outline"
-              className="border-white text-white hover:bg-white/10"
+              className="bg-indigo-600 text-white hover:bg-indigo-700"
               onClick={onBrowseTemplates}
             >
               Browse Templates
