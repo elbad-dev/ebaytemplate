@@ -191,9 +191,10 @@ export function parseTemplate(htmlContent: string): TemplateData {
       const title = $(el).text().trim();
       if (title.includes('Produktbeschreibung')) {
         const parent = $(el).parent();
-        const descriptionContent = parent.find('p, .description, .content').text().trim();
-        if (descriptionContent) {
-          description = descriptionContent;
+        const descriptionEl = parent.find('p, .description, .content').first();
+        if (descriptionEl.length) {
+          // Preserve the HTML content to keep formatting, colors, and spaces
+          description = descriptionEl.html() || '';
           return false; // Break the loop
         }
       }
@@ -203,7 +204,8 @@ export function parseTemplate(htmlContent: string): TemplateData {
     if (!description) {
       const descriptionEl = $('.product-description, #description, .description, .produktbeschreibung').first();
       if (descriptionEl.length) {
-        description = descriptionEl.text().trim();
+        // Preserve the HTML content to keep formatting, colors, and spaces
+        description = descriptionEl.html() || '';
       }
     }
     

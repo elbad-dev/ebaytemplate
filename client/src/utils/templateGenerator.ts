@@ -178,26 +178,59 @@ export function generateTemplate(templateData: TemplateData): string {
       }
     }
     
-    // Update product description
+    // Update product description - preserve HTML formatting
     if (templateData.description) {
+      let descriptionUpdated = false;
+      
+      // First try to find existing description elements
       $('.product-description, .description, .produktbeschreibung').each((_, el) => {
         $(el).html(templateData.description || '');
+        descriptionUpdated = true;
       });
       
       // If no description found but there's a section titled "Produktbeschreibung"
-      $('.product-section h2, .section-title, .card-title').each((_, el) => {
-        const title = $(el).text().trim();
-        if (title.includes('Produktbeschreibung')) {
-          const parent = $(el).parent();
-          const descriptionEl = parent.find('p, .description, .content');
-          if (descriptionEl.length) {
-            descriptionEl.html(templateData.description || '');
-          } else {
-            // Add description if there's no content element
-            $(el).after(`<p class="description">${templateData.description || ''}</p>`);
+      if (!descriptionUpdated) {
+        $('.product-section h2, .section-title, .card-title').each((_, el) => {
+          const title = $(el).text().trim();
+          if (title.includes('Produktbeschreibung')) {
+            const parent = $(el).parent();
+            const descriptionEl = parent.find('p, .description, .content');
+            if (descriptionEl.length) {
+              descriptionEl.html(templateData.description || '');
+              descriptionUpdated = true;
+            } else {
+              // Add description if there's no content element
+              // Insert as raw HTML to preserve formatting
+              $(el).after(`<div class="product-description">${templateData.description || ''}</div>`);
+              descriptionUpdated = true;
+            }
+          }
+        });
+      }
+      
+      // If still no description section found, create one
+      if (!descriptionUpdated) {
+        // Find an appropriate place to add the description section
+        const possibleTargets = [
+          '.product-header', 
+          '.gallery', 
+          '.tech-section', 
+          '.company-section'
+        ];
+        
+        for (const target of possibleTargets) {
+          const el = $(target).first();
+          if (el.length) {
+            el.before(`
+              <div class="product-section">
+                <h2 class="section-title">Produktbeschreibung</h2>
+                <div class="product-description">${templateData.description || ''}</div>
+              </div>
+            `);
+            break;
           }
         }
-      });
+      }
     }
     
     // Update company information sections

@@ -125,14 +125,18 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
                 )}
               </Button>
             </div>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={handleDescriptionChange}
-              rows={10}
-              placeholder="Enter product description here..."
-              className="w-full"
-            />
+            <div className="border rounded-md">
+              <textarea
+                id="description"
+                value={description}
+                onChange={handleDescriptionChange}
+                rows={10}
+                placeholder="Enter product description here..."
+                className="w-full p-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ fontFamily: 'inherit' }}
+                // Use a standard textarea instead of the styled component to preserve formatting
+              />
+            </div>
             <p className="text-xs text-gray-500 mt-1">
               This description will be shown in the "Produktbeschreibung" section of your template.
             </p>
