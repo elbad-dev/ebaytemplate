@@ -146,10 +146,72 @@ export function generateTemplate(templateData: TemplateData): string {
         }
       });
       
-      // If we have more images than slots, look for other image patterns
-      const allUpdatedImages = mainImages.length + thumbnailImages.length;
-      if (allUpdatedImages < templateData.images.length) {
-        let extraIndex = allUpdatedImages;
+      // If we have more images than slots, add new gallery items and thumbnails
+      // First, determine if we need to add more images
+      const existingMainImages = mainImages.length;
+      const existingThumbnails = thumbnailImages.length;
+      
+      if (existingMainImages < templateData.images.length) {
+        // Find the main gallery container to add new images
+        const galleryContainer = $('.gallery-container').first();
+        
+        if (galleryContainer.length) {
+          // Add new gallery items for each additional image
+          for (let i = existingMainImages; i < templateData.images.length; i++) {
+            const newImage = templateData.images[i];
+            const newId = `main${i + 1}`;
+            
+            // Create new gallery item with the same structure as existing ones
+            const newGalleryItem = $(`
+              <div class="gallery-item" id="${newId}">
+                <img src="${newImage.url}" alt="Product image ${i + 1}" />
+              </div>
+            `);
+            
+            // Add to gallery container
+            galleryContainer.append(newGalleryItem);
+          }
+        }
+        
+        // Now add corresponding thumbnails
+        const thumbnailContainer = $('.thumbnail-set.set1, .thumbnail-sets').first();
+        
+        if (thumbnailContainer.length) {
+          // Add new thumbnails for each additional image
+          for (let i = existingThumbnails; i < templateData.images.length; i++) {
+            const newImage = templateData.images[i];
+            const imgNumber = i + 1;
+            
+            // Create new thumbnail with the same structure as existing ones
+            let newThumbnail;
+            
+            // Check if thumbnails use labels (common in radio button implementations)
+            if ($('.thumbnail label').length > 0) {
+              newThumbnail = $(`
+                <div class="thumbnail">
+                  <label for="img${imgNumber}">
+                    <img src="${newImage.url}" alt="Thumbnail ${imgNumber}" />
+                  </label>
+                </div>
+              `);
+            } else {
+              newThumbnail = $(`
+                <div class="thumbnail">
+                  <img src="${newImage.url}" alt="Thumbnail ${imgNumber}" />
+                </div>
+              `);
+            }
+            
+            // Add to thumbnail container
+            thumbnailContainer.append(newThumbnail);
+          }
+        }
+      }
+      
+      // For any remaining images that couldn't be added to galleries, update other image patterns
+      const updatedMainCount = $('.gallery-item').length;
+      if (updatedMainCount < templateData.images.length) {
+        let extraIndex = updatedMainCount;
         $('.product-image img, .main-image img').each((_, el) => {
           if (extraIndex < templateData.images.length) {
             $(el).attr('src', templateData.images[extraIndex].url);
@@ -582,7 +644,7 @@ function createBasicTemplate(data: TemplateData): string {
         ` : ''}
         
         <div class="tech-section">
-          <h2 class="section-title">Technical Specifications</h2>
+          <h2 class="section-title">Technical Specs</h2>
           ${techSpecs}
         </div>
         

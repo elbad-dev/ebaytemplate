@@ -186,8 +186,8 @@ export function parseTemplate(htmlContent: string): TemplateData {
     // Extract the logo
     let logo = '';
     
-    // Look for logo images specifically with 'ebay-logo' in their URL or class
-    $('img[src*="ebay-logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img').each((_, el) => {
+    // Look for logo images in common logo locations
+    $('img[src*="logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img').each((_, el) => {
       const src = $(el).attr('src');
       if (src) {
         logo = src;
@@ -232,7 +232,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
     // Extract company info sections
     const companyInfo: CompanySection[] = [];
     
-    // Find company info cards - from eBay template
+    // Find company info cards - from template
     $('.info-cards .card').each((i, el) => {
       const title = $(el).find('h3').text().trim();
       const description = $(el).find('p').text().trim();
