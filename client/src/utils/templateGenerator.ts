@@ -181,7 +181,7 @@ export function generateTemplate(templateData: TemplateData): string {
     // Update product description
     if (templateData.description) {
       $('.product-description, .description, .produktbeschreibung').each((_, el) => {
-        $(el).html(templateData.description);
+        $(el).html(templateData.description || '');
       });
       
       // If no description found but there's a section titled "Produktbeschreibung"
@@ -191,10 +191,10 @@ export function generateTemplate(templateData: TemplateData): string {
           const parent = $(el).parent();
           const descriptionEl = parent.find('p, .description, .content');
           if (descriptionEl.length) {
-            descriptionEl.html(templateData.description);
+            descriptionEl.html(templateData.description || '');
           } else {
             // Add description if there's no content element
-            $(el).after(`<p class="description">${templateData.description}</p>`);
+            $(el).after(`<p class="description">${templateData.description || ''}</p>`);
           }
         }
       });
@@ -421,6 +421,7 @@ function createBasicTemplate(data: TemplateData): string {
           object-fit: cover;
         }
         
+        .product-section,
         .tech-section {
           margin: 40px 0;
         }
@@ -429,6 +430,12 @@ function createBasicTemplate(data: TemplateData): string {
           font-size: 22px;
           margin-bottom: 20px;
           font-weight: 600;
+        }
+        
+        .product-description {
+          line-height: 1.6;
+          color: var(--text);
+          margin-bottom: 30px;
         }
         
         .tech-table {
@@ -496,6 +503,15 @@ function createBasicTemplate(data: TemplateData): string {
         </div>
         
         ${imageGallery}
+        
+        ${data.description ? `
+        <div class="product-section">
+          <h2 class="section-title">Produktbeschreibung</h2>
+          <div class="product-description">
+            ${data.description}
+          </div>
+        </div>
+        ` : ''}
         
         <div class="tech-section">
           <h2 class="section-title">Technical Specifications</h2>
