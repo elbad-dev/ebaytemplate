@@ -49,14 +49,14 @@ export function generateStyledTemplate(
     // Main gallery images - all images with radio button selection
     const mainImagesHtml = templateData.images.map((img, idx) => `
       <input type="radio" name="gallery-select" id="gallery-select-${idx}" ${idx === 0 ? 'checked' : ''} class="gallery-select" />
-      <div class="gallery-main-image" id="main-image-${idx}" data-id="${img.id}">
+      <div class="gallery-main-image" id="main-image-${idx}" data-id="${img.id}" style="${idx === 0 ? 'display:block; opacity:1;' : ''}">
         <img src="${img.url}" alt="${templateData.title || 'Product'}" />
       </div>
     `).join('');
     
     // Thumbnail images with labels connected to radio buttons
     const thumbnailsHtml = templateData.images.map((img, idx) => `
-      <label for="gallery-select-${idx}" class="thumbnail-item" data-for="main-image-${idx}" data-id="${img.id}">
+      <label for="gallery-select-${idx}" class="thumbnail-item" data-for="main-image-${idx}" data-id="${img.id}" style="${idx === 0 ? 'border-color:var(--color-primary);' : ''}">
         <img src="${img.url}" alt="Thumbnail ${idx + 1}" />
       </label>
     `).join('');
@@ -220,6 +220,18 @@ export function generateStyledTemplate(
   const simpleGalleryJs = `
     // Basic thumbnail-to-main image selector for old browsers or when CSS selectors aren't fully supported
     document.addEventListener("DOMContentLoaded", function() {
+      // Set initial state
+      var firstMainImage = document.querySelector(".gallery-main-image");
+      if (firstMainImage) {
+        firstMainImage.style.display = "block";
+        firstMainImage.style.opacity = "1";
+      }
+      
+      var firstThumbnail = document.querySelector(".thumbnail-item");
+      if (firstThumbnail) {
+        firstThumbnail.style.borderColor = "#3498db";
+      }
+      
       var thumbnails = document.querySelectorAll(".thumbnail-item");
       var mainImages = document.querySelectorAll(".gallery-main-image");
       
@@ -492,7 +504,7 @@ export function generateDefaultTemplate(templateData: TemplateData): string {
           <div class="gallery-main">
             ${templateData.images.map((img, idx) => `
               <input type="radio" name="gallery-select" id="gallery-select-${idx}" ${idx === 0 ? 'checked' : ''} class="gallery-select" />
-              <div class="gallery-main-image" id="main-image-${idx}" data-id="${img.id}">
+              <div class="gallery-main-image" id="main-image-${idx}" data-id="${img.id}" style="${idx === 0 ? 'display:block; opacity:1;' : ''}">
                 <img src="${img.url}" alt="${templateData.title || 'Product'}" />
               </div>
             `).join('')}
@@ -502,7 +514,7 @@ export function generateDefaultTemplate(templateData: TemplateData): string {
         <div class="gallery-thumbnails">
           <div class="thumbnail-scroll">
             ${templateData.images.map((img, idx) => `
-              <label for="gallery-select-${idx}" class="thumbnail-item" data-for="main-image-${idx}" data-id="${img.id}">
+              <label for="gallery-select-${idx}" class="thumbnail-item" data-for="main-image-${idx}" data-id="${img.id}" style="${idx === 0 ? 'border-color:var(--color-primary);' : ''}">
                 <img src="${img.url}" alt="Thumbnail ${idx + 1}" />
               </label>
             `).join('')}
@@ -661,6 +673,18 @@ export function generateDefaultTemplate(templateData: TemplateData): string {
     <script>
       // Simple gallery interactivity - eBay compatible
       document.addEventListener('DOMContentLoaded', function() {
+        // Set initial state
+        var firstMainImage = document.querySelector(".gallery-main-image");
+        if (firstMainImage) {
+          firstMainImage.style.display = "block";
+          firstMainImage.style.opacity = "1";
+        }
+        
+        var firstThumbnail = document.querySelector(".thumbnail-item");
+        if (firstThumbnail) {
+          firstThumbnail.style.borderColor = "#3498db";
+        }
+        
         // Basic thumbnail-to-main image selector for old browsers or when CSS selectors aren't fully supported
         var thumbnails = document.querySelectorAll(".thumbnail-item");
         var mainImages = document.querySelectorAll(".gallery-main-image");
