@@ -1,44 +1,108 @@
-import { pgTable, text, serial, integer, boolean, pgEnum } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+import { pgTable, pgEnum, text, serial, timestamp, boolean, varchar, integer } from "drizzle-orm/pg-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Enums for template style categorization
+// Enums
 export const templateTypeEnum = pgEnum("template_type", ["product", "service", "portfolio", "company"]);
 export const templateStyleEnum = pgEnum("template_style", ["modern", "classic", "minimalist", "bold", "elegant"]);
 export const templateColorSchemeEnum = pgEnum("color_scheme", ["light", "dark", "colorful", "monochrome", "custom"]);
+export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
 
-// Template model
+// Users table
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 255 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(),
+  role: userRoleEnum("role").default("user").notNull(),
+  isVerified: boolean("is_verified").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Templates table
 export const templates = pgTable("templates", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  thumbnail: varchar("thumbnail", { length: 255 }),
+  type: templateTypeEnum("type").default("product").notNull(),
+  style: templateStyleEnum("style").default("modern").notNull(),
+  colorScheme: templateColorSchemeEnum("color_scheme").default("light").notNull(),
+  htmlStructure: text("html_structure").notNull(),
+  cssStyles: text("css_styles"),
+  jsInteractions: text("js_interactions"),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   html: text("html").notNull(),
-  userId: text("user_id"),
-  createdAt: text("created_at").notNull(),
-  // New field to reference the style used
-  styleId: integer("style_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Template styles table
+export const templateStyles = pgTable("template_styles", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  thumbnail: varchar("thumbnail", { length: 255 }),
+  type: templateTypeEnum("type").default("product").notNull(),
+  style: templateStyleEnum("style").default("modern").notNull(),
+  colorScheme: templateColorSchemeEnum("color_scheme").default("light").notNull(),
+  htmlStructure: text("html_structure").notNull(),
+  cssStyles: text("css_styles"),
+  jsInteractions: text("js_interactions"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Images table
+export const images = pgTable("images", {
+  id: serial("id").primaryKey(),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileType: varchar("file_type", { length: 50 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  url: varchar("url", { length: 255 }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+});
+
+// SVG icons table
+export const svgIcons = pgTable("svg_icons", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  category: varchar("category", { length: 100 }).default("general").notNull(),
+  svg: text("svg").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Verification tokens table
+export const verificationTokens = pgTable("verification_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expires: timestamp("expires").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Schemas for insertion
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  email: true,
+  password: true,
+  role: true,
+  isVerified: true,
 });
 
 export const insertTemplateSchema = createInsertSchema(templates).pick({
   name: true,
-  html: true,
+  description: true,
+  thumbnail: true,
+  type: true,
+  style: true,
+  colorScheme: true,
+  htmlStructure: true,
+  cssStyles: true,
+  jsInteractions: true,
   userId: true,
-  createdAt: true,
-  styleId: true,
-});
-
-// New table for template styles/designs
-export const templateStyles = pgTable("template_styles", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description").notNull(),
-  thumbnail: text("thumbnail").notNull(), // URL to preview image
-  type: templateTypeEnum("type").notNull(),
-  style: templateStyleEnum("style").notNull(),
-  colorScheme: templateColorSchemeEnum("color_scheme").notNull(),
-  htmlStructure: text("html_structure").notNull(), // Base HTML with placeholders
-  cssStyles: text("css_styles").notNull(), // CSS for this template style
-  jsInteractions: text("js_interactions"), // Optional JavaScript for interactive elements
-  createdAt: text("created_at").notNull(),
+  html: true,
 });
 
 export const insertTemplateStyleSchema = createInsertSchema(templateStyles).pick({
@@ -48,21 +112,9 @@ export const insertTemplateStyleSchema = createInsertSchema(templateStyles).pick
   type: true,
   style: true,
   colorScheme: true,
-  htmlStructure: true, 
+  htmlStructure: true,
   cssStyles: true,
   jsInteractions: true,
-  createdAt: true,
-});
-
-// Image upload model
-export const images = pgTable("images", {
-  id: serial("id").primaryKey(),
-  fileName: text("file_name").notNull(),
-  fileType: text("file_type").notNull(),
-  fileSize: integer("file_size").notNull(),
-  url: text("url").notNull(),
-  userId: text("user_id"),
-  uploadedAt: text("uploaded_at").notNull(),
 });
 
 export const insertImageSchema = createInsertSchema(images).pick({
@@ -71,28 +123,23 @@ export const insertImageSchema = createInsertSchema(images).pick({
   fileSize: true,
   url: true,
   userId: true,
-  uploadedAt: true,
-});
-
-// Definitions for SVG icons library
-export const svgIcons = pgTable("svg_icons", {
-  id: serial("id").primaryKey(), 
-  name: text("name").notNull(),
-  category: text("category").notNull(), // Like "business", "tech", "commerce", etc.
-  svg: text("svg").notNull(), // SVG content
-  tags: text("tags").array(), // Array of search tags
-  createdAt: text("created_at").notNull(),
 });
 
 export const insertSvgIconSchema = createInsertSchema(svgIcons).pick({
   name: true,
   category: true,
   svg: true,
-  tags: true,
-  createdAt: true,
 });
 
-// Type exports
+export const insertVerificationTokenSchema = createInsertSchema(verificationTokens).pick({
+  userId: true,
+  token: true,
+  expires: true,
+});
+
+// TypeScript types
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
 export type InsertTemplate = z.infer<typeof insertTemplateSchema>;
 export type Template = typeof templates.$inferSelect;
 export type InsertImage = z.infer<typeof insertImageSchema>;
@@ -101,8 +148,10 @@ export type InsertTemplateStyle = z.infer<typeof insertTemplateStyleSchema>;
 export type TemplateStyle = typeof templateStyles.$inferSelect;
 export type InsertSvgIcon = z.infer<typeof insertSvgIconSchema>;
 export type SvgIcon = typeof svgIcons.$inferSelect;
+export type InsertVerificationToken = z.infer<typeof insertVerificationTokenSchema>;
+export type VerificationToken = typeof verificationTokens.$inferSelect;
 
-// Custom types for the editor components
+// Template data schema (used in the frontend)
 export const templateDataSchema = z.object({
   title: z.string(),
   subtitle: z.string().optional(),
@@ -110,41 +159,36 @@ export const templateDataSchema = z.object({
   currency: z.string().optional(),
   description: z.string().optional(),
   logo: z.string().optional(),
-  images: z.array(z.object({
-    id: z.string(),
-    url: z.string()
-  })),
-  specs: z.array(z.object({
-    id: z.string(),
-    label: z.string(),
-    value: z.string()
-  })),
-  companyInfo: z.array(z.object({
-    id: z.string(),
-    title: z.string(),
-    description: z.string(),
-    svg: z.string()
-  })),
+  images: z.array(
+    z.object({
+      id: z.string(),
+      url: z.string(),
+    })
+  ),
+  specs: z.array(
+    z.object({
+      id: z.string(),
+      label: z.string(),
+      value: z.string(),
+    })
+  ),
+  companyInfo: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      description: z.string(),
+      svg: z.string(),
+    })
+  ),
   rawHtml: z.string().optional(),
-  // New fields for template generation and customization
-  templateStyleId: z.number().optional(), // ID of the template style to use
-  colorPrimary: z.string().optional(), // Primary brand color
-  colorSecondary: z.string().optional(), // Secondary brand color
-  colorAccent: z.string().optional(), // Accent color
-  colorBackground: z.string().optional(), // Background color
-  colorText: z.string().optional(), // Text color
-  fontHeading: z.string().optional(), // Font for headings
-  fontBody: z.string().optional(), // Font for body text
-  layout: z.string().optional(), // Layout style (centered, split, etc.)
 });
 
 export type TemplateData = z.infer<typeof templateDataSchema>;
 
-// Editor section props interface
+// UI component props types
 export interface EditorSectionProps {
   data: TemplateData;
   onUpdate: (updatedData: Partial<TemplateData>) => void;
 }
 
-// Preview mode type
 export type PreviewMode = "desktop" | "tablet" | "mobile";
