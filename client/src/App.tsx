@@ -6,8 +6,9 @@ import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/HomePage";
 import AuthPage from "@/pages/auth-page";
 import { Logo } from "@/components/Logo";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "./hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
   return (
@@ -15,7 +16,7 @@ function Router() {
       <AppHeader />
       <main>
         <Switch>
-          <Route path="/" component={HomePage} />
+          <ProtectedRoute path="/" component={HomePage} />
           <Route path="/auth" component={AuthPage} />
           <Route component={NotFound} />
         </Switch>
