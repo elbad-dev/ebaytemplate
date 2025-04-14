@@ -86,11 +86,11 @@ const CompanyEditor: React.FC<CompanyEditorProps> = ({ data, onUpdate, onEditSvg
 
   return (
     <div className="p-4">
-      <h3 className="text-sm font-semibold mb-3 text-gray-700">Company Information</h3>
+      <h3 className="text-sm font-semibold mb-3 text-gray-700">About Us Information</h3>
       
       {data.companyInfo.length === 0 ? (
         <div className="p-6 text-center">
-          <p className="text-gray-500">No company information sections found in template.</p>
+          <p className="text-gray-500">No "About Us" information sections found in template.</p>
         </div>
       ) : (
         data.companyInfo.map((section, index) => (

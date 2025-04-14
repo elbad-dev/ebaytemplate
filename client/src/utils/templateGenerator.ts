@@ -552,7 +552,7 @@ function createBasicTemplate(data: TemplateData): string {
         </div>
         
         <div class="company-section">
-          <h2 class="section-title">About Our Company</h2>
+          <h2 class="section-title">About Us</h2>
           ${companyInfo}
         </div>
       </div>
