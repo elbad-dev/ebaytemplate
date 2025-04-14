@@ -28,9 +28,9 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
       <h3 className="text-sm font-semibold mb-3 text-gray-700">Company name</h3>
       
       <div className="space-y-4">
-        {/* eBay Logo Editor */}
+        {/* Logo Editor */}
         <div>
-          <label className="block text-xs text-gray-600 mb-1">eBay Logo</label>
+          <label className="block text-xs text-gray-600 mb-1">Logo</label>
           <div className="flex items-center space-x-2 mb-2">
             {data.logo ? (
               <div className="mb-2 flex items-center">
@@ -38,7 +38,7 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
                   {data.logo.includes('<svg') ? (
                     <div dangerouslySetInnerHTML={{ __html: data.logo }} />
                   ) : (
-                    <img src={data.logo} alt="eBay Logo" className="h-10" />
+                    <img src={data.logo} alt="Logo" className="h-10" />
                   )}
                 </div>
                 <Button
@@ -65,7 +65,7 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
               className="text-xs"
             />
           </div>
-          <p className="mt-1 text-xs text-gray-500">Upload a new eBay logo to replace the current one</p>
+          <p className="mt-1 text-xs text-gray-500">Upload a new logo to replace the current one</p>
         </div>
 
         <div>

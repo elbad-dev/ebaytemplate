@@ -40,7 +40,7 @@ export function generateTemplate(templateData: TemplateData): string {
       $('h1').after(`<h2 class="subtitle">${templateData.subtitle}</h2>`);
     }
     
-    // Update the eBay logo if it exists
+    // Update the logo if it exists
     if (templateData.logo) {
       const logoStr = templateData.logo; // Local constant to avoid undefined errors
       
@@ -62,7 +62,7 @@ export function generateTemplate(templateData: TemplateData): string {
           $(el).replaceWith(logoStr);
         } else {
           // If it's an image URL, replace the SVG with an img tag
-          $(el).replaceWith(`<img src="${logoStr}" alt="eBay Logo" />`);
+          $(el).replaceWith(`<img src="${logoStr}" alt="Logo" />`);
         }
       });
     }
@@ -82,7 +82,7 @@ export function generateTemplate(templateData: TemplateData): string {
       const thumbnailImages = $('.thumbnail img');
       
       // Create image ID to thumbnail mapping
-      // In eBay templates, there's often a pattern like main1, main2, main3 for IDs
+      // In templates, there's often a pattern like main1, main2, main3 for IDs
       // and thumbnails with labels that reference those IDs
       const mainImageMap = new Map();
       
@@ -369,7 +369,7 @@ function createBasicTemplate(data: TemplateData): string {
   const logoHtml = data.logo 
     ? data.logo.includes('<svg') 
       ? `<div class="logo">${data.logo}</div>`
-      : `<div class="logo"><img src="${data.logo}" alt="eBay Logo" /></div>`
+      : `<div class="logo"><img src="${data.logo}" alt="Logo" /></div>`
     : '';
 
   return `
