@@ -49,7 +49,8 @@ export function parseTemplate(htmlContent: string): TemplateData {
     });
     
     // Now add unique images giving preference to main images
-    for (const [id, url] of mainImages.entries()) {
+    // Convert Map.entries() to Array to avoid iteration issues with older TypeScript targets
+    Array.from(mainImages.entries()).forEach(([id, url]) => {
       if (!imageMap.has(url)) {
         images.push({
           id: nanoid(),
@@ -57,7 +58,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
         });
         imageMap.set(url, true);
       }
-    }
+    });
     
     // If no product images found, try finding any img tags with eBay URLs
     if (images.length === 0) {
