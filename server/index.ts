@@ -1,10 +1,22 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from 'path';
+import fs from 'fs';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Serve our test auth page
+app.get('/auth-test', (req, res) => {
+  const authTestPath = path.join(process.cwd(), 'auth-test.html');
+  if (fs.existsSync(authTestPath)) {
+    res.sendFile(authTestPath);
+  } else {
+    res.status(404).send('Auth test file not found');
+  }
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
