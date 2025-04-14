@@ -40,6 +40,33 @@ export function generateTemplate(templateData: TemplateData): string {
       $('h1').after(`<h2 class="subtitle">${templateData.subtitle}</h2>`);
     }
     
+    // Update the eBay logo if it exists
+    if (templateData.logo) {
+      const logoStr = templateData.logo; // Local constant to avoid undefined errors
+      
+      // Update image-based logos
+      $('img[src*="ebay-logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img').each((_, el) => {
+        // If the logo is a URL to an image
+        if (!logoStr.includes('<svg')) {
+          $(el).attr('src', logoStr);
+        } else {
+          // If it's an SVG, replace the img tag with the SVG
+          $(el).replaceWith(logoStr);
+        }
+      });
+      
+      // Update SVG-based logos
+      $('.logo svg, .header-logo svg, .brand-logo svg').each((_, el) => {
+        // If the logo is an SVG, replace it
+        if (logoStr.includes('<svg')) {
+          $(el).replaceWith(logoStr);
+        } else {
+          // If it's an image URL, replace the SVG with an img tag
+          $(el).replaceWith(`<img src="${logoStr}" alt="eBay Logo" />`);
+        }
+      });
+    }
+    
     // Update price
     if (templateData.price) {
       $('.price').each((_, el) => {
@@ -338,6 +365,13 @@ function createBasicTemplate(data: TemplateData): string {
     `
     : '';
   
+  // Create logo HTML if a logo exists
+  const logoHtml = data.logo 
+    ? data.logo.includes('<svg') 
+      ? `<div class="logo">${data.logo}</div>`
+      : `<div class="logo"><img src="${data.logo}" alt="eBay Logo" /></div>`
+    : '';
+
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -530,6 +564,7 @@ function createBasicTemplate(data: TemplateData): string {
     <body>
       <div class="container">
         <div class="product-header">
+          ${logoHtml ? `<div class="header-logo mb-4">${logoHtml}</div>` : ''}
           <h1 class="product-title">${data.title}</h1>
           ${data.subtitle ? `<p class="subtitle">${data.subtitle}</p>` : ''}
           ${data.price ? `<div class="price">${currencySymbol}${data.price}</div>` : ''}
