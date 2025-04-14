@@ -77,9 +77,8 @@ export function generateStyledTemplate(
         </div>
         
         <style>
-          /* CSS-only gallery styles */
+          /* Simple gallery styles compatible with eBay listing restrictions */
           .product-gallery {
-            position: relative;
             margin-bottom: 30px;
           }
           
@@ -87,21 +86,20 @@ export function generateStyledTemplate(
             position: relative;
             border: 1px solid #eee;
             border-radius: 4px;
-            aspect-ratio: 4/3;
-            overflow: hidden;
+            width: 100%;
             margin-bottom: 10px;
+            text-align: center;
           }
           
           .gallery-main {
             position: relative;
             width: 100%;
-            height: 100%;
+            height: 400px;
           }
           
           .gallery-select {
             position: absolute;
             opacity: 0;
-            pointer-events: none;
           }
           
           .gallery-main-image {
@@ -111,60 +109,59 @@ export function generateStyledTemplate(
             width: 100%;
             height: 100%;
             opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            text-align: center;
+            display: none;
           }
           
           .gallery-main-image img {
             max-width: 100%;
             max-height: 100%;
-            object-fit: contain;
+            margin: 0 auto;
           }
           
-          /* Show selected image */
+          /* Show selected image - basic display property for eBay compatibility */
           .gallery-select:checked + .gallery-main-image {
             opacity: 1;
-            z-index: 2;
+            display: block;
           }
           
           /* Thumbnails */
           .gallery-thumbnails {
             width: 100%;
             overflow-x: auto;
-            overflow-y: hidden;
-            scrollbar-width: thin;
-            scrollbar-color: #ddd #f7f7f7;
           }
           
           .thumbnail-scroll {
-            display: flex;
-            gap: 10px;
-            padding-bottom: 5px;
+            display: table;
+            width: 100%;
           }
           
           .thumbnail-item {
-            flex: 0 0 80px;
+            display: inline-block;
+            width: 80px;
             height: 80px;
             border: 2px solid #ddd;
             overflow: hidden;
             cursor: pointer;
-            display: block;
+            margin-right: 8px;
+            margin-bottom: 8px;
           }
           
           .thumbnail-item img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
           }
           
           .thumbnail-item:hover {
-            border-color: var(--color-primary);
+            border-color: #3498db;
           }
           
-          /* Selected thumbnail highlight */
+          /* Selected thumbnail - basic selector for eBay compatibility */
+          .gallery-select:checked ~ .gallery-thumbnails .thumbnail-item[data-for] {
+            border-color: #ddd;
+          }
+          
+          /* Individual selectors for thumbnails - eBay compatible */
           #gallery-select-0:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-0"],
           #gallery-select-1:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-1"],
           #gallery-select-2:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-2"],
@@ -175,26 +172,7 @@ export function generateStyledTemplate(
           #gallery-select-7:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-7"],
           #gallery-select-8:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-8"],
           #gallery-select-9:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-9"] {
-            border-color: var(--color-primary);
-            position: relative;
-          }
-          
-          /* Make sure thumbnails spread across the row but don't shrink */
-          .thumbnail-item {
-            min-width: 80px;
-          }
-          
-          /* Responsive */
-          @media (max-width: 768px) {
-            .gallery-main-wrapper {
-              aspect-ratio: 1/1;
-            }
-            
-            .thumbnail-item {
-              flex: 0 0 60px;
-              height: 60px;
-              min-width: 60px;
-            }
+            border-color: #3498db;
           }
         </style>
       </div>
@@ -238,11 +216,48 @@ export function generateStyledTemplate(
   }
   html = html.replace(/\{\{COMPANY_SECTIONS\}\}/g, companySectionsHtml);
   
-  // Add any JavaScript interactions if the style has them
+  // Add minimal JavaScript for gallery - compatible with eBay restrictions
+  const simpleGalleryJs = `
+    // Basic thumbnail-to-main image selector for old browsers or when CSS selectors aren't fully supported
+    document.addEventListener("DOMContentLoaded", function() {
+      var thumbnails = document.querySelectorAll(".thumbnail-item");
+      var mainImages = document.querySelectorAll(".gallery-main-image");
+      
+      for(var i = 0; i < thumbnails.length; i++) {
+        thumbnails[i].onclick = function() {
+          // Show this image
+          var targetId = this.getAttribute("data-for");
+          var targetImage = document.getElementById(targetId);
+          
+          // Hide all images
+          for(var j = 0; j < mainImages.length; j++) {
+            mainImages[j].style.display = "none";
+            mainImages[j].style.opacity = "0";
+          }
+          
+          // Show target image
+          if(targetImage) {
+            targetImage.style.display = "block";
+            targetImage.style.opacity = "1";
+          }
+          
+          // Remove active class from all thumbnails
+          for(var k = 0; k < thumbnails.length; k++) {
+            thumbnails[k].style.borderColor = "#ddd";
+          }
+          
+          // Add active class to clicked thumbnail
+          this.style.borderColor = "#3498db";
+        };
+      }
+    });
+  `;
+  
+  // Combine with any additional JS from the style
   if (templateStyle.jsInteractions) {
-    html = html.replace(/\{\{JS_INTERACTIONS\}\}/g, templateStyle.jsInteractions);
+    html = html.replace(/\{\{JS_INTERACTIONS\}\}/g, simpleGalleryJs + templateStyle.jsInteractions);
   } else {
-    html = html.replace(/\{\{JS_INTERACTIONS\}\}/g, '');
+    html = html.replace(/\{\{JS_INTERACTIONS\}\}/g, simpleGalleryJs);
   }
   
   return html;
@@ -644,18 +659,38 @@ export function generateDefaultTemplate(templateData: TemplateData): string {
     </div>
     
     <script>
-      // Simple gallery interactivity
+      // Simple gallery interactivity - eBay compatible
       document.addEventListener('DOMContentLoaded', function() {
-        const thumbnails = document.querySelectorAll('.thumbnail-container');
-        const mainImage = document.querySelector('.gallery-image');
+        // Basic thumbnail-to-main image selector for old browsers or when CSS selectors aren't fully supported
+        var thumbnails = document.querySelectorAll(".thumbnail-item");
+        var mainImages = document.querySelectorAll(".gallery-main-image");
         
-        if (thumbnails.length > 0 && mainImage) {
-          thumbnails.forEach(thumbnail => {
-            thumbnail.addEventListener('click', function() {
-              const imgSrc = this.querySelector('img').src;
-              mainImage.src = imgSrc;
-            });
-          });
+        for(var i = 0; i < thumbnails.length; i++) {
+          thumbnails[i].onclick = function() {
+            // Show this image
+            var targetId = this.getAttribute("data-for");
+            var targetImage = document.getElementById(targetId);
+            
+            // Hide all images
+            for(var j = 0; j < mainImages.length; j++) {
+              mainImages[j].style.display = "none";
+              mainImages[j].style.opacity = "0";
+            }
+            
+            // Show target image
+            if(targetImage) {
+              targetImage.style.display = "block";
+              targetImage.style.opacity = "1";
+            }
+            
+            // Remove active class from all thumbnails
+            for(var k = 0; k < thumbnails.length; k++) {
+              thumbnails[k].style.borderColor = "#ddd";
+            }
+            
+            // Add active class to clicked thumbnail
+            this.style.borderColor = "#3498db";
+          };
         }
       });
     </script>
