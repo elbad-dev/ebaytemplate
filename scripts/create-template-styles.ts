@@ -11,7 +11,7 @@ const styles = [
   {
     name: "Modern Classic Gallery",
     description: "Clean and modern horizontal gallery with simple thumbnail navigation",
-    thumbnail: null,
+    thumbnail: "/styles/modern-product.jpg",
     type: "product",
     style: "modern",
     colorScheme: "light",
@@ -341,7 +341,7 @@ const styles = [
   {
     name: "Minimal Grid Gallery",
     description: "Modern minimalist template with a grid gallery layout",
-    thumbnail: null,
+    thumbnail: "/styles/minimal-grid.jpg",
     type: "product",
     style: "minimalist",
     colorScheme: "light",
@@ -3925,9 +3925,19 @@ async function createTemplateStyles() {
     
     console.log('Deleted existing template styles');
     
-    // Now insert all our new styles
+    // Set a default thumbnail for all styles
+    const defaultThumbnail = "/styles/modern-product.jpg";
+    
+    // Now insert all our new styles with a thumbnail
     for (const style of styles) {
-      await db.insert(templateStyles).values(style);
+      // Ensure all thumbnails have a value and add createdAt
+      const styleWithThumbnail = {
+        ...style,
+        thumbnail: style.thumbnail || defaultThumbnail,
+        createdAt: new Date()
+      };
+      
+      await db.insert(templateStyles).values(styleWithThumbnail);
     }
     
     console.log(`Successfully created ${styles.length} template styles`);
