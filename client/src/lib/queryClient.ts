@@ -1,9 +1,32 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Safely parse JSON or return the original text if not JSON
+async function safelyParseJSON(response: Response): Promise<any> {
+  const text = await response.text();
+  
+  try {
+    // Attempt to parse as JSON
+    return JSON.parse(text);
+  } catch (e) {
+    // If it's not valid JSON, log the error and return the text
+    console.error('Failed to parse response as JSON:', text);
+    throw new Error(`Invalid JSON response: ${text.substring(0, 50)}...`);
+  }
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    try {
+      // Try to parse error response as JSON first
+      const errorData = await safelyParseJSON(res);
+      throw new Error(`${res.status}: ${errorData.message || JSON.stringify(errorData)}`);
+    } catch (e) {
+      // If parsing as JSON fails, use the error message
+      if (e instanceof Error) {
+        throw e;
+      }
+      throw new Error(`${res.status}: ${res.statusText}`);
+    }
   }
 }
 
@@ -70,7 +93,13 @@ export const getQueryFn: <T>(options: {
     }
 
     await throwIfResNotOk(res);
-    return await res.json();
+    
+    try {
+      return await safelyParseJSON(res.clone());
+    } catch (error) {
+      console.error('Failed to parse response:', error);
+      throw new Error('Failed to parse response');
+    }
   };
 
 export const queryClient = new QueryClient({
