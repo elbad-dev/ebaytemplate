@@ -4,6 +4,7 @@ import * as cheerio from 'cheerio';
 
 /**
  * Parse an HTML template to extract editable elements
+ * Enhanced with better detection for eBay templates and other product listings
  */
 export function parseTemplate(htmlContent: string): TemplateData {
   try {

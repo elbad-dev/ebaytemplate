@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { parseTemplate } from '../utils/templateParser';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import TemplateSectionSelector from './TemplateSectionSelector';
 
 interface TemplateUploaderProps {
   onTemplateImport: (data: TemplateData) => void;
@@ -15,6 +16,9 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
   const [uploadState, setUploadState] = useState<UploadState>('idle');
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showManualSelector, setShowManualSelector] = useState(false);
+  const [currentHtmlContent, setCurrentHtmlContent] = useState('');
+  const [currentTemplateData, setCurrentTemplateData] = useState<TemplateData | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,21 +51,68 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
 
       const data = await response.json();
       const htmlContent = data.content;
+      setCurrentHtmlContent(htmlContent);
 
       // Parse the template HTML
       const templateData = parseTemplate(htmlContent);
       
       // Add the raw HTML to the template data
       templateData.rawHtml = htmlContent;
-
-      // Call the onTemplateImport callback
-      onTemplateImport(templateData);
-
-      setUploadState('success');
+      
+      // Store the template data for possible manual editing
+      setCurrentTemplateData(templateData);
+      
+      // Check if any essential sections are missing or incomplete
+      const needsManualSelection = checkIfNeedsManualSelection(templateData);
+      
+      if (needsManualSelection) {
+        // Show manual section selector
+        toast({
+          title: "Template sections might be incomplete",
+          description: "Some template sections couldn't be automatically detected. Please select them manually.",
+        });
+        setShowManualSelector(true);
+      } else {
+        // Template is good to go, proceed
+        // Call the onTemplateImport callback
+        onTemplateImport(templateData);
+        setUploadState('success');
+      }
     } catch (error) {
       console.error('Upload error:', error);
       setUploadError(error instanceof Error ? error.message : 'Failed to upload template');
       setUploadState('error');
+    }
+  };
+  
+  // Helper function to check if we need manual section selection
+  const checkIfNeedsManualSelection = (templateData: TemplateData): boolean => {
+    const missingTitle = !templateData.title || templateData.title === 'Product Title';
+    const missingDescription = !templateData.description;
+    const missingImages = !templateData.images || templateData.images.length === 0;
+    const missingSpecs = !templateData.specs || templateData.specs.length === 0;
+    
+    // If any major component is missing
+    return missingTitle || missingDescription || missingImages || missingSpecs;
+  };
+  
+  // Handle template data updates from manual selector
+  const handleManualSectionUpdate = (updates: Partial<TemplateData>) => {
+    if (!currentTemplateData) return;
+    
+    setCurrentTemplateData(prev => {
+      if (!prev) return null;
+      return { ...prev, ...updates };
+    });
+  };
+  
+  // Close manual selector and proceed with the template
+  const handleManualSelectorClose = () => {
+    setShowManualSelector(false);
+    
+    if (currentTemplateData) {
+      onTemplateImport(currentTemplateData);
+      setUploadState('success');
     }
   };
 
@@ -80,17 +131,33 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
     try {
       setUploadState('uploading');
       setUploadError('');
+      setCurrentHtmlContent(htmlContent);
 
       // Parse the template HTML
       const templateData = parseTemplate(htmlContent);
       
       // Add the raw HTML to the template data
       templateData.rawHtml = htmlContent;
-
-      // Call the onTemplateImport callback
-      onTemplateImport(templateData);
-
-      setUploadState('success');
+      
+      // Store the template data for possible manual editing
+      setCurrentTemplateData(templateData);
+      
+      // Check if any essential sections are missing or incomplete
+      const needsManualSelection = checkIfNeedsManualSelection(templateData);
+      
+      if (needsManualSelection) {
+        // Show manual section selector
+        toast({
+          title: "Template sections might be incomplete",
+          description: "Some template sections couldn't be automatically detected. Please select them manually.",
+        });
+        setShowManualSelector(true);
+      } else {
+        // Template is good to go, proceed
+        // Call the onTemplateImport callback
+        onTemplateImport(templateData);
+        setUploadState('success');
+      }
     } catch (error) {
       console.error('Paste error:', error);
       setUploadError(error instanceof Error ? error.message : 'Failed to parse template');
@@ -103,56 +170,68 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
   };
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div
-          className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center"
-          onPaste={handlePaste}
-          tabIndex={0}
-        >
-          <input 
-            type="file" 
-            accept=".html" 
-            onChange={handleFileChange} 
-            ref={fileInputRef}
-            className="hidden" 
-          />
-          
-          <p className="text-sm text-gray-600 mb-4">
-            Upload an HTML template or paste HTML content
-          </p>
-          
-          <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <Button 
-              onClick={triggerFileInput}
-              disabled={uploadState === 'uploading'}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition"
-            >
-              {uploadState === 'uploading' ? 'Uploading...' : 'Upload Template'}
-            </Button>
+    <>
+      <Card>
+        <CardContent className="p-4">
+          <div
+            className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center"
+            onPaste={handlePaste}
+            tabIndex={0}
+          >
+            <input 
+              type="file" 
+              accept=".html" 
+              onChange={handleFileChange} 
+              ref={fileInputRef}
+              className="hidden" 
+            />
             
-            <Button 
-              variant="outline"
-              disabled={uploadState === 'uploading'}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-100 transition"
-            >
-              Paste HTML (Ctrl+V)
-            </Button>
+            <p className="text-sm text-gray-600 mb-4">
+              Upload an HTML template or paste HTML content
+            </p>
+            
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
+              <Button 
+                onClick={triggerFileInput}
+                disabled={uploadState === 'uploading'}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition"
+              >
+                {uploadState === 'uploading' ? 'Uploading...' : 'Upload Template'}
+              </Button>
+              
+              <Button 
+                variant="outline"
+                disabled={uploadState === 'uploading'}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-100 transition"
+              >
+                Paste HTML (Ctrl+V)
+              </Button>
+            </div>
+            
+            {uploadState === 'error' && (
+              <p className="mt-3 text-sm text-red-600">
+                {uploadError}
+              </p>
+            )}
+            
+            {uploadState === 'success' && (
+              <p className="mt-3 text-sm text-green-600">
+                Template uploaded successfully!
+              </p>
+            )}
           </div>
-          
-          {uploadState === 'error' && (
-            <p className="mt-3 text-sm text-red-600">
-              {uploadError}
-            </p>
-          )}
-          
-          {uploadState === 'success' && (
-            <p className="mt-3 text-sm text-green-600">
-              Template uploaded successfully!
-            </p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      
+      {/* Manual Section Selector Dialog */}
+      {showManualSelector && currentTemplateData && (
+        <TemplateSectionSelector
+          htmlContent={currentHtmlContent}
+          templateData={currentTemplateData}
+          onUpdate={handleManualSectionUpdate}
+          onClose={handleManualSelectorClose}
+        />
+      )}
+    </>
   );
 }
