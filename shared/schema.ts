@@ -16,8 +16,8 @@ export const users = pgTable("users", {
   password: varchar("password", { length: 255 }).notNull(),
   role: userRoleEnum("role").default("user").notNull(),
   isVerified: boolean("is_verified").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Templates table
@@ -43,7 +43,7 @@ export const templateStyles = pgTable("template_styles", {
   htmlStructure: text("html_structure").notNull(),
   cssStyles: text("css_styles"),
   jsInteractions: text("js_interactions"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Images table
@@ -54,7 +54,7 @@ export const images = pgTable("images", {
   fileSize: integer("file_size").notNull(),
   url: varchar("url", { length: 255 }).notNull(),
   user_id: integer("user_id").references(() => users.id, { onDelete: "set null" }),
-  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+  uploaded_at: timestamp("uploaded_at").defaultNow().notNull(),
 });
 
 // SVG icons table
@@ -63,16 +63,16 @@ export const svgIcons = pgTable("svg_icons", {
   name: varchar("name", { length: 255 }).notNull(),
   category: varchar("category", { length: 100 }).default("general").notNull(),
   svg: text("svg").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Verification tokens table
 export const verificationTokens = pgTable("verification_tokens", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  user_id: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   token: varchar("token", { length: 255 }).notNull().unique(),
   expires: timestamp("expires").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Schemas for insertion
@@ -88,7 +88,7 @@ export const insertTemplateSchema = createInsertSchema(templates).pick({
   name: true,
   description: true,
   html: true,
-  userId: true,
+  user_id: true,
   style_id: true,
 });
 
@@ -109,8 +109,8 @@ export const insertImageSchema = createInsertSchema(images).pick({
   fileType: true,
   fileSize: true,
   url: true,
-  userId: true,
-  uploadedAt: true,
+  user_id: true,
+  uploaded_at: true,
 });
 
 export const insertSvgIconSchema = createInsertSchema(svgIcons).pick({
@@ -120,7 +120,7 @@ export const insertSvgIconSchema = createInsertSchema(svgIcons).pick({
 });
 
 export const insertVerificationTokenSchema = createInsertSchema(verificationTokens).pick({
-  userId: true,
+  user_id: true,
   token: true,
   expires: true,
 });
