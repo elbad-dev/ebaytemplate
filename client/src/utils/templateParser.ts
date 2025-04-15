@@ -14,12 +14,25 @@ export function parseTemplate(htmlContent: string): TemplateData {
     let title = '';
     
     // Method 1: Try to find product title from h2 in product-info section
-    const productInfoTitle = $('.product-info h2').text().trim();
-    if (productInfoTitle && productInfoTitle.includes('Professioneller Werkzeugsatz Premium')) {
-      title = productInfoTitle;
-    } 
-    // Method 2: Look for title near the price section
-    else {
+    // Look for titles in various product info containers (more generic approach)
+    const productInfoSelectors = [
+      '.product-info h2', 
+      '.product-info .card h2',
+      '.product-info-section h2',
+      '.product-details h2',
+      '.product-header h1, .product-header h2'
+    ];
+    
+    for (const selector of productInfoSelectors) {
+      const titleElement = $(selector);
+      if (titleElement.length) {
+        title = titleElement.text().trim();
+        break;
+      }
+    }
+    
+    // Method 2: If no title found, look for title near the price section
+    if (!title) {
       // Find the text that contains "Professioneller Werkzeugsatz Premium" above price
       const priceEl = $('.price').first();
       if (priceEl.length) {

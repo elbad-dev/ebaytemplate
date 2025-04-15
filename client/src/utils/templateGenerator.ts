@@ -16,10 +16,17 @@ export function generateTemplate(templateData: TemplateData): string {
     $('title').text(templateData.title);
     
     // Update main heading(s)
-    const headings = ['h1', '.main-title', '.product-title', '.brand-text h1'];
+    const headings = ['h1', '.main-title', '.product-title', '.brand-text h1', '.product-info h2', '.product-info .card h2'];
     for (const selector of headings) {
       $(selector).each((i: number, el: any) => {
+        // Save the original styling but update the text content
+        const originalStyles = $(el).attr('style') || '';
         $(el).text(templateData.title);
+        
+        // Make sure we preserve any existing styling
+        if (originalStyles) {
+          $(el).attr('style', originalStyles);
+        }
       });
     }
     

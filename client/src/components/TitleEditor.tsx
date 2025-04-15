@@ -17,11 +17,17 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
   const [detectionMethod, setDetectionMethod] = useState<string>('');
   
   useEffect(() => {
-    // Check if the title contains the specified text
-    if (data.title && data.title.includes('Professioneller Werkzeugsatz Premium')) {
-      setDetectionMethod('Company Name Detection');
+    // Check if we found a title in the template
+    if (data.title) {
+      if (data.rawHtml?.includes('product-info') && data.rawHtml?.includes('<h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">')) {
+        setDetectionMethod('Product Info Section');
+      } else if (data.title.includes('Professioneller Werkzeugsatz Premium')) {
+        setDetectionMethod('Product Title Detection');
+      } else {
+        setDetectionMethod('Title Detection');
+      }
     }
-  }, [data.title]);
+  }, [data.title, data.rawHtml]);
   
   return (
     <div className="p-4">
@@ -85,8 +91,9 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs">
-                      This company name was detected using our enhanced detection algorithm 
-                      for "Professioneller Werkzeugsatz Premium" sections.
+                      {detectionMethod === 'Product Info Section' 
+                        ? 'This title was detected in the product-info section of your template.' 
+                        : 'This title was detected using our enhanced detection algorithm.'}
                     </p>
                   </TooltipContent>
                 </Tooltip>
