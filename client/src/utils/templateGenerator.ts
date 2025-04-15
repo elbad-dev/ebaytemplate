@@ -57,10 +57,9 @@ export function generateTemplate(templateData: TemplateData): string {
     
     // Update subtitle in brand section if it exists
     if (templateData.subtitle) {
-      const subtitle = templateData.subtitle || '';
       // Check for brand-subtitle specifically
       $('.brand-subtitle p').each((i: number, el: any) => {
-        $(el).text(subtitle);
+        $(el).text(templateData.subtitle);
       });
       
       // Also check for subtitle in the brand-text section
@@ -68,7 +67,7 @@ export function generateTemplate(templateData: TemplateData): string {
         // Only update if it's not within a container that has already been updated
         const parentHasH1 = $(el).parent().find('h1').length > 0;
         if (parentHasH1) {
-          $(el).text(subtitle);
+          $(el).text(templateData.subtitle);
         }
       });
     }
@@ -114,28 +113,17 @@ export function generateTemplate(templateData: TemplateData): string {
       const hasEbayGallery = $('input[type="radio"][name="gallery"]').length > 0;
       
       if (hasEbayGallery) {
-        console.log("Detected eBay gallery structure - updating with new images");
-        
         // Count existing radio buttons to determine how many images are already in place
         const existingRadios = $('input[type="radio"][name="gallery"]').length;
         const totalImages = templateData.images.length;
         
-        console.log(`Found ${existingRadios} existing images, need to update to ${totalImages} total images`);
-        
-        // Get container references for all components
+        // Get container references for all four components
         const galleryContainer = $('.gallery-container');
         const radioContainer = $('input[type="radio"][name="gallery"]').first().parent();
         const thumbnailContainer = $('.thumbnail-set.set1');
         
-        // Find the existing style element containing gallery CSS
-        // Looking for specifically the selectors that control image visibility
-        let styleElement = $('style:contains("#img1:checked ~ .gallery-container #main1")');
-        
-        // If not found, try a broader search
-        if (!styleElement.length) {
-          styleElement = $('style:contains("#img")');
-        }
-        
+        // Before updating, get references to existing CSS that manages the image visibility
+        const styleElement = $('style:contains("#img")');
         let cssContent = styleElement.html() || '';
         
         // 1. First update existing images
@@ -157,103 +145,73 @@ export function generateTemplate(templateData: TemplateData): string {
         
         // 2. Add new elements for additional images
         if (totalImages > existingRadios) {
-          console.log(`Adding new images ${existingRadios + 1} to ${totalImages}`);
-          
-          // a. Add new radio buttons first (following the example structure)
+          // a. Add new radio buttons first
           for (let i = existingRadios; i < totalImages; i++) {
             const n = i + 1;
             radioContainer.append(`<input type="radio" name="gallery" id="img${n}">`);
           }
           
-          // IMPORTANT: The CSS is what controls image visibility and arrow navigation
-          // We need to completely rebuild this for the entire gallery to ensure consistency
-          
-          // Find or create a style element for our gallery CSS
-          let styleElementHtml = '';
-          if (styleElement.length) {
-            // Extract the existing CSS - we'll replace it entirely to avoid conflicts
-            styleElementHtml = styleElement.html() || '';
-            
-            // Remove the portions we need to rebuild (image visibility and arrow display)
-            styleElementHtml = styleElementHtml
-              .replace(/\s*#img\d+:checked[\s\S]*?opacity:\s*1;[\s\S]*?}\s*/g, '')
-              .replace(/\s*#img\d+:checked[\s\S]*?display:\s*block;[\s\S]*?}\s*/g, '');
-          }
-          
-          // Now build CSS for ALL images (not just new ones)
+          // b. Add CSS selectors for new images (up to 20 images allowed)
+          // This is the important part - making sure the correct CSS is in place for selectors
           let newCSS = '';
-          
-          // First add CSS for showing the main images when radio buttons are checked
-          for (let i = 0; i < totalImages; i++) {
+          for (let i = existingRadios; i < Math.min(totalImages, 20); i++) {
             const n = i + 1;
             newCSS += `
             #img${n}:checked ~ .gallery-container #main${n} {
-              opacity: 1;
-              z-index: 2;
-            }
-            `;
-          }
-          
-          // Then add CSS for showing next arrows
-          for (let i = 0; i < totalImages; i++) {
-            const n = i + 1;
-            const nextTarget = n === totalImages ? 1 : n + 1;
-            
-            newCSS += `
-            #img${n}:checked ~ .gallery-container .gallery-arrow.next[for="img${nextTarget}"] {
               display: block;
             }
             `;
           }
           
-          // Then add CSS for showing prev arrows
+          // Add directional selectors for new arrows
           for (let i = 0; i < totalImages; i++) {
             const n = i + 1;
-            const prevTarget = n === 1 ? totalImages : n - 1;
+            const prevN = n === 1 ? totalImages : n - 1;
+            const nextN = n === totalImages ? 1 : n + 1;
             
             newCSS += `
-            #img${n}:checked ~ .gallery-container .gallery-arrow.prev[for="img${prevTarget}"] {
+            #img${n}:checked ~ .gallery-container .gallery-arrow.prev[for="img${prevN}"],
+            #img${n}:checked ~ .gallery-container .gallery-arrow.next[for="img${nextN}"] {
               display: block;
             }
             `;
           }
           
-          // Update the style element with our new CSS
+          // Append the new CSS
           if (styleElement.length) {
-            // Append our new CSS rules to the filtered existing CSS
-            styleElement.html(styleElementHtml + newCSS);
+            styleElement.append(newCSS);
           } else {
-            // Create a new style element
+            // If no style element exists, create one
             $('head').append(`<style>${newCSS}</style>`);
           }
           
-          // Now add the HTML elements for the new images
+          // c. Add/Update prev arrow navigation for ALL images (not just new ones)
+          // First remove existing arrows to avoid duplicates
+          $('.gallery-arrow.prev').remove();
           
-          // c. Add ALL navigation arrows to ensure we have the complete set
-          console.log(`Adding navigation arrows for ${totalImages} images`);
-          
-          // First remove all existing arrows to prevent duplicates
-          galleryContainer.find('.gallery-arrow').remove();
-          
-          // Add ALL prev arrows - each arrow points to the previous image
+          // Add all arrows fresh to ensure consistency
           for (let i = 0; i < totalImages; i++) {
             const n = i + 1;
             const prevTarget = n === 1 ? totalImages : n - 1;
+            
             galleryContainer.append(`
               <label class="gallery-arrow prev" for="img${prevTarget}"></label>
             `);
           }
           
-          // Add ALL next arrows - each arrow points to the next image
+          // d. Add/Update next arrow navigation for ALL images
+          $('.gallery-arrow.next').remove();
+          
           for (let i = 0; i < totalImages; i++) {
             const n = i + 1;
             const nextTarget = n === totalImages ? 1 : n + 1;
+            
             galleryContainer.append(`
               <label class="gallery-arrow next" for="img${nextTarget}"></label>
             `);
           }
           
-          // d. Add new main images
+          // e. Add new main images
           for (let i = existingRadios; i < totalImages; i++) {
             const n = i + 1;
             galleryContainer.append(`
@@ -261,7 +219,7 @@ export function generateTemplate(templateData: TemplateData): string {
             `);
           }
           
-          // e. Add new thumbnails
+          // f. Add new thumbnails
           for (let i = existingRadios; i < totalImages; i++) {
             const n = i + 1;
             thumbnailContainer.append(`
@@ -271,11 +229,9 @@ export function generateTemplate(templateData: TemplateData): string {
             `);
           }
           
-          // Make sure first radio button is checked by default if it wasn't already
-          if (!$('#img1').is(':checked')) {
-            $('input[type="radio"][name="gallery"]').prop('checked', false);
-            $('#img1').prop('checked', true);
-          }
+          // Make sure first radio button is checked by default
+          $('input[type="radio"][name="gallery"]').prop('checked', false);
+          $('#img1').prop('checked', true);
         }
       } else {
         // Handle other gallery types
@@ -522,14 +478,12 @@ function createBasicTemplate(data: TemplateData): string {
         <!-- Main Image Container -->
         <div class="gallery-container">
           <!-- Navigation Arrows -->
-          <!-- Prev Arrows -->
           ${data.images.map((img, index) => {
             const currentIndex = index + 1;
             const prevIndex = currentIndex === 1 ? data.images.length : currentIndex - 1;
             return `<label class="gallery-arrow prev" for="img${prevIndex}"></label>`;
           }).join('')}
           
-          <!-- Next Arrows -->
           ${data.images.map((img, index) => {
             const currentIndex = index + 1;
             const nextIndex = currentIndex === data.images.length ? 1 : currentIndex + 1;

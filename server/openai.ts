@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
-// Initialize OpenAI client with direct API key
-const openai = new OpenAI({ apiKey: "proj_tIpk4xFGpJivZ8MqMTjk4S7b" });
+// Initialize OpenAI client with API key from environment variables
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Function to analyze text and suggest template data
 export async function analyzeTemplateText(
@@ -57,21 +57,20 @@ export async function analyzeTemplateText(
 
     // Add logo info if available
     if (logoUrl) {
-      // For images, we need to use a special format that OpenAI expects
       messages.push({
         role: "user",
         content: [
           {
             type: "text",
-            text: "Logo image (please analyze this for color and style suggestions):"
+            text: "Logo image (please analyze this for color and style suggestions):",
           },
           {
             type: "image_url",
             image_url: {
-              url: logoUrl
-            }
-          }
-        ] as any, // Use type assertion to avoid TypeScript errors
+              url: logoUrl,
+            },
+          },
+        ],
       });
     }
 
@@ -88,7 +87,7 @@ export async function analyzeTemplateText(
     
     // Add unique IDs to company info sections if they don't have them
     if (suggestions.companyInfo && Array.isArray(suggestions.companyInfo)) {
-      suggestions.companyInfo = suggestions.companyInfo.map((section: any, index: number) => {
+      suggestions.companyInfo = suggestions.companyInfo.map((section, index) => {
         if (!section.id) {
           return {
             ...section,
