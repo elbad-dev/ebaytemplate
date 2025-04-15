@@ -197,10 +197,10 @@ export default function TemplateLibrary({
               </CardHeader>
               
               <CardContent className="pb-2 flex-grow text-sm text-muted-foreground">
-                {template.styleId && (
+                {template.style && (
                   <div className="flex items-center gap-1 text-xs mt-1">
                     <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-sm">
-                      Template Style #{template.styleId}
+                      Style: {template.style}
                     </span>
                   </div>
                 )}
