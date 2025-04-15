@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom styles will be defined in the @layer components section below */
+
 @keyframes float {
   0% {
     transform: translateY(0) translateX(0);
@@ -100,14 +102,14 @@
   }
   
   .device-button {
-    @apply w-8 h-8 flex items-center justify-center;
+    @apply w-9 h-9 flex items-center justify-center rounded-md transition-all;
   }
   
   .device-button-active {
-    @apply text-primary bg-blue-50 rounded;
+    @apply text-white bg-primary shadow-sm;
   }
   
   .device-button-inactive {
-    @apply text-gray-400;
+    @apply text-gray-500 hover:bg-gray-100 hover:text-gray-700;
   }
 }
