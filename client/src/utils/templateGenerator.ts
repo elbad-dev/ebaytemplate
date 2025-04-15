@@ -146,17 +146,34 @@ export function generateTemplate(templateData: TemplateData): string {
         
         // 2. Add new elements for additional images
         if (totalImages > existingRadios) {
+          console.log(`Adding new images ${existingRadios + 1} to ${totalImages}`);
+          
           // a. Add new radio buttons first
           for (let i = existingRadios; i < totalImages; i++) {
             const n = i + 1;
             radioContainer.append(`<input type="radio" name="gallery" id="img${n}">`);
           }
           
-          // b. Add CSS selectors for new images
+          // IMPORTANT: The CSS is what controls image visibility and arrow navigation
+          // We need to completely rebuild this for the entire gallery to ensure consistency
+          
+          // Find or create a style element for our gallery CSS
+          let styleElementHtml = '';
+          if (styleElement.length) {
+            // Extract the existing CSS - we'll replace it entirely to avoid conflicts
+            styleElementHtml = styleElement.html() || '';
+            
+            // Remove the portions we need to rebuild (image visibility and arrow display)
+            styleElementHtml = styleElementHtml
+              .replace(/\s*#img\d+:checked[\s\S]*?opacity:\s*1;[\s\S]*?}\s*/g, '')
+              .replace(/\s*#img\d+:checked[\s\S]*?display:\s*block;[\s\S]*?}\s*/g, '');
+          }
+          
+          // Now build CSS for ALL images (not just new ones)
           let newCSS = '';
           
-          // First add CSS for showing the images
-          for (let i = existingRadios; i < totalImages; i++) {
+          // First add CSS for showing the main images when radio buttons are checked
+          for (let i = 0; i < totalImages; i++) {
             const n = i + 1;
             newCSS += `
             #img${n}:checked ~ .gallery-container #main${n} {
@@ -166,76 +183,60 @@ export function generateTemplate(templateData: TemplateData): string {
             `;
           }
           
-          // Then add CSS for showing arrows in both directions
-          // We need to add rules for each possible image index
+          // Then add CSS for showing next arrows
           for (let i = 0; i < totalImages; i++) {
             const n = i + 1;
-            
-            // For the "next" arrow
-            // If we're at the last image, the next button should point to img1
             const nextTarget = n === totalImages ? 1 : n + 1;
             
-            // For the "prev" arrow
-            // If we're at the first image, the prev button should point to the last image
-            const prevTarget = n === 1 ? totalImages : n - 1;
-            
-            // Add CSS to show the appropriate next arrow based on which radio button is checked
-            if (n < totalImages) {
-              newCSS += `
-              #img${n}:checked ~ .gallery-container .gallery-arrow.next[for="img${nextTarget}"] {
-                display: block;
-              }
-              `;
+            newCSS += `
+            #img${n}:checked ~ .gallery-container .gallery-arrow.next[for="img${nextTarget}"] {
+              display: block;
             }
-            
-            // Add CSS to show the appropriate prev arrow based on which radio button is checked
-            if (n > 1 || n === totalImages) {
-              newCSS += `
-              #img${n}:checked ~ .gallery-container .gallery-arrow.prev[for="img${prevTarget}"] {
-                display: block;
-              }
-              `;
-            }
+            `;
           }
           
-          // Append our new CSS to the existing style element or create a new one
+          // Then add CSS for showing prev arrows
+          for (let i = 0; i < totalImages; i++) {
+            const n = i + 1;
+            const prevTarget = n === 1 ? totalImages : n - 1;
+            
+            newCSS += `
+            #img${n}:checked ~ .gallery-container .gallery-arrow.prev[for="img${prevTarget}"] {
+              display: block;
+            }
+            `;
+          }
+          
+          // Update the style element with our new CSS
           if (styleElement.length) {
-            styleElement.append(newCSS);
+            // Append our new CSS rules to the filtered existing CSS
+            styleElement.html(styleElementHtml + newCSS);
           } else {
+            // Create a new style element
             $('head').append(`<style>${newCSS}</style>`);
           }
           
-          // c. Add new navigation arrows for the new images
+          // Now add the HTML elements for the new images
           
-          // c1. Add prev arrow for last to second-last
-          if (totalImages > 1) {
-            // For the last image, add prev arrow pointing to the second-last
-            galleryContainer.append(`
-              <label class="gallery-arrow prev" for="img${totalImages - 1}"></label>
-            `);
-          }
+          // c. Add ALL navigation arrows to ensure we have the complete set
+          console.log(`Adding navigation arrows for ${totalImages} images`);
           
-          // c2. Add prev arrows for new images except the first one
-          for (let i = existingRadios; i < totalImages - 1; i++) {
+          // First remove all existing arrows to prevent duplicates
+          galleryContainer.find('.gallery-arrow').remove();
+          
+          // Add ALL prev arrows - each arrow points to the previous image
+          for (let i = 0; i < totalImages; i++) {
             const n = i + 1;
-            const prevTarget = n - 1;
-            
+            const prevTarget = n === 1 ? totalImages : n - 1;
             galleryContainer.append(`
               <label class="gallery-arrow prev" for="img${prevTarget}"></label>
             `);
           }
           
-          // c3. Add next arrow from last image to first
-          // The arrow from last to first image
-          galleryContainer.append(`
-            <label class="gallery-arrow next" for="img1"></label>
-          `);
-          
-          // c4. Add next arrows for new images except the last one
-          for (let i = existingRadios; i < totalImages - 1; i++) {
+          // Add ALL next arrows - each arrow points to the next image
+          for (let i = 0; i < totalImages; i++) {
             const n = i + 1;
-            const nextTarget = n + 1;
-            
+            const nextTarget = n === totalImages ? 1 : n + 1;
             galleryContainer.append(`
               <label class="gallery-arrow next" for="img${nextTarget}"></label>
             `);
@@ -510,12 +511,14 @@ function createBasicTemplate(data: TemplateData): string {
         <!-- Main Image Container -->
         <div class="gallery-container">
           <!-- Navigation Arrows -->
+          <!-- Prev Arrows -->
           ${data.images.map((img, index) => {
             const currentIndex = index + 1;
             const prevIndex = currentIndex === 1 ? data.images.length : currentIndex - 1;
             return `<label class="gallery-arrow prev" for="img${prevIndex}"></label>`;
           }).join('')}
           
+          <!-- Next Arrows -->
           ${data.images.map((img, index) => {
             const currentIndex = index + 1;
             const nextIndex = currentIndex === data.images.length ? 1 : currentIndex + 1;
