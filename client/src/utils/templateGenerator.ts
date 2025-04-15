@@ -114,9 +114,13 @@ export function generateTemplate(templateData: TemplateData): string {
       const hasEbayGallery = $('input[type="radio"][name="gallery"]').length > 0;
       
       if (hasEbayGallery) {
+        console.log("Detected eBay gallery structure - updating with new images");
+        
         // Count existing radio buttons to determine how many images are already in place
         const existingRadios = $('input[type="radio"][name="gallery"]').length;
         const totalImages = templateData.images.length;
+        
+        console.log(`Found ${existingRadios} existing images, need to update to ${totalImages} total images`);
         
         // Get container references for all components
         const galleryContainer = $('.gallery-container');
@@ -124,7 +128,14 @@ export function generateTemplate(templateData: TemplateData): string {
         const thumbnailContainer = $('.thumbnail-set.set1');
         
         // Find the existing style element containing gallery CSS
-        const styleElement = $('style:contains("#img")');
+        // Looking for specifically the selectors that control image visibility
+        let styleElement = $('style:contains("#img1:checked ~ .gallery-container #main1")');
+        
+        // If not found, try a broader search
+        if (!styleElement.length) {
+          styleElement = $('style:contains("#img")');
+        }
+        
         let cssContent = styleElement.html() || '';
         
         // 1. First update existing images
@@ -148,7 +159,7 @@ export function generateTemplate(templateData: TemplateData): string {
         if (totalImages > existingRadios) {
           console.log(`Adding new images ${existingRadios + 1} to ${totalImages}`);
           
-          // a. Add new radio buttons first
+          // a. Add new radio buttons first (following the example structure)
           for (let i = existingRadios; i < totalImages; i++) {
             const n = i + 1;
             radioContainer.append(`<input type="radio" name="gallery" id="img${n}">`);
