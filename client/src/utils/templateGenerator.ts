@@ -16,31 +16,14 @@ export function generateTemplate(templateData: TemplateData): string {
     $('title').text(templateData.title);
     
     // Update main heading(s)
-    // NOTE: We need to be more specific to avoid overwriting description section headings
-    const headings = ['h1', '.main-title', '.product-title', '.brand-text h1'];
+    const headings = ['h1', '.main-title', '.product-title', '.brand-text h1', '.product-info h2', '.product-info .card h2'];
     
-    // First check if there's a specific product-info heading that we should update
-    let productInfoHeadingUpdated = false;
-    $('.product-info .card h2:first-of-type, .product-info h2:first-of-type').each((i: number, el: any) => {
-      // Only update if it's the first h2 in product-info (product name)
-      // and not a section heading like "Produktbeschreibung"
-      const text = $(el).text().trim();
-      if (!text.includes('Produktbeschreibung') && !text.includes('Technische Daten') && 
-          !text.includes('Über uns') && !text.includes('Beschreibung')) {
-        const originalStyles = $(el).attr('style') || '';
-        $(el).text(templateData.title);
-        
-        if (originalStyles) {
-          $(el).attr('style', originalStyles);
-        }
-        productInfoHeadingUpdated = true;
-      }
-    });
-    
-    // If we didn't update a specific product-info heading, use the general selectors
-    if (!productInfoHeadingUpdated) {
-      for (const selector of headings) {
-        $(selector).each((i: number, el: any) => {
+    for (const selector of headings) {
+      $(selector).each((i: number, el: any) => {
+        // Only update if it's NOT a section heading like "Produktbeschreibung"
+        const text = $(el).text().trim();
+        if (!text.includes('Produktbeschreibung') && !text.includes('Technische Daten') && 
+            !text.includes('Über uns') && !text.includes('Beschreibung')) {
           // Save the original styling but update the text content
           const originalStyles = $(el).attr('style') || '';
           $(el).text(templateData.title);
@@ -49,8 +32,8 @@ export function generateTemplate(templateData: TemplateData): string {
           if (originalStyles) {
             $(el).attr('style', originalStyles);
           }
-        });
-      }
+        }
+      });
     }
     
     // Update subtitle
@@ -376,29 +359,30 @@ export function generateTemplate(templateData: TemplateData): string {
     if (templateData.description) {
       let descriptionUpdated = false;
       
-      // First try to find existing description elements
-      $('.product-description, .description, .produktbeschreibung').each((i: number, el: any) => {
-        $(el).html(templateData.description || '');
-        descriptionUpdated = true;
+      // Look for elements specifically under a section titled "Produktbeschreibung"
+      $('.product-section h2, .section-title, .card-title').each((i: number, el: any) => {
+        const title = $(el).text().trim();
+        if (title.includes('Produktbeschreibung')) {
+          const parent = $(el).parent();
+          const descriptionEl = parent.find('p, .description, .content, div[style]');
+          if (descriptionEl.length) {
+            descriptionEl.html(templateData.description || '');
+            descriptionUpdated = true;
+          } else {
+            // Add description if there's no content element
+            // Insert as raw HTML to preserve formatting
+            $(el).after(`<div class="product-description">${templateData.description || ''}</div>`);
+            descriptionUpdated = true;
+          }
+        }
       });
       
-      // If no description found but there's a section titled "Produktbeschreibung"
+      // Only if we couldn't find a dedicated "Produktbeschreibung" section,
+      // look for generic description elements
       if (!descriptionUpdated) {
-        $('.product-section h2, .section-title, .card-title').each((i: number, el: any) => {
-          const title = $(el).text().trim();
-          if (title.includes('Produktbeschreibung')) {
-            const parent = $(el).parent();
-            const descriptionEl = parent.find('p, .description, .content');
-            if (descriptionEl.length) {
-              descriptionEl.html(templateData.description || '');
-              descriptionUpdated = true;
-            } else {
-              // Add description if there's no content element
-              // Insert as raw HTML to preserve formatting
-              $(el).after(`<div class="product-description">${templateData.description || ''}</div>`);
-              descriptionUpdated = true;
-            }
-          }
+        $('.product-description, .description, .produktbeschreibung').each((i: number, el: any) => {
+          $(el).html(templateData.description || '');
+          descriptionUpdated = true;
         });
       }
     }
