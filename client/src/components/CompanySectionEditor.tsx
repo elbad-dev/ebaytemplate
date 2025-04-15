@@ -84,108 +84,35 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
         </Alert>
       )}
       
-      {/* Section Editor Grid Layout */}
-      <div className="grid gap-6">
-        {/* First row - top 3 sections in 3 columns */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {sections.slice(0, 3).map(section => (
-            <Card key={section.id} className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 h-6 w-6 text-gray-400 hover:text-gray-600"
-                onClick={() => removeSection(section.id)}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-              
-              <CardHeader className="pb-2 pt-3 px-3">
-                <CardTitle className="text-xs font-medium flex items-center space-x-2">
-                  <span>Über Uns Sektion</span>
-                </CardTitle>
-              </CardHeader>
-              
-              <CardContent className="space-y-3 px-3 pb-3">
-                {/* Icon section */}
-                <div className="flex justify-center mb-1">
+      {/* Section Editor Grid Layout - One section per row */}
+      <div className="space-y-4">
+        {sections.map((section, index) => (
+          <Card key={section.id} className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 h-6 w-6 text-gray-400 hover:text-gray-600"
+              onClick={() => removeSection(section.id)}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+            
+            <CardHeader className="pb-2 pt-3 px-4">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <span>Über Uns Sektion {index + 1}</span>
+              </CardTitle>
+            </CardHeader>
+            
+            <CardContent className="px-4 pb-4">
+              <div className="flex flex-row gap-6">
+                {/* Left column with icon */}
+                <div className="flex flex-col items-center space-y-2 w-24">
                   <div
-                    className="w-12 h-12 flex items-center justify-center bg-gray-50 rounded-md border p-2"
+                    className="w-16 h-16 flex items-center justify-center bg-gray-50 rounded-md border p-2"
                     dangerouslySetInnerHTML={{ __html: section.svg }}
                   />
-                </div>
-                
-                <div className="flex justify-center mt-1 mb-2">
-                  <IconSelector
-                    onIconSelect={(svg) => updateSection(section.id, 'svg', svg)}
-                    onColorChange={(color) => {
-                      // Extract the current SVG and update its color
-                      const svgContent = section.svg;
-                      const newSvg = svgContent.replace(/stroke="[^"]*"/, `stroke="${color}"`);
-                      updateSection(section.id, 'svg', newSvg);
-                    }}
-                    currentIcon={section.svg}
-                  />
-                </div>
-                
-                {/* Title input */}
-                <div>
-                  <Label htmlFor={`title-${section.id}`} className="text-xs font-medium">Titel</Label>
-                  <Input
-                    id={`title-${section.id}`}
-                    value={section.title}
-                    onChange={(e) => updateSection(section.id, 'title', e.target.value)}
-                    placeholder="Titel der Sektion"
-                    className="mt-1 py-1 text-sm"
-                  />
-                </div>
-                
-                {/* Description textarea */}
-                <div>
-                  <Label htmlFor={`description-${section.id}`} className="text-xs font-medium">Beschreibung</Label>
-                  <Textarea
-                    id={`description-${section.id}`}
-                    value={section.description}
-                    onChange={(e) => updateSection(section.id, 'description', e.target.value)}
-                    placeholder="Beschreibung der Sektion"
-                    className="mt-1 resize-none text-sm"
-                    rows={2}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        
-        {/* Second row - remaining sections in 3 columns */}
-        {sections.length > 3 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {sections.slice(3).map(section => (
-              <Card key={section.id} className="relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 h-6 w-6 text-gray-400 hover:text-gray-600"
-                  onClick={() => removeSection(section.id)}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-                
-                <CardHeader className="pb-2 pt-3 px-3">
-                  <CardTitle className="text-xs font-medium flex items-center space-x-2">
-                    <span>Über Uns Sektion</span>
-                  </CardTitle>
-                </CardHeader>
-                
-                <CardContent className="space-y-3 px-3 pb-3">
-                  {/* Icon section */}
-                  <div className="flex justify-center mb-1">
-                    <div
-                      className="w-12 h-12 flex items-center justify-center bg-gray-50 rounded-md border p-2"
-                      dangerouslySetInnerHTML={{ __html: section.svg }}
-                    />
-                  </div>
                   
-                  <div className="flex justify-center mt-1 mb-2">
+                  <div className="mt-1">
                     <IconSelector
                       onIconSelect={(svg) => updateSection(section.id, 'svg', svg)}
                       onColorChange={(color) => {
@@ -197,36 +124,39 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
                       currentIcon={section.svg}
                     />
                   </div>
-                  
+                </div>
+                
+                {/* Right column with text fields */}
+                <div className="flex-1 space-y-4">
                   {/* Title input */}
                   <div>
-                    <Label htmlFor={`title-${section.id}`} className="text-xs font-medium">Titel</Label>
+                    <Label htmlFor={`title-${section.id}`} className="text-sm font-medium">Titel</Label>
                     <Input
                       id={`title-${section.id}`}
                       value={section.title}
                       onChange={(e) => updateSection(section.id, 'title', e.target.value)}
                       placeholder="Titel der Sektion"
-                      className="mt-1 py-1 text-sm"
+                      className="mt-1"
                     />
                   </div>
                   
                   {/* Description textarea */}
                   <div>
-                    <Label htmlFor={`description-${section.id}`} className="text-xs font-medium">Beschreibung</Label>
+                    <Label htmlFor={`description-${section.id}`} className="text-sm font-medium">Beschreibung</Label>
                     <Textarea
                       id={`description-${section.id}`}
                       value={section.description}
                       onChange={(e) => updateSection(section.id, 'description', e.target.value)}
                       placeholder="Beschreibung der Sektion"
-                      className="mt-1 resize-none text-sm"
-                      rows={2}
+                      className="mt-1 resize-none"
+                      rows={3}
                     />
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
       
       <Button 
