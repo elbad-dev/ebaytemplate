@@ -14,8 +14,8 @@ const styles = [
     thumbnail: "/styles/modern-product.jpg",
     type: "product",
     style: "modern",
-    colorScheme: "light",
-    htmlStructure: `
+    color_scheme: "light",
+    html_structure: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -60,7 +60,7 @@ const styles = [
       </body>
       </html>
     `,
-    cssStyles: `
+    css_styles: `
       :root {
         --color-primary: #3498db;
         --color-secondary: #2c3e50;
@@ -336,7 +336,7 @@ const styles = [
         }
       }
     `,
-    jsInteractions: ""
+    js_interactions: ""
   },
   {
     name: "Minimal Grid Gallery",
@@ -344,8 +344,8 @@ const styles = [
     thumbnail: "/styles/minimal-grid.jpg",
     type: "product",
     style: "minimalist",
-    colorScheme: "light",
-    htmlStructure: `
+    color_scheme: "light",
+    html_structure: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -396,7 +396,7 @@ const styles = [
       </body>
       </html>
     `,
-    cssStyles: `
+    css_styles: `
       :root {
         --color-primary: #00bcd4;
         --color-secondary: #263238;
@@ -690,7 +690,7 @@ const styles = [
         }
       }
     `,
-    jsInteractions: ""
+    js_interactions: ""
   },
   {
     name: "Bold Card Gallery",
@@ -698,8 +698,8 @@ const styles = [
     thumbnail: null,
     type: "product",
     style: "bold",
-    colorScheme: "colorful",
-    htmlStructure: `
+    color_scheme: "colorful",
+    html_structure: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -749,7 +749,7 @@ const styles = [
       </body>
       </html>
     `,
-    cssStyles: `
+    css_styles: `
       :root {
         --color-primary: #6200ea;
         --color-secondary: #0091ea;
@@ -1064,7 +1064,7 @@ const styles = [
         }
       }
     `,
-    jsInteractions: ""
+    js_interactions: ""
   },
   {
     name: "Elegant Slideshow",
@@ -1072,8 +1072,8 @@ const styles = [
     thumbnail: null,
     type: "product",
     style: "elegant",
-    colorScheme: "light",
-    htmlStructure: `
+    color_scheme: "light",
+    html_structure: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -1125,7 +1125,7 @@ const styles = [
       </body>
       </html>
     `,
-    cssStyles: `
+    css_styles: `
       :root {
         --color-primary: #9c8570;
         --color-secondary: #3a3a3a;
@@ -1435,7 +1435,7 @@ const styles = [
         }
       }
     `,
-    jsInteractions: ""
+    js_interactions: ""
   },
   {
     name: "Modern Tech Showcase",
@@ -1443,8 +1443,8 @@ const styles = [
     thumbnail: null,
     type: "product",
     style: "modern",
-    colorScheme: "dark",
-    htmlStructure: `
+    color_scheme: "dark",
+    html_structure: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -1493,7 +1493,7 @@ const styles = [
       </body>
       </html>
     `,
-    cssStyles: `
+    css_styles: `
       :root {
         --color-primary: #00aaff;
         --color-secondary: #1a1a1a;
@@ -1819,7 +1819,7 @@ const styles = [
         }
       }
     `,
-    jsInteractions: ""
+    js_interactions: ""
   },
   {
     name: "Clean Service Showcase",
@@ -1827,8 +1827,8 @@ const styles = [
     thumbnail: null,
     type: "service",
     style: "modern",
-    colorScheme: "light",
-    htmlStructure: `
+    color_scheme: "light",
+    html_structure: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -1877,7 +1877,7 @@ const styles = [
       </body>
       </html>
     `,
-    cssStyles: `
+    css_styles: `
       :root {
         --color-primary: #4a90e2;
         --color-secondary: #333333;
@@ -2183,7 +2183,7 @@ const styles = [
         }
       }
     `,
-    jsInteractions: ""
+    js_interactions: ""
   },
   {
     name: "Portfolio Showcase",
@@ -2191,8 +2191,8 @@ const styles = [
     thumbnail: null,
     type: "portfolio",
     style: "modern",
-    colorScheme: "light",
-    htmlStructure: `
+    color_scheme: "light",
+    html_structure: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -2241,7 +2241,7 @@ const styles = [
       </body>
       </html>
     `,
-    cssStyles: `
+    css_styles: `
       :root {
         --color-primary: #ff4e50;
         --color-secondary: #2c3e50;
@@ -2534,7 +2534,7 @@ const styles = [
         }
       }
     `,
-    jsInteractions: ""
+    js_interactions: ""
   },
   {
     name: "Simple Corporate Profile",
@@ -2542,8 +2542,8 @@ const styles = [
     thumbnail: null,
     type: "company",
     style: "minimalist",
-    colorScheme: "light",
-    htmlStructure: `
+    color_scheme: "light",
+    html_structure: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -2587,7 +2587,7 @@ const styles = [
       </body>
       </html>
     `,
-    cssStyles: `
+    css_styles: `
       :root {
         --color-primary: #0077cc;
         --color-secondary: #292929;
@@ -2841,7 +2841,7 @@ const styles = [
         }
       }
     `,
-    jsInteractions: ""
+    js_interactions: ""
   },
   {
     name: "Vibrant Product Showcase",
@@ -2849,8 +2849,8 @@ const styles = [
     thumbnail: null,
     type: "product",
     style: "bold",
-    colorScheme: "colorful",
-    htmlStructure: `
+    color_scheme: "colorful",
+    html_structure: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -2899,7 +2899,7 @@ const styles = [
       </body>
       </html>
     `,
-    cssStyles: `
+    css_styles: `
       :root {
         --color-primary: #ff5252;
         --color-secondary: #5c6bc0;
@@ -3233,7 +3233,7 @@ const styles = [
         }
       }
     `,
-    jsInteractions: ""
+    js_interactions: ""
   },
   {
     name: "Classic Business Template",
@@ -3241,8 +3241,8 @@ const styles = [
     thumbnail: null,
     type: "company",
     style: "classic",
-    colorScheme: "light",
-    htmlStructure: `
+    color_scheme: "light",
+    html_structure: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -3290,7 +3290,7 @@ const styles = [
       </body>
       </html>
     `,
-    cssStyles: `
+    css_styles: `
       :root {
         --color-primary: #003366;
         --color-secondary: #333333;
@@ -3574,7 +3574,7 @@ const styles = [
         }
       }
     `,
-    jsInteractions: ""
+    js_interactions: ""
   },
   {
     name: "Minimalist Dark Tech",
@@ -3582,8 +3582,8 @@ const styles = [
     thumbnail: null,
     type: "product",
     style: "minimalist",
-    colorScheme: "dark",
-    htmlStructure: `
+    color_scheme: "dark",
+    html_structure: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -3630,7 +3630,7 @@ const styles = [
       </body>
       </html>
     `,
-    cssStyles: `
+    css_styles: `
       :root {
         --color-primary: #00e5ff;
         --color-secondary: #ffffff;
@@ -3914,7 +3914,7 @@ const styles = [
         }
       }
     `,
-    jsInteractions: ""
+    js_interactions: ""
   }
 ];
 
@@ -3930,11 +3930,11 @@ async function createTemplateStyles() {
     
     // Now insert all our new styles with a thumbnail
     for (const style of styles) {
-      // Ensure all thumbnails have a value and add createdAt
+      // Ensure all thumbnails have a value and add created_at
       const styleWithThumbnail = {
         ...style,
         thumbnail: style.thumbnail || defaultThumbnail,
-        createdAt: new Date()
+        created_at: new Date()
       };
       
       await db.insert(templateStyles).values(styleWithThumbnail);
