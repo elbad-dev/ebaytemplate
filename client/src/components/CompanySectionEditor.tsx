@@ -29,14 +29,37 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
       'Easy Returns'
     ];
     
-    // Get the next default title or use a generic one if we've used all defaults
-    const nextTitle = defaultTitles[sections.length % defaultTitles.length];
+    // Default SVG icons that match the titles
+    const defaultSvgs = [
+      // Shipping icon
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15h14"/><path d="M5 8a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2Z"/><circle cx="8" cy="18" r="2"/><path d="M10 18h4"/><circle cx="16" cy="18" r="2"/></svg>',
+      
+      // Quality shield icon
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>',
+      
+      // Support/headphones icon
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2Z"/><path d="M21 14h-2a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2Z"/><path d="M8 14v1"/><path d="M16 14v1"/><path d="M3 16c0-2.8 0-4.7.9-6.1a6 6 0 0 1 1.5-1.9C7.2 6.2 9.6 6 12 6c2.4 0 4.8.2 6.6 2 .5.5 1 1.1 1.5 1.9.9 1.4.9 3.3.9 6.1"/></svg>',
+      
+      // Secure payment/lock icon
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+      
+      // Fast delivery icon
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3M18 16H9m-5 0H2a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2M18 16a3 3 0 1 0 6 0a3 3 0 1 0-6 0m-9 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0m0 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0m-5 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0m9-14v4m0 0L9 7m4-1 3 1"/></svg>',
+      
+      // Returns icon
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>'
+    ];
+    
+    // Get the next default title and matching SVG
+    const index = sections.length % defaultTitles.length;
+    const nextTitle = defaultTitles[index];
+    const nextSvg = defaultSvgs[index];
     
     const newSection = {
       id: generateId(),
       title: nextTitle,
       description: 'Add description here.',
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+      svg: nextSvg
     };
     onChange([...sections, newSection]);
   };
@@ -116,12 +139,38 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
                     <IconSelector
                       onIconSelect={(svg) => updateSection(section.id, 'svg', svg)}
                       onColorChange={(color) => {
-                        // Extract the current SVG and update its color
-                        const svgContent = section.svg;
-                        const newSvg = svgContent.replace(/stroke="[^"]*"/, `stroke="${color}"`);
+                        // Get a clean SVG from the IconSelector library with the new color
+                        // Find what type of icon it is
+                        const iconTypes = [
+                          { id: 'truck', cat: 'business' },
+                          { id: 'lock', cat: 'business' },
+                          { id: 'headphones', cat: 'business' },
+                          { id: 'shield', cat: 'business' },
+                          { id: 'star', cat: 'product' },
+                          { id: 'check', cat: 'product' },
+                          { id: 'tool', cat: 'product' },
+                          { id: 'chevron', cat: 'product' },
+                          { id: 'globe', cat: 'company' },
+                          { id: 'award', cat: 'company' },
+                          { id: 'users', cat: 'company' },
+                          { id: 'clock', cat: 'company' }
+                        ];
+                        
+                        // Find which icon is being used 
+                        let iconMatch = 'truck'; // Default
+                        for(const icon of iconTypes) {
+                          if(section.svg.includes(icon.id)) {
+                            iconMatch = icon.id;
+                            break;
+                          }
+                        }
+                        
+                        // Use regex to specifically target the stroke attribute
+                        const newSvg = section.svg.replace(/stroke="[^"]*"/g, `stroke="${color}"`);
                         updateSection(section.id, 'svg', newSvg);
                       }}
                       currentIcon={section.svg}
+                      currentColor={section.svg.match(/stroke="([^"]*)"/)?.[1] || "#3498db"}
                     />
                   </div>
                 </div>
