@@ -208,19 +208,19 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
                 <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as EditorTab)}>
                   <TabsList className="grid grid-cols-5 w-full">
                     <TabsTrigger value="images" className="text-xs sm:text-sm">
-                      Images
+                      Gallery
                     </TabsTrigger>
                     <TabsTrigger value="title" className="text-xs sm:text-sm">
-                      Info
+                      Company Info
                     </TabsTrigger>
                     <TabsTrigger value="description" className="text-xs sm:text-sm">
-                      Desc
+                      Description
                     </TabsTrigger>
                     <TabsTrigger value="specs" className="text-xs sm:text-sm">
-                      Specs
+                      Tech Specs
                     </TabsTrigger>
                     <TabsTrigger value="company" className="text-xs sm:text-sm">
-                      About
+                      About Us
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>

@@ -429,10 +429,19 @@ export function generateTemplate(templateData: TemplateData): string {
               // Update SVG if possible
               const svgContainer = $(el).find('.icon, .svg-container, .card-icon');
               if (svgContainer.length) {
-                svgContainer.html(section.svg);
+                // Increase SVG size by scaling it up
+                const enlargedSvg = section.svg
+                  .replace('width="24"', 'width="36"')
+                  .replace('height="24"', 'height="36"')
+                  .replace('stroke-width="2"', 'stroke-width="1.5"');
+                svgContainer.html(enlargedSvg);
               } else {
                 // If no container found, try to replace the SVG directly
-                $(el).find('svg').replaceWith(section.svg);
+                const enlargedSvg = section.svg
+                  .replace('width="24"', 'width="36"')
+                  .replace('height="24"', 'height="36"')
+                  .replace('stroke-width="2"', 'stroke-width="1.5"');
+                $(el).find('svg').replaceWith(enlargedSvg);
               }
               
               updated = true;
