@@ -57,20 +57,21 @@ export async function analyzeTemplateText(
 
     // Add logo info if available
     if (logoUrl) {
+      // For images, we need to use a special format that OpenAI expects
       messages.push({
         role: "user",
         content: [
           {
             type: "text",
-            text: "Logo image (please analyze this for color and style suggestions):",
+            text: "Logo image (please analyze this for color and style suggestions):"
           },
           {
             type: "image_url",
             image_url: {
-              url: logoUrl,
-            },
-          },
-        ],
+              url: logoUrl
+            }
+          }
+        ] as any, // Use type assertion to avoid TypeScript errors
       });
     }
 
@@ -87,7 +88,7 @@ export async function analyzeTemplateText(
     
     // Add unique IDs to company info sections if they don't have them
     if (suggestions.companyInfo && Array.isArray(suggestions.companyInfo)) {
-      suggestions.companyInfo = suggestions.companyInfo.map((section, index) => {
+      suggestions.companyInfo = suggestions.companyInfo.map((section: any, index: number) => {
         if (!section.id) {
           return {
             ...section,
