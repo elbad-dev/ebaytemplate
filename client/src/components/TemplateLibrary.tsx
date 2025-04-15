@@ -96,9 +96,8 @@ export default function TemplateLibrary({
       const newTemplate = {
         name: `${template.name} (Copy)`,
         html: template.html,
-        userId: template.userId,
-        style: template.style,
-        htmlStructure: template.html
+        user_id: template.user_id,
+        style_id: template.style_id
       };
       
       const response = await apiRequest('/api/templates', {
@@ -192,15 +191,15 @@ export default function TemplateLibrary({
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg line-clamp-1">{template.name}</CardTitle>
                 <CardDescription>
-                  Created: {formatDate(template.createdAt)}
+                  Created: {formatDate(template.created_at)}
                 </CardDescription>
               </CardHeader>
               
               <CardContent className="pb-2 flex-grow text-sm text-muted-foreground">
-                {template.style && (
+                {template.style_id && (
                   <div className="flex items-center gap-1 text-xs mt-1">
                     <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-sm">
-                      Style: {template.style}
+                      Style ID: {template.style_id}
                     </span>
                   </div>
                 )}

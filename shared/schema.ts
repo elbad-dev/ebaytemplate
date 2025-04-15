@@ -25,17 +25,10 @@ export const templates = pgTable("templates", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  thumbnail: varchar("thumbnail", { length: 255 }),
-  type: templateTypeEnum("type").default("product").notNull(),
-  style: templateStyleEnum("style").default("modern").notNull(),
-  colorScheme: templateColorSchemeEnum("color_scheme").default("light").notNull(),
-  htmlStructure: text("html_structure").notNull(),
-  cssStyles: text("css_styles"),
-  jsInteractions: text("js_interactions"),
-  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  style_id: integer("style_id"),
+  user_id: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   html: text("html").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Template styles table
@@ -94,15 +87,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const insertTemplateSchema = createInsertSchema(templates).pick({
   name: true,
   description: true,
-  thumbnail: true,
-  type: true,
-  style: true,
-  colorScheme: true,
-  htmlStructure: true,
-  cssStyles: true,
-  jsInteractions: true,
-  userId: true,
   html: true,
+  userId: true,
+  style_id: true,
 });
 
 export const insertTemplateStyleSchema = createInsertSchema(templateStyles).pick({

@@ -436,10 +436,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newTemplate = await storage.createTemplate({
         name: templateName,
         html: generatedHtml,
-        userId,
-        style: style?.style || "modern",
-        htmlStructure: generatedHtml
-        // Don't set createdAt - it will be automatically set to now() by the database
+        user_id: userId,
+        style_id: templateData.templateStyleId
+        // Don't set created_at - it will be automatically set to now() by the database
       });
       
       // Return both the template record and the generated HTML
