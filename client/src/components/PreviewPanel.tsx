@@ -28,6 +28,16 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
       updateFullscreenIframeContent();
     }
   }, [html, isFullscreen]);
+  
+  // When the fullscreen dialog opens, ensure we load the content
+  useEffect(() => {
+    if (isFullscreen) {
+      // Add a short delay to ensure the iframe is in the DOM
+      setTimeout(() => {
+        updateFullscreenIframeContent();
+      }, 100);
+    }
+  }, [isFullscreen]);
 
   const updateIframeContent = () => {
     if (iframeRef.current) {
@@ -192,6 +202,14 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
                     <Smartphone className="w-5 h-5" />
                   </button>
                 </div>
+                <Button
+                  variant="secondary"
+                  onClick={onRefresh}
+                  className="flex items-center"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh
+                </Button>
                 <Button
                   variant="secondary"
                   onClick={() => setIsFullscreen(false)}
