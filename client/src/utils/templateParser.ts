@@ -63,7 +63,13 @@ export function parseTemplate(htmlContent: string): TemplateData {
       
       // Fallback to other common title locations if still not found
       if (!title) {
-        title = $('.product-title, h1.title, h1, .product-info h2').first().text().trim() || $('title').text();
+        // First specifically look for the product title in the product-info card section
+        const productInfoTitle = $('.product-info .card h2').first().text().trim();
+        if (productInfoTitle) {
+          title = productInfoTitle;
+        } else {
+          title = $('.product-title, h1.title, h1, .product-info h2').first().text().trim() || $('title').text();
+        }
       }
     }
     
@@ -220,12 +226,13 @@ export function parseTemplate(htmlContent: string): TemplateData {
     // Extract product description from "Produktbeschreibung" section
     let description = '';
     
-    // Method 1: Look for a section with title "Produktbeschreibung"
-    $('.product-section h2, .section-title, .card-title').each((_, el) => {
+    // Method 1: First check for the specific structure provided
+    $('.card h2').each((_, el) => {
       const title = $(el).text().trim();
       if (title.includes('Produktbeschreibung')) {
         const parent = $(el).parent();
-        const descriptionEl = parent.find('p, .description, .content').first();
+        // Look for div[style] as in the provided template
+        const descriptionEl = parent.find('div[style], p, .description, .content').first();
         if (descriptionEl.length) {
           // Preserve the HTML content to keep formatting, colors, and spaces
           description = descriptionEl.html() || '';
@@ -234,7 +241,23 @@ export function parseTemplate(htmlContent: string): TemplateData {
       }
     });
     
-    // Method 2: Look for div with class or ID containing "description"
+    // Method 2: Try more generic pattern if not found
+    if (!description) {
+      $('.product-section h2, .section-title, .card-title').each((_, el) => {
+        const title = $(el).text().trim();
+        if (title.includes('Produktbeschreibung')) {
+          const parent = $(el).parent();
+          const descriptionEl = parent.find('p, .description, .content, div[style]').first();
+          if (descriptionEl.length) {
+            // Preserve the HTML content to keep formatting, colors, and spaces
+            description = descriptionEl.html() || '';
+            return false; // Break the loop
+          }
+        }
+      });
+    }
+    
+    // Method 3: Look for div with class or ID containing "description"
     if (!description) {
       const descriptionEl = $('.product-description, #description, .description, .produktbeschreibung').first();
       if (descriptionEl.length) {

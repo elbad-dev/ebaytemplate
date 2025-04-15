@@ -12,19 +12,29 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { EditorSectionProps } from '@/types';
+import { Info } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({ 
   data, 
   onUpdate 
 }) => {
+  const [title, setTitle] = useState(data.title || '');
   const [price, setPrice] = useState(data.price || '');
   const [currency, setCurrency] = useState(data.currency || 'EUR');
   const [description, setDescription] = useState(data.description || '');
   const [detectingDescription, setDetectingDescription] = useState(false);
+  const [detectingTitle, setDetectingTitle] = useState(false);
   const contentEditableRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Update local state when data changes
+    setTitle(data.title || '');
     setPrice(data.price || '');
     setCurrency(data.currency || 'EUR');
     setDescription(data.description || '');
@@ -34,6 +44,12 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
       contentEditableRef.current.innerHTML = data.description;
     }
   }, [data]);
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+    onUpdate({ title: newTitle });
+  };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPrice = e.target.value;
@@ -52,6 +68,21 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
       const newDescription = contentEditableRef.current.innerHTML;
       setDescription(newDescription);
       onUpdate({ description: newDescription });
+    }
+  };
+
+  const handleDetectTitle = () => {
+    if (data.rawHtml) {
+      setDetectingTitle(true);
+      
+      // Look for title in the template
+      if (data.title) {
+        setTitle(data.title);
+      }
+      
+      setTimeout(() => {
+        setDetectingTitle(false);
+      }, 1000);
     }
   };
 
@@ -81,9 +112,41 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
       <CardContent className="p-6">
         <div className="space-y-6">
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Product Description</h3>
+            <h3 className="text-lg font-semibold">Product Information</h3>
             <p className="text-sm text-gray-500">
-              Edit the product description, price, and currency.
+              Edit the product title, description, price, and currency.
+            </p>
+          </div>
+
+          {/* Product Title Section */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="productTitle">Product Title</Label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDetectTitle}
+                disabled={!data.rawHtml || detectingTitle}
+                className="relative"
+              >
+                {detectingTitle ? 'Detecting...' : 'Detect Title'}
+                {detectingTitle && (
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                  </span>
+                )}
+              </Button>
+            </div>
+            <Input
+              id="productTitle"
+              value={title}
+              onChange={handleTitleChange}
+              placeholder="Enter product title (e.g. Professioneller Werkzeugsatz Premium)"
+              className="w-full"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              This title will appear above the price in your template.
             </p>
           </div>
 
