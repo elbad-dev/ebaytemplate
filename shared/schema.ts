@@ -53,7 +53,7 @@ export const images = pgTable("images", {
   fileType: varchar("file_type", { length: 50 }).notNull(),
   fileSize: integer("file_size").notNull(),
   url: varchar("url", { length: 255 }).notNull(),
-  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  user_id: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
 });
 

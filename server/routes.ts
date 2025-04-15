@@ -92,8 +92,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Template not found" });
       }
       
-      // If template has an owner (userId is not null), check if the current user is the owner
-      if (template.userId !== null && (!req.isAuthenticated() || template.userId !== (req.user as Express.User).id)) {
+      // If template has an owner (user_id is not null), check if the current user is the owner
+      if (template.user_id !== null && (!req.isAuthenticated() || template.user_id !== (req.user as Express.User).id)) {
         // For non-public templates, verify the user has access
         return res.status(403).json({ message: "You don't have permission to access this template" });
       }
@@ -116,8 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as Express.User).id;
       const templateData = insertTemplateSchema.parse({
         ...req.body,
-        userId,
-        createdAt: new Date().toISOString(),
+        user_id: userId,
       });
       
       const newTemplate = await storage.createTemplate(templateData);
@@ -145,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if the template belongs to the authenticated user
       const userId = (req.user as Express.User).id;
-      if (template.userId !== userId) {
+      if (template.user_id !== userId) {
         return res.status(403).json({ message: "You don't have permission to update this template" });
       }
       
@@ -176,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if the template belongs to the authenticated user
       const userId = (req.user as Express.User).id;
-      if (template.userId !== userId) {
+      if (template.user_id !== userId) {
         return res.status(403).json({ message: "You don't have permission to delete this template" });
       }
       
@@ -237,8 +236,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileType: req.file.mimetype,
         fileSize: req.file.size,
         url: imageUrl,
-        userId: userId,
-        uploadedAt: uploadDate
+        user_id: userId
+        // uploadedAt will be set to now() by the database
       };
       
       console.log("Saving image with data:", imageData);
