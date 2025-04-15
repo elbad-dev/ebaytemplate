@@ -821,6 +821,21 @@ function createBasicTemplate(data: TemplateData): string {
           font-size: 16px;
         }
         
+        .company-section {
+          margin-top: 40px;
+          padding-top: 20px;
+        }
+        
+        .company-section h2 {
+          font-size: 28px;
+          text-align: center;
+          margin-bottom: 30px;
+          font-weight: 700;
+          background: linear-gradient(135deg, var(--primary), #333);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        
         @media (max-width: 768px) {
           .thumbnail {
             width: 60px;
@@ -854,7 +869,10 @@ function createBasicTemplate(data: TemplateData): string {
           ${techSpecs}
         </div>
         
-        ${companyInfo ? `<div class="company-section">${companyInfo}</div>` : ''}
+        ${companyInfo ? `<div class="company-section">
+          <h2 class="section-title">Über Uns</h2>
+          ${companyInfo}
+        </div>` : ''}
       </div>
     </body>
     </html>
