@@ -19,14 +19,14 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
   
   // Add a new empty section with appropriate naming based on position
   const addSection = () => {
-    // Default section titles based on common Über Uns (About Us) section topics
+    // Default section titles based on common About Us section topics
     const defaultTitles = [
-      'Kostenloser Versand',
-      'Qualitätsgarantie',
-      'Kundensupport',
-      'Sichere Zahlung',
-      'Schnelle Lieferung',
-      'Einfache Rückgabe'
+      'Free Shipping',
+      'Quality Guarantee',
+      'Customer Support',
+      'Secure Payment',
+      'Fast Delivery',
+      'Easy Returns'
     ];
     
     // Get the next default title or use a generic one if we've used all defaults
@@ -35,7 +35,7 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
     const newSection = {
       id: generateId(),
       title: nextTitle,
-      description: 'Beschreibung hier hinzufügen.',
+      description: 'Add description here.',
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
     };
     onChange([...sections, newSection]);
@@ -56,7 +56,7 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Über Uns Sektionen</h3>
+        <h3 className="text-lg font-semibold">Company Sections</h3>
         <Button 
           variant="outline" 
           size="sm" 
@@ -64,21 +64,21 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
           className="text-xs"
         >
           <AlertCircle className="h-4 w-4 mr-1" />
-          {showHelp ? "Tipps ausblenden" : "Tipps anzeigen"}
+          {showHelp ? "Hide Tips" : "Show Tips"}
         </Button>
       </div>
       
       {showHelp && (
         <Alert variant="default" className="bg-blue-50 text-blue-800 border-blue-200">
           <AlertCircle className="h-4 w-4 text-blue-600" />
-          <AlertTitle>Über die "Über Uns" Sektionen</AlertTitle>
+          <AlertTitle>About the Company Sections</AlertTitle>
           <AlertDescription className="text-sm mt-2 text-blue-700">
-            <p>Diese Sektionen heben wichtige Informationen über Ihr Unternehmen hervor, wie Versandrichtlinien, Garantiedetails, Kundensupport oder Unternehmenswerte.</p>
+            <p>Company sections highlight key information about your business like shipping policies, warranty details, customer support or company values.</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li>Verwenden Sie den <strong>Icon-Selector</strong>, um aus einer Bibliothek professioneller Icons auszuwählen</li>
-              <li>Passen Sie die Icon-Farben an Ihre Markenidentität an</li>
-              <li>Halten Sie die Sektions-Titel kurz und beschreibend</li>
-              <li>Verwenden Sie prägnante Beschreibungen, die die wichtigsten Vorteile hervorheben</li>
+              <li>Use the <strong>Icon Selector</strong> to pick from a library of professional icons</li>
+              <li>Customize icon colors to match your brand identity</li>
+              <li>Keep section titles short and descriptive</li>
+              <li>Use concise descriptions that highlight key benefits</li>
             </ul>
           </AlertDescription>
         </Alert>
@@ -99,7 +99,7 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
             
             <CardHeader className="pb-2 pt-3 px-4">
               <CardTitle className="text-sm font-medium flex items-center">
-                <span>Über Uns Sektion {index + 1}</span>
+                <span>Company Section {index + 1}</span>
               </CardTitle>
             </CardHeader>
             
@@ -130,24 +130,24 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
                 <div className="flex-1 space-y-4">
                   {/* Title input */}
                   <div>
-                    <Label htmlFor={`title-${section.id}`} className="text-sm font-medium">Titel</Label>
+                    <Label htmlFor={`title-${section.id}`} className="text-sm font-medium">Title</Label>
                     <Input
                       id={`title-${section.id}`}
                       value={section.title}
                       onChange={(e) => updateSection(section.id, 'title', e.target.value)}
-                      placeholder="Titel der Sektion"
+                      placeholder="Section title"
                       className="mt-1"
                     />
                   </div>
                   
                   {/* Description textarea */}
                   <div>
-                    <Label htmlFor={`description-${section.id}`} className="text-sm font-medium">Beschreibung</Label>
+                    <Label htmlFor={`description-${section.id}`} className="text-sm font-medium">Description</Label>
                     <Textarea
                       id={`description-${section.id}`}
                       value={section.description}
                       onChange={(e) => updateSection(section.id, 'description', e.target.value)}
-                      placeholder="Beschreibung der Sektion"
+                      placeholder="Section description"
                       className="mt-1 resize-none"
                       rows={3}
                     />
@@ -165,7 +165,7 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
         className="w-full py-6 border-dashed flex items-center justify-center gap-2"
       >
         <PlusCircle className="h-5 w-5" />
-        Neue Sektion hinzufügen
+        Add New Section
       </Button>
     </div>
   );
