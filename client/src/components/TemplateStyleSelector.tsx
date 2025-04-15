@@ -6,6 +6,24 @@ import { useToast } from '@/hooks/use-toast';
 import { TemplateStyle } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 
+// Helper function to get background gradient based on style
+function getStyleBackground(style: string): string {
+  switch (style) {
+    case 'modern':
+      return 'from-blue-500 to-indigo-600';
+    case 'minimalist':
+      return 'from-gray-700 to-gray-900';
+    case 'bold':
+      return 'from-red-500 to-purple-600';
+    case 'elegant':
+      return 'from-amber-700 to-rose-800';
+    case 'classic':
+      return 'from-green-700 to-teal-800';
+    default:
+      return 'from-blue-500 to-purple-600';
+  }
+}
+
 interface TemplateStyleSelectorProps {
   onStyleSelect: (style: TemplateStyle) => void;
   selectedStyleId?: number;
@@ -69,17 +87,11 @@ export default function TemplateStyleSelector({ onStyleSelect, selectedStyleId }
             onClick={() => onStyleSelect(style)}
           >
             <div className="h-40 overflow-hidden bg-muted">
-              {style.thumbnail ? (
-                <img 
-                  src={style.thumbnail} 
-                  alt={style.name} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-muted-foreground/10">
-                  <span className="text-sm text-muted-foreground">{style.style} {style.type} template</span>
-                </div>
-              )}
+              {/* We'll always show a styled preview */}
+              <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${getStyleBackground(style.style)}`}>
+                <div className="text-white font-medium mb-2">{style.name}</div>
+                <div className="text-xs text-white/80 px-3 py-1 rounded-full bg-black/20">{style.style} style</div>
+              </div>
             </div>
             <CardHeader className="p-4 pb-2">
               <CardTitle className="text-lg">{style.name}</CardTitle>
