@@ -122,25 +122,78 @@ export function generateTemplate(templateData: TemplateData): string {
         const radioContainer = $('input[type="radio"][name="gallery"]').first().parent();
         const thumbnailContainer = $('.thumbnail-set.set1');
         
-        // Before updating, get references to existing CSS that manages the image visibility
-        const styleElement = $('style:contains("#img")');
-        let cssContent = styleElement.html() || '';
+        // Build complete gallery structure
+        const galleryContainer = $('.gallery-container');
+        const thumbnailSet = $('.thumbnail-set').first();
+        const radioContainer = $('.gallery').first();
         
-        // 1. First update existing images
-        for (let i = 0; i < Math.min(existingRadios, totalImages); i++) {
-          const n = i + 1; // Use 1-based indexing as in the example
+        // Clear existing elements
+        radioContainer.find('input[type="radio"]').remove();
+        galleryContainer.find('.gallery-arrow').remove();
+        galleryContainer.find('.gallery-item').remove();
+        thumbnailSet.empty();
+        
+        // Generate radio inputs
+        for (let i = 0; i < totalImages; i++) {
+          const n = i + 1;
+          radioContainer.prepend(`
+            <input type="radio" name="gallery" id="img${n}" ${n === 1 ? 'checked' : ''}>
+          `);
+        }
+        
+        // Generate navigation arrows
+        for (let i = 0; i < totalImages; i++) {
+          const n = i + 1;
+          const prevTarget = n === 1 ? totalImages : n - 1;
+          const nextTarget = n === totalImages ? 1 : n + 1;
           
-          // Update main image
-          const mainImage = $(`#main${n}`);
-          if (mainImage.length) {
-            mainImage.attr('src', templateData.images[i].url);
-          }
-          
-          // Update thumbnail
-          const thumbnail = $(`.thumbnail[for="img${n}"] img`);
-          if (thumbnail.length) {
-            thumbnail.attr('src', templateData.images[i].url);
-          }
+          galleryContainer.append(`
+            <label class="gallery-arrow prev" for="img${prevTarget}"></label>
+            <label class="gallery-arrow next" for="img${nextTarget}"></label>
+          `);
+        }
+        
+        // Generate main images
+        for (let i = 0; i < totalImages; i++) {
+          const n = i + 1;
+          galleryContainer.append(`
+            <img src="${templateData.images[i].url}" alt="Product Detail ${n}" class="gallery-item" id="main${n}">
+          `);
+        }
+        
+        // Generate thumbnails
+        for (let i = 0; i < totalImages; i++) {
+          const n = i + 1;
+          thumbnailSet.append(`
+            <label class="thumbnail" for="img${n}">
+              <img src="${templateData.images[i].url}" alt="Thumbnail ${n}">
+            </label>
+          `);
+        }
+        
+        // Generate CSS for image visibility
+        let newCSS = '';
+        for (let i = 0; i < totalImages; i++) {
+          const n = i + 1;
+          newCSS += `
+            #img${n}:checked ~ .gallery-container #main${n} {
+              opacity: 1;
+              z-index: 2;
+            }
+            
+            #img${n}:checked ~ .gallery-container .next[for="img${n === totalImages ? 1 : n + 1}"],
+            #img${n}:checked ~ .gallery-container .prev[for="img${n === 1 ? totalImages : n - 1}"] {
+              display: block;
+            }
+          `;
+        }
+        
+        // Update or create style element
+        const styleElement = $('style:contains("#img")');
+        if (styleElement.length) {
+          styleElement.html(newCSS);
+        } else {
+          $('head').append(`<style>${newCSS}</style>`);
         }
         
         // 2. Add new elements for additional images
@@ -821,21 +874,6 @@ function createBasicTemplate(data: TemplateData): string {
           font-size: 16px;
         }
         
-        .company-section {
-          margin-top: 40px;
-          padding-top: 20px;
-        }
-        
-        .company-section h2 {
-          font-size: 28px;
-          text-align: center;
-          margin-bottom: 30px;
-          font-weight: 700;
-          background: linear-gradient(135deg, var(--primary), #333);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-        
         @media (max-width: 768px) {
           .thumbnail {
             width: 60px;
@@ -869,10 +907,7 @@ function createBasicTemplate(data: TemplateData): string {
           ${techSpecs}
         </div>
         
-        ${companyInfo ? `<div class="company-section">
-          <h2 class="section-title">Über Uns</h2>
-          ${companyInfo}
-        </div>` : ''}
+        ${companyInfo ? `<div class="company-section">${companyInfo}</div>` : ''}
       </div>
     </body>
     </html>
