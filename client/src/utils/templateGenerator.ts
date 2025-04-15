@@ -482,7 +482,7 @@ export function generateTemplate(templateData: TemplateData): string {
         ];
         
         // First try to update existing cards
-        const existingCards: JQuery<any>[] = [];
+        const existingCards: any[] = [];
         for (const selector of companyContainers) {
           const cards = $(selector);
           if (cards.length > 0) {
