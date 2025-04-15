@@ -97,8 +97,8 @@ export default function TemplateLibrary({
         name: `${template.name} (Copy)`,
         html: template.html,
         userId: template.userId,
-        createdAt: new Date().toISOString(),
-        styleId: template.styleId
+        style: template.style,
+        htmlStructure: template.html
       };
       
       const response = await apiRequest('/api/templates', {

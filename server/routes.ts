@@ -312,10 +312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const styleData = insertTemplateStyleSchema.parse({
-        ...req.body,
-        createdAt: new Date().toISOString(),
-      });
+      const styleData = insertTemplateStyleSchema.parse(req.body);
       
       const newStyle = await storage.createTemplateStyle(styleData);
       res.status(201).json(newStyle);
@@ -360,10 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const iconData = insertSvgIconSchema.parse({
-        ...req.body,
-        createdAt: new Date().toISOString(),
-      });
+      const iconData = insertSvgIconSchema.parse(req.body);
       
       const newIcon = await storage.createSvgIcon(iconData);
       res.status(201).json(newIcon);
@@ -443,7 +437,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: templateName,
         html: generatedHtml,
         userId,
-        styleId: templateData.templateStyleId || null
+        style: style?.style || "modern",
+        htmlStructure: generatedHtml
         // Don't set createdAt - it will be automatically set to now() by the database
       });
       
