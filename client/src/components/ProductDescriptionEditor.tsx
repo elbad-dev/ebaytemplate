@@ -21,12 +21,18 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
   const [currency, setCurrency] = useState(data.currency || 'EUR');
   const [description, setDescription] = useState(data.description || '');
   const [detectingDescription, setDetectingDescription] = useState(false);
+  const contentEditableRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Update local state when data changes
     setPrice(data.price || '');
     setCurrency(data.currency || 'EUR');
     setDescription(data.description || '');
+    
+    // Update the contentEditable div with the description HTML
+    if (contentEditableRef.current && data.description) {
+      contentEditableRef.current.innerHTML = data.description;
+    }
   }, [data]);
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,10 +46,13 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
     onUpdate({ currency: value });
   };
 
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newDescription = e.target.value;
-    setDescription(newDescription);
-    onUpdate({ description: newDescription });
+  // Handle input in the contentEditable div
+  const handleDescriptionChange = () => {
+    if (contentEditableRef.current) {
+      const newDescription = contentEditableRef.current.innerHTML;
+      setDescription(newDescription);
+      onUpdate({ description: newDescription });
+    }
   };
 
   const handleDetectDescription = () => {
@@ -54,6 +63,11 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
       if (data.description) {
         setDescription(data.description);
         onUpdate({ description: data.description });
+        
+        // Update the contentEditable div with the detected HTML
+        if (contentEditableRef.current) {
+          contentEditableRef.current.innerHTML = data.description;
+        }
       }
       
       setTimeout(() => {
@@ -125,17 +139,30 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
                 )}
               </Button>
             </div>
-            <div className="border rounded-md">
-              <textarea
-                id="description"
-                value={description}
-                onChange={handleDescriptionChange}
-                rows={10}
-                placeholder="Enter product description here..."
-                className="w-full p-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ fontFamily: 'inherit' }}
-                // Use a standard textarea instead of the styled component to preserve formatting
-              />
+            <div>
+              <div 
+                className="relative border rounded-md overflow-hidden"
+              >
+                {!description && (
+                  <div className="absolute left-3 top-3 text-gray-400 pointer-events-none">
+                    Enter product description here...
+                  </div>
+                )}
+                <div
+                  ref={contentEditableRef}
+                  id="description"
+                  contentEditable
+                  onInput={handleDescriptionChange}
+                  onBlur={handleDescriptionChange}
+                  className="w-full p-3 min-h-[200px] max-h-[400px] overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ 
+                    fontFamily: 'inherit',
+                    lineHeight: '1.5',
+                    color: '#333'
+                  }}
+                  dangerouslySetInnerHTML={{ __html: description }}
+                />
+              </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
               This description will be shown in the "Produktbeschreibung" section of your template.
