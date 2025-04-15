@@ -87,11 +87,11 @@ export default function AITemplateRecommender({
     }));
     
     onSuggestionsApplied({
-      colorPrimary: suggestions.colorPrimary,
-      colorSecondary: suggestions.colorSecondary,
-      colorAccent: suggestions.colorAccent,
-      colorBackground: suggestions.colorBackground,
-      colorText: suggestions.colorText,
+      color_primary: suggestions.color_primary || suggestions.colorPrimary,
+      color_secondary: suggestions.color_secondary || suggestions.colorSecondary,
+      color_accent: suggestions.color_accent || suggestions.colorAccent,
+      color_background: suggestions.color_background || suggestions.colorBackground,
+      color_text: suggestions.color_text || suggestions.colorText,
       companyInfo: companyInfoWithIds,
       ...(suggestions.description ? { description: suggestions.description } : {}),
     });
@@ -107,11 +107,11 @@ export default function AITemplateRecommender({
     if (!suggestions) return;
     
     onSuggestionsApplied({
-      colorPrimary: suggestions.colorPrimary,
-      colorSecondary: suggestions.colorSecondary,
-      colorAccent: suggestions.colorAccent,
-      colorBackground: suggestions.colorBackground,
-      colorText: suggestions.colorText,
+      color_primary: suggestions.color_primary || suggestions.colorPrimary,
+      color_secondary: suggestions.color_secondary || suggestions.colorSecondary,
+      color_accent: suggestions.color_accent || suggestions.colorAccent,
+      color_background: suggestions.color_background || suggestions.colorBackground,
+      color_text: suggestions.color_text || suggestions.colorText,
     });
     
     toast({
@@ -203,35 +203,35 @@ export default function AITemplateRecommender({
                   <div>
                     <div 
                       className="h-16 rounded-md border"
-                      style={{ backgroundColor: suggestions.colorPrimary }}
+                      style={{ backgroundColor: suggestions.color_primary || suggestions.colorPrimary }}
                     ></div>
                     <p className="text-xs mt-1 text-center">Primary</p>
                   </div>
                   <div>
                     <div 
                       className="h-16 rounded-md border"
-                      style={{ backgroundColor: suggestions.colorSecondary }}
+                      style={{ backgroundColor: suggestions.color_secondary || suggestions.colorSecondary }}
                     ></div>
                     <p className="text-xs mt-1 text-center">Secondary</p>
                   </div>
                   <div>
                     <div 
                       className="h-16 rounded-md border"
-                      style={{ backgroundColor: suggestions.colorAccent }}
+                      style={{ backgroundColor: suggestions.color_accent || suggestions.colorAccent }}
                     ></div>
                     <p className="text-xs mt-1 text-center">Accent</p>
                   </div>
                   <div>
                     <div 
                       className="h-16 rounded-md border"
-                      style={{ backgroundColor: suggestions.colorBackground }}
+                      style={{ backgroundColor: suggestions.color_background || suggestions.colorBackground }}
                     ></div>
                     <p className="text-xs mt-1 text-center">Background</p>
                   </div>
                   <div>
                     <div 
                       className="h-16 rounded-md border"
-                      style={{ backgroundColor: suggestions.colorText }}
+                      style={{ backgroundColor: suggestions.color_text || suggestions.colorText }}
                     ></div>
                     <p className="text-xs mt-1 text-center">Text</p>
                   </div>
