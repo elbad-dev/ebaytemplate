@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
-// Initialize OpenAI client with API key from environment variables
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Initialize OpenAI client with direct API key
+const openai = new OpenAI({ apiKey: "proj_tIpk4xFGpJivZ8MqMTjk4S7b" });
 
 // Function to analyze text and suggest template data
 export async function analyzeTemplateText(
