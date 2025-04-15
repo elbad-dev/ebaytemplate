@@ -443,8 +443,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: templateName,
         html: generatedHtml,
         userId,
-        createdAt: new Date().toISOString(),
         styleId: templateData.templateStyleId || null
+        // Don't set createdAt - it will be automatically set to now() by the database
       });
       
       // Return both the template record and the generated HTML
