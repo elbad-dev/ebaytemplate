@@ -17,49 +17,13 @@ interface CompanySectionEditorProps {
 export default function CompanySectionEditor({ sections, onChange }: CompanySectionEditorProps) {
   const [showHelp, setShowHelp] = useState<boolean>(false);
   
-  // Add a new empty section with appropriate naming based on position
+  // Add a new empty section
   const addSection = () => {
-    // Default section titles based on common About Us section topics
-    const defaultTitles = [
-      'Free Shipping',
-      'Quality Guarantee',
-      'Customer Support',
-      'Secure Payment',
-      'Fast Delivery',
-      'Easy Returns'
-    ];
-    
-    // Default SVG icons that match the titles
-    const defaultSvgs = [
-      // Shipping icon
-      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15h14"/><path d="M5 8a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2Z"/><circle cx="8" cy="18" r="2"/><path d="M10 18h4"/><circle cx="16" cy="18" r="2"/></svg>',
-      
-      // Quality shield icon
-      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>',
-      
-      // Support/headphones icon
-      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2Z"/><path d="M21 14h-2a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2Z"/><path d="M8 14v1"/><path d="M16 14v1"/><path d="M3 16c0-2.8 0-4.7.9-6.1a6 6 0 0 1 1.5-1.9C7.2 6.2 9.6 6 12 6c2.4 0 4.8.2 6.6 2 .5.5 1 1.1 1.5 1.9.9 1.4.9 3.3.9 6.1"/></svg>',
-      
-      // Secure payment/lock icon
-      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
-      
-      // Fast delivery icon
-      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3M18 16H9m-5 0H2a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2M18 16a3 3 0 1 0 6 0a3 3 0 1 0-6 0m-9 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0m0 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0m-5 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0m9-14v4m0 0L9 7m4-1 3 1"/></svg>',
-      
-      // Returns icon
-      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>'
-    ];
-    
-    // Get the next default title and matching SVG
-    const index = sections.length % defaultTitles.length;
-    const nextTitle = defaultTitles[index];
-    const nextSvg = defaultSvgs[index];
-    
     const newSection = {
       id: generateId(),
-      title: nextTitle,
-      description: 'Add description here.',
-      svg: nextSvg
+      title: 'New Section',
+      description: 'Describe this section here.',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
     };
     onChange([...sections, newSection]);
   };
@@ -107,91 +71,57 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
         </Alert>
       )}
       
-      {/* Section Editor Grid Layout - One section per row */}
-      <div className="space-y-4">
-        {sections.map((section, index) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {sections.map(section => (
           <Card key={section.id} className="relative">
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-2 right-2 h-6 w-6 text-gray-400 hover:text-gray-600"
+              className="absolute top-2 right-2 h-7 w-7 text-gray-400 hover:text-gray-600"
               onClick={() => removeSection(section.id)}
             >
-              <X className="h-3 w-3" />
+              <X className="h-4 w-4" />
             </Button>
             
-            <CardHeader className="pb-2 pt-3 px-4">
-              <CardTitle className="text-sm font-medium flex items-center">
-                <span>Company Section {index + 1}</span>
-              </CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Section</CardTitle>
             </CardHeader>
             
-            <CardContent className="px-4 pb-4">
-              <div className="flex flex-row gap-6">
-                {/* Left column with icon */}
-                <div className="flex flex-col items-center space-y-2 w-24">
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-16">
                   <div
-                    className="w-16 h-16 flex items-center justify-center bg-gray-50 rounded-md border p-2"
+                    className="w-14 h-14 flex items-center justify-center bg-gray-50 rounded-md border p-2"
                     dangerouslySetInnerHTML={{ __html: section.svg }}
                   />
-                  
-                  <div className="mt-1">
+                  <div className="mt-2">
                     <IconSelector
                       onIconSelect={(svg) => updateSection(section.id, 'svg', svg)}
                       onColorChange={(color) => {
-                        // Get a clean SVG from the IconSelector library with the new color
-                        // Find what type of icon it is
-                        const iconTypes = [
-                          { id: 'truck', cat: 'business' },
-                          { id: 'lock', cat: 'business' },
-                          { id: 'headphones', cat: 'business' },
-                          { id: 'shield', cat: 'business' },
-                          { id: 'star', cat: 'product' },
-                          { id: 'check', cat: 'product' },
-                          { id: 'tool', cat: 'product' },
-                          { id: 'chevron', cat: 'product' },
-                          { id: 'globe', cat: 'company' },
-                          { id: 'award', cat: 'company' },
-                          { id: 'users', cat: 'company' },
-                          { id: 'clock', cat: 'company' }
-                        ];
-                        
-                        // Find which icon is being used 
-                        let iconMatch = 'truck'; // Default
-                        for(const icon of iconTypes) {
-                          if(section.svg.includes(icon.id)) {
-                            iconMatch = icon.id;
-                            break;
-                          }
-                        }
-                        
-                        // Use regex to specifically target the stroke attribute
-                        const newSvg = section.svg.replace(/stroke="[^"]*"/g, `stroke="${color}"`);
+                        // Extract the current SVG and update its color
+                        const svgContent = section.svg;
+                        const newSvg = svgContent.replace(/stroke="[^"]*"/, `stroke="${color}"`);
                         updateSection(section.id, 'svg', newSvg);
                       }}
                       currentIcon={section.svg}
-                      currentColor={section.svg.match(/stroke="([^"]*)"/)?.[1] || "#3498db"}
                     />
                   </div>
                 </div>
                 
-                {/* Right column with text fields */}
-                <div className="flex-1 space-y-4">
-                  {/* Title input */}
+                <div className="flex-1 space-y-3">
                   <div>
-                    <Label htmlFor={`title-${section.id}`} className="text-sm font-medium">Title</Label>
+                    <Label htmlFor={`title-${section.id}`} className="text-xs">Title</Label>
                     <Input
                       id={`title-${section.id}`}
                       value={section.title}
                       onChange={(e) => updateSection(section.id, 'title', e.target.value)}
-                      placeholder="Section title"
+                      placeholder="Section Title"
                       className="mt-1"
                     />
                   </div>
                   
-                  {/* Description textarea */}
                   <div>
-                    <Label htmlFor={`description-${section.id}`} className="text-sm font-medium">Description</Label>
+                    <Label htmlFor={`description-${section.id}`} className="text-xs">Description</Label>
                     <Textarea
                       id={`description-${section.id}`}
                       value={section.description}

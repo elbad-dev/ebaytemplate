@@ -47,37 +47,12 @@ export function generateTemplate(templateData: TemplateData): string {
       $('h1').after(`<h2 class="subtitle">${templateData.subtitle}</h2>`);
     }
     
-    // Update brand text in header if it exists
-    if (templateData.title) {
-      // Check for brand-text header specifically
-      $('.brand-text h1').each((i: number, el: any) => {
-        $(el).text(templateData.title || '');
-      });
-    }
-    
-    // Update subtitle in brand section if it exists
-    if (templateData.subtitle) {
-      // Check for brand-subtitle specifically
-      $('.brand-subtitle p').each((i: number, el: any) => {
-        $(el).text(templateData.subtitle || '');
-      });
-      
-      // Also check for subtitle in the brand-text section
-      $('.brand-text p').each((i: number, el: any) => {
-        // Only update if it's not within a container that has already been updated
-        const parentHasH1 = $(el).parent().find('h1').length > 0;
-        if (parentHasH1) {
-          $(el).text(templateData.subtitle || '');
-        }
-      });
-    }
-    
     // Update the logo if it exists
     if (templateData.logo) {
       const logoStr = templateData.logo; // Local constant to avoid undefined errors
       
       // Update image-based logos
-      $('img[src*="logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img, .brand-info img').each((i: number, el: any) => {
+      $('img[src*="logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img').each((i: number, el: any) => {
         // If the logo is a URL to an image
         if (!logoStr.includes('<svg')) {
           $(el).attr('src', logoStr);
@@ -88,7 +63,7 @@ export function generateTemplate(templateData: TemplateData): string {
       });
       
       // Update SVG-based logos
-      $('.logo svg, .header-logo svg, .brand-logo svg, .brand-info svg').each((i: number, el: any) => {
+      $('.logo svg, .header-logo svg, .brand-logo svg').each((i: number, el: any) => {
         // If the logo is an SVG, replace it
         if (logoStr.includes('<svg')) {
           $(el).replaceWith(logoStr);
@@ -407,217 +382,39 @@ export function generateTemplate(templateData: TemplateData): string {
     
     // Update company information sections
     if (templateData.companyInfo.length > 0) {
-      // First, look for a container that might have company/about us sections
-      const possibleContainers = [
-        '.info-cards',
-        '.about-us',
-        '.ueber-uns',
-        '.company-info',
-        '.info-section',
-        '.company-section',
-        '.feature-cards'
+      const companyContainers = [
+        '.info-card', '.company-card', '.info-section', '.company-section',
+        '.info-cards .card'
       ];
       
-      let mainContainer = null;
-      for (const containerSelector of possibleContainers) {
-        const container = $(containerSelector);
-        if (container.length) {
-          mainContainer = container;
-          break;
-        }
-      }
-      
-      // If no container found, look for a section with a title like "About Us" or "Über Uns"
-      if (!mainContainer) {
-        $('h2, h3, .section-title').each((_, el) => {
-          const title = $(el).text().toLowerCase().trim();
-          if (title.includes('about us') || title.includes('über uns') || title.includes('ueber uns') || title.includes('company')) {
-            // Get the parent container
-            mainContainer = $(el).parent();
-            return false; // break the loop
-          }
-        });
-      }
-      
-      // If we found a container, clear it and add all sections
-      if (mainContainer) {
-        // First, clear existing card content but keep the container and heading
-        const heading = mainContainer.find('h2, h3, .section-title').first().clone();
-        mainContainer.empty();
-        
-        // If we had a heading, put it back
-        if (heading.length) {
-          mainContainer.append(heading);
-        }
-        
-        // Create a container for cards if it doesn't exist
-        let cardsContainer;
-        if (mainContainer.hasClass('info-cards')) {
-          cardsContainer = mainContainer;
-        } else {
-          cardsContainer = $('<div class="info-cards"></div>');
-          mainContainer.append(cardsContainer);
-        }
-        
-        // Now add each company info section as a card
-        templateData.companyInfo.forEach(section => {
-          // Process the SVG to ensure it has proper size constraints
-          let svgWithSize = section.svg;
-          if (svgWithSize && !svgWithSize.includes('width=') && !svgWithSize.includes('height=')) {
-            // If SVG doesn't have dimensions, add them
-            svgWithSize = svgWithSize.replace('<svg', '<svg width="24" height="24"');
-          }
+      for (const section of templateData.companyInfo) {
+        for (const container of companyContainers) {
+          const cards = $(container);
+          let updated = false;
           
-          // Add style directly to the SVG to constrain its size
-          svgWithSize = svgWithSize.replace('<svg', '<svg style="width: 24px; height: 24px; max-width: 24px; max-height: 24px;"');
-          
-          const cardHtml = `
-            <div class="info-card">
-              <div class="card-icon" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">${svgWithSize}</div>
-              <h3 class="info-title">${section.title}</h3>
-              <p class="info-description">${section.description}</p>
-            </div>
-          `;
-          cardsContainer.append(cardHtml);
-        });
-      } else {
-        // If we didn't find a suitable container, try updating existing cards
-        const companyContainers = [
-          '.info-card', 
-          '.company-card', 
-          '.info-section', 
-          '.company-section',
-          '.info-cards .card',
-          '.feature-cards .card'
-        ];
-        
-        // First try to update existing cards
-        const existingCards: any[] = [];
-        for (const selector of companyContainers) {
-          const cards = $(selector);
-          if (cards.length > 0) {
-            cards.each((_, el) => {
-              existingCards.push($(el));
-            });
-          }
-        }
-        
-        // Update existing cards first
-        for (let i = 0; i < Math.min(existingCards.length, templateData.companyInfo.length); i++) {
-          const card = existingCards[i];
-          const section = templateData.companyInfo[i];
-          
-          // Update title
-          card.find('.info-title, .card-title, h3').text(section.title);
-          
-          // Update description
-          card.find('.info-description, .card-content, p').text(section.description);
-          
-          // Update SVG if possible, making sure it has size constraints
-          // Process SVG to ensure it has proper size constraints
-          let svgWithSize = section.svg;
-          if (svgWithSize && !svgWithSize.includes('width=') && !svgWithSize.includes('height=')) {
-            // If SVG doesn't have dimensions, add them
-            svgWithSize = svgWithSize.replace('<svg', '<svg width="24" height="24"');
-          }
-          
-          // Add style directly to the SVG to constrain its size, but use max-width/height 
-          // instead of fixed dimensions to preserve layout
-          svgWithSize = svgWithSize.replace('<svg', '<svg style="max-width: 40px; max-height: 40px;"');
-          
-          const svgContainer = card.find('.icon, .svg-container, .card-icon');
-          if (svgContainer.length) {
-            svgContainer.html(svgWithSize);
-            // Don't modify the container style to preserve layout
-          } else {
-            // If no container found, try to replace the SVG directly
-            card.find('svg').replaceWith(svgWithSize);
-          }
-        }
-        
-        // If we have more sections than cards, add them at the end of the body
-        if (templateData.companyInfo.length > existingCards.length) {
-          // Create a new about us section if none exists
-          const aboutUsSection = $('<div class="about-us"><h2>Über Uns</h2><div class="info-cards"></div></div>');
-          $('body').append(aboutUsSection);
-          
-          const infoCards = aboutUsSection.find('.info-cards');
-          
-          // Add the extra sections
-          for (let i = existingCards.length; i < templateData.companyInfo.length; i++) {
-            const section = templateData.companyInfo[i];
-            
-            // Process SVG to ensure it has proper size constraints
-            let svgWithSize = section.svg;
-            if (svgWithSize && !svgWithSize.includes('width=') && !svgWithSize.includes('height=')) {
-              // If SVG doesn't have dimensions, add them
-              svgWithSize = svgWithSize.replace('<svg', '<svg width="24" height="24"');
+          cards.each((i: number, el: any) => {
+            const sectionIndex = templateData.companyInfo.findIndex(s => s.id === section.id);
+            if (i === sectionIndex) {
+              // Update title
+              $(el).find('.info-title, .card-title, h3').text(section.title);
+              
+              // Update description
+              $(el).find('.info-description, .card-content, p').text(section.description);
+              
+              // Update SVG if possible
+              const svgContainer = $(el).find('.icon, .svg-container, .card-icon');
+              if (svgContainer.length) {
+                svgContainer.html(section.svg);
+              } else {
+                // If no container found, try to replace the SVG directly
+                $(el).find('svg').replaceWith(section.svg);
+              }
+              
+              updated = true;
             }
-            
-            // Add style directly to the SVG to constrain its size, but use max-width/height 
-            // instead of fixed dimensions to preserve layout
-            svgWithSize = svgWithSize.replace('<svg', '<svg style="max-width: 40px; max-height: 40px;"');
-            
-            const cardHtml = `
-              <div class="info-card">
-                <div class="card-icon">${svgWithSize}</div>
-                <h3 class="info-title">${section.title}</h3>
-                <p class="info-description">${section.description}</p>
-              </div>
-            `;
-            infoCards.append(cardHtml);
-          }
+          });
           
-          // Add some basic CSS for the new section
-          $('head').append(`
-            <style>
-              .about-us {
-                margin-top: 60px;
-                padding: 20px;
-              }
-              .about-us h2 {
-                font-size: 24px;
-                margin-bottom: 30px;
-                text-align: center;
-              }
-              .info-cards {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 25px;
-              }
-              .info-card {
-                background-color: #f9f9f9;
-                border-radius: 8px;
-                padding: 25px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-                transition: all 0.3s ease;
-                position: relative;
-                overflow: hidden;
-              }
-              .info-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 5px;
-                height: 100%;
-                background: linear-gradient(to bottom, #3498db, #2980b9);
-              }
-              .card-icon {
-                margin-bottom: 20px;
-                width: 40px;
-                height: 40px;
-              }
-              .info-title {
-                font-size: 18px;
-                font-weight: 700;
-                margin-bottom: 12px;
-              }
-              .info-description {
-                line-height: 1.7;
-              }
-            </style>
-          `);
+          if (updated) break;
         }
       }
     }
@@ -693,29 +490,17 @@ function createBasicTemplate(data: TemplateData): string {
     `
     : '<div class="tech-table"><p>No technical specifications available</p></div>';
   
-  // Create company info HTML with size-constrained SVGs
+  // Create company info HTML
   const companyInfo = data.companyInfo.length > 0
     ? `
       <div class="info-cards">
-        ${data.companyInfo.map(info => {
-          // Process SVG to ensure proper sizing
-          let svgWithSize = info.svg;
-          if (svgWithSize && !svgWithSize.includes('width=') && !svgWithSize.includes('height=')) {
-            // If SVG doesn't have dimensions, add them
-            svgWithSize = svgWithSize.replace('<svg', '<svg width="24" height="24"');
-          }
-          
-          // Add style directly to the SVG to constrain its size, but use max-width/height
-          // instead of fixed dimensions to preserve layout
-          svgWithSize = svgWithSize.replace('<svg', '<svg style="max-width: 40px; max-height: 40px;"');
-          
-          return `
+        ${data.companyInfo.map(info => `
           <div class="card info-card">
-            <div class="card-icon">${svgWithSize}</div>
+            <div class="card-icon">${info.svg}</div>
             <h3 class="info-title">${info.title}</h3>
             <p class="info-description">${info.description}</p>
           </div>
-        `;}).join('')}
+        `).join('')}
       </div>
     `
     : '';
