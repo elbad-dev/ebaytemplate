@@ -521,14 +521,14 @@ export function generateTemplate(templateData: TemplateData): string {
             svgWithSize = svgWithSize.replace('<svg', '<svg width="24" height="24"');
           }
           
-          // Add style directly to the SVG to constrain its size
-          svgWithSize = svgWithSize.replace('<svg', '<svg style="width: 24px; height: 24px; max-width: 24px; max-height: 24px;"');
+          // Add style directly to the SVG to constrain its size, but use max-width/height 
+          // instead of fixed dimensions to preserve layout
+          svgWithSize = svgWithSize.replace('<svg', '<svg style="max-width: 40px; max-height: 40px;"');
           
           const svgContainer = card.find('.icon, .svg-container, .card-icon');
           if (svgContainer.length) {
             svgContainer.html(svgWithSize);
-            // Add size constraints to the container as well
-            svgContainer.attr('style', 'width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;');
+            // Don't modify the container style to preserve layout
           } else {
             // If no container found, try to replace the SVG directly
             card.find('svg').replaceWith(svgWithSize);
@@ -554,12 +554,13 @@ export function generateTemplate(templateData: TemplateData): string {
               svgWithSize = svgWithSize.replace('<svg', '<svg width="24" height="24"');
             }
             
-            // Add style directly to the SVG to constrain its size
-            svgWithSize = svgWithSize.replace('<svg', '<svg style="width: 24px; height: 24px; max-width: 24px; max-height: 24px;"');
+            // Add style directly to the SVG to constrain its size, but use max-width/height 
+            // instead of fixed dimensions to preserve layout
+            svgWithSize = svgWithSize.replace('<svg', '<svg style="max-width: 40px; max-height: 40px;"');
             
             const cardHtml = `
               <div class="info-card">
-                <div class="card-icon" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">${svgWithSize}</div>
+                <div class="card-icon">${svgWithSize}</div>
                 <h3 class="info-title">${section.title}</h3>
                 <p class="info-description">${section.description}</p>
               </div>
@@ -704,12 +705,13 @@ function createBasicTemplate(data: TemplateData): string {
             svgWithSize = svgWithSize.replace('<svg', '<svg width="24" height="24"');
           }
           
-          // Add style directly to the SVG to constrain its size
-          svgWithSize = svgWithSize.replace('<svg', '<svg style="width: 24px; height: 24px; max-width: 24px; max-height: 24px;"');
+          // Add style directly to the SVG to constrain its size, but use max-width/height
+          // instead of fixed dimensions to preserve layout
+          svgWithSize = svgWithSize.replace('<svg', '<svg style="max-width: 40px; max-height: 40px;"');
           
           return `
           <div class="card info-card">
-            <div class="card-icon" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">${svgWithSize}</div>
+            <div class="card-icon">${svgWithSize}</div>
             <h3 class="info-title">${info.title}</h3>
             <p class="info-description">${info.description}</p>
           </div>
