@@ -47,12 +47,37 @@ export function generateTemplate(templateData: TemplateData): string {
       $('h1').after(`<h2 class="subtitle">${templateData.subtitle}</h2>`);
     }
     
+    // Update brand text in header if it exists
+    if (templateData.title) {
+      // Check for brand-text header specifically
+      $('.brand-text h1').each((i: number, el: any) => {
+        $(el).text(templateData.title);
+      });
+    }
+    
+    // Update subtitle in brand section if it exists
+    if (templateData.subtitle) {
+      // Check for brand-subtitle specifically
+      $('.brand-subtitle p').each((i: number, el: any) => {
+        $(el).text(templateData.subtitle);
+      });
+      
+      // Also check for subtitle in the brand-text section
+      $('.brand-text p').each((i: number, el: any) => {
+        // Only update if it's not within a container that has already been updated
+        const parentHasH1 = $(el).parent().find('h1').length > 0;
+        if (parentHasH1) {
+          $(el).text(templateData.subtitle);
+        }
+      });
+    }
+    
     // Update the logo if it exists
     if (templateData.logo) {
       const logoStr = templateData.logo; // Local constant to avoid undefined errors
       
       // Update image-based logos
-      $('img[src*="logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img').each((i: number, el: any) => {
+      $('img[src*="logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img, .brand-info img').each((i: number, el: any) => {
         // If the logo is a URL to an image
         if (!logoStr.includes('<svg')) {
           $(el).attr('src', logoStr);
@@ -63,7 +88,7 @@ export function generateTemplate(templateData: TemplateData): string {
       });
       
       // Update SVG-based logos
-      $('.logo svg, .header-logo svg, .brand-logo svg').each((i: number, el: any) => {
+      $('.logo svg, .header-logo svg, .brand-logo svg, .brand-info svg').each((i: number, el: any) => {
         // If the logo is an SVG, replace it
         if (logoStr.includes('<svg')) {
           $(el).replaceWith(logoStr);

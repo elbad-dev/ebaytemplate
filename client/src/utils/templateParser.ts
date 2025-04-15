@@ -13,14 +13,21 @@ export function parseTemplate(htmlContent: string): TemplateData {
     // Extract title from specific product info section (templates)
     let title = '';
     
-    // Method 1: Try to find product title from h2 in product-info section
+    // Method 1: Try to find product title from various containers
     // Look for titles in various product info containers (more generic approach)
     const productInfoSelectors = [
+      // Product info section selectors
       '.product-info h2', 
       '.product-info .card h2',
       '.product-info-section h2',
       '.product-details h2',
-      '.product-header h1, .product-header h2'
+      '.product-header h1, .product-header h2',
+      
+      // Header/brand section selectors
+      '.brand-text h1',
+      '.header .brand-section h1',
+      'header .brand-section h1',
+      '.header-content .brand-info h1'
     ];
     
     for (const selector of productInfoSelectors) {
@@ -186,7 +193,19 @@ export function parseTemplate(htmlContent: string): TemplateData {
     // Extract subtitle
     let subtitle = '';
     const possibleSubtitles = [
-      '.subtitle', '.brand-subtitle', 'h2:first-of-type', '.product-subtitle'
+      // Direct subtitle classes
+      '.subtitle', 
+      '.product-subtitle',
+      
+      // Brand sections
+      '.brand-subtitle',
+      '.brand-subtitle p',
+      '.brand-text p',
+      '.header .brand-section p',
+      '.header-content .brand-subtitle p',
+      
+      // Fallback
+      'h2:first-of-type'
     ];
     
     for (const selector of possibleSubtitles) {
@@ -194,6 +213,17 @@ export function parseTemplate(htmlContent: string): TemplateData {
       if (subtitleEl.length) {
         subtitle = subtitleEl.text().trim();
         break;
+      }
+    }
+    
+    // Additional check for the brand-text structure with <p> after the h1
+    if (!subtitle) {
+      const brandTextH1 = $('.brand-text h1');
+      if (brandTextH1.length) {
+        const nextParagraph = brandTextH1.parent().find('p').first();
+        if (nextParagraph.length) {
+          subtitle = nextParagraph.text().trim();
+        }
       }
     }
     

@@ -21,7 +21,9 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
     if (data.title) {
       if (data.rawHtml?.includes('product-info') && data.rawHtml?.includes('<h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">')) {
         setDetectionMethod('Product Info Section');
-      } else if (data.title.includes('Professioneller Werkzeugsatz Premium')) {
+      } else if (data.rawHtml?.includes('brand-text') && data.rawHtml?.includes('<h1>')) {
+        setDetectionMethod('Brand Header Section');
+      } else if (data.title.includes('Professioneller Werkzeugsatz Premium') || data.title.includes('HAUS WERKZEUGE')) {
         setDetectionMethod('Product Title Detection');
       } else {
         setDetectionMethod('Title Detection');
@@ -93,6 +95,8 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
                     <p className="text-xs">
                       {detectionMethod === 'Product Info Section' 
                         ? 'This title was detected in the product-info section of your template.' 
+                        : detectionMethod === 'Brand Header Section'
+                        ? 'This title was detected in the brand header section of your template.'
                         : 'This title was detected using our enhanced detection algorithm.'}
                     </p>
                   </TooltipContent>
