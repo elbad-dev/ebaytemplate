@@ -122,76 +122,116 @@ export function generateTemplate(templateData: TemplateData): string {
         const radioContainer = $('input[type="radio"][name="gallery"]').first().parent();
         const thumbnailContainer = $('.thumbnail-set.set1');
         
-        // Build complete gallery structure
-        const thumbnailSet = $('.thumbnail-set').first();
+        // Before updating, get references to existing CSS that manages the image visibility
+        const styleElement = $('style:contains("#img")');
+        let cssContent = styleElement.html() || '';
         
-        // Clear existing elements
-        radioContainer.find('input[type="radio"]').remove();
-        galleryContainer.find('.gallery-arrow').remove();
-        galleryContainer.find('.gallery-item').remove();
-        thumbnailSet.empty();
-        
-        // Generate radio inputs
-        for (let i = 0; i < totalImages; i++) {
-          const n = i + 1;
-          radioContainer.prepend(`
-            <input type="radio" name="gallery" id="img${n}" ${n === 1 ? 'checked' : ''}>
-          `);
-        }
-        
-        // Generate navigation arrows
-        for (let i = 0; i < totalImages; i++) {
-          const n = i + 1;
-          const prevTarget = n === 1 ? totalImages : n - 1;
-          const nextTarget = n === totalImages ? 1 : n + 1;
+        // 1. First update existing images
+        for (let i = 0; i < Math.min(existingRadios, totalImages); i++) {
+          const n = i + 1; // Use 1-based indexing as in the example
           
-          galleryContainer.append(`
-            <label class="gallery-arrow prev" for="img${prevTarget}"></label>
-            <label class="gallery-arrow next" for="img${nextTarget}"></label>
-          `);
+          // Update main image
+          const mainImage = $(`#main${n}`);
+          if (mainImage.length) {
+            mainImage.attr('src', templateData.images[i].url);
+          }
+          
+          // Update thumbnail
+          const thumbnail = $(`.thumbnail[for="img${n}"] img`);
+          if (thumbnail.length) {
+            thumbnail.attr('src', templateData.images[i].url);
+          }
         }
         
-        // Generate main images
-        for (let i = 0; i < totalImages; i++) {
-          const n = i + 1;
-          galleryContainer.append(`
-            <img src="${templateData.images[i].url}" alt="Product Detail ${n}" class="gallery-item" id="main${n}">
-          `);
-        }
-        
-        // Generate thumbnails
-        for (let i = 0; i < totalImages; i++) {
-          const n = i + 1;
-          thumbnailSet.append(`
-            <label class="thumbnail" for="img${n}">
-              <img src="${templateData.images[i].url}" alt="Thumbnail ${n}">
-            </label>
-          `);
-        }
-        
-        // Generate CSS for image visibility
-        let newCSS = '';
-        for (let i = 0; i < totalImages; i++) {
-          const n = i + 1;
-          newCSS += `
+        // 2. Add new elements for additional images
+        if (totalImages > existingRadios) {
+          // a. Add new radio buttons first
+          for (let i = existingRadios; i < totalImages; i++) {
+            const n = i + 1;
+            radioContainer.append(`<input type="radio" name="gallery" id="img${n}">`);
+          }
+          
+          // b. Add CSS selectors for new images (up to 20 images allowed)
+          // This is the important part - making sure the correct CSS is in place for selectors
+          let newCSS = '';
+          for (let i = existingRadios; i < Math.min(totalImages, 20); i++) {
+            const n = i + 1;
+            newCSS += `
             #img${n}:checked ~ .gallery-container #main${n} {
-              opacity: 1;
-              z-index: 2;
-            }
-            
-            #img${n}:checked ~ .gallery-container .next[for="img${n === totalImages ? 1 : n + 1}"],
-            #img${n}:checked ~ .gallery-container .prev[for="img${n === 1 ? totalImages : n - 1}"] {
               display: block;
             }
-          `;
-        }
-        
-        // Update or create style element
-        const styleElement = $('style:contains("#img")');
-        if (styleElement.length) {
-          styleElement.html(newCSS);
-        } else {
-          $('head').append(`<style>${newCSS}</style>`);
+            `;
+          }
+          
+          // Add directional selectors for new arrows
+          for (let i = 0; i < totalImages; i++) {
+            const n = i + 1;
+            const prevN = n === 1 ? totalImages : n - 1;
+            const nextN = n === totalImages ? 1 : n + 1;
+            
+            newCSS += `
+            #img${n}:checked ~ .gallery-container .gallery-arrow.prev[for="img${prevN}"],
+            #img${n}:checked ~ .gallery-container .gallery-arrow.next[for="img${nextN}"] {
+              display: block;
+            }
+            `;
+          }
+          
+          // Append the new CSS
+          if (styleElement.length) {
+            styleElement.append(newCSS);
+          } else {
+            // If no style element exists, create one
+            $('head').append(`<style>${newCSS}</style>`);
+          }
+          
+          // c. Add/Update prev arrow navigation for ALL images (not just new ones)
+          // First remove existing arrows to avoid duplicates
+          $('.gallery-arrow.prev').remove();
+          
+          // Add all arrows fresh to ensure consistency
+          for (let i = 0; i < totalImages; i++) {
+            const n = i + 1;
+            const prevTarget = n === 1 ? totalImages : n - 1;
+            
+            galleryContainer.append(`
+              <label class="gallery-arrow prev" for="img${prevTarget}"></label>
+            `);
+          }
+          
+          // d. Add/Update next arrow navigation for ALL images
+          $('.gallery-arrow.next').remove();
+          
+          for (let i = 0; i < totalImages; i++) {
+            const n = i + 1;
+            const nextTarget = n === totalImages ? 1 : n + 1;
+            
+            galleryContainer.append(`
+              <label class="gallery-arrow next" for="img${nextTarget}"></label>
+            `);
+          }
+          
+          // e. Add new main images
+          for (let i = existingRadios; i < totalImages; i++) {
+            const n = i + 1;
+            galleryContainer.append(`
+              <img src="${templateData.images[i].url}" alt="Product Detail ${n}" class="gallery-item" id="main${n}">
+            `);
+          }
+          
+          // f. Add new thumbnails
+          for (let i = existingRadios; i < totalImages; i++) {
+            const n = i + 1;
+            thumbnailContainer.append(`
+              <label class="thumbnail" for="img${n}">
+                <img src="${templateData.images[i].url}" alt="Thumbnail ${n}">
+              </label>
+            `);
+          }
+          
+          // Make sure first radio button is checked by default
+          $('input[type="radio"][name="gallery"]').prop('checked', false);
+          $('#img1').prop('checked', true);
         }
       } else {
         // Handle other gallery types
@@ -389,19 +429,10 @@ export function generateTemplate(templateData: TemplateData): string {
               // Update SVG if possible
               const svgContainer = $(el).find('.icon, .svg-container, .card-icon');
               if (svgContainer.length) {
-                // Increase SVG size by scaling it up
-                const enlargedSvg = section.svg
-                  .replace('width="24"', 'width="36"')
-                  .replace('height="24"', 'height="36"')
-                  .replace('stroke-width="2"', 'stroke-width="1.5"');
-                svgContainer.html(enlargedSvg);
+                svgContainer.html(section.svg);
               } else {
                 // If no container found, try to replace the SVG directly
-                const enlargedSvg = section.svg
-                  .replace('width="24"', 'width="36"')
-                  .replace('height="24"', 'height="36"')
-                  .replace('stroke-width="2"', 'stroke-width="1.5"');
-                $(el).find('svg').replaceWith(enlargedSvg);
+                $(el).find('svg').replaceWith(section.svg);
               }
               
               updated = true;
@@ -488,21 +519,13 @@ function createBasicTemplate(data: TemplateData): string {
   const companyInfo = data.companyInfo.length > 0
     ? `
       <div class="info-cards">
-        ${data.companyInfo.map(info => {
-          // Increase SVG size
-          const enlargedSvg = info.svg
-            .replace('width="24"', 'width="48"')
-            .replace('height="24"', 'height="48"')
-            .replace('stroke-width="2"', 'stroke-width="1.5"');
-            
-          return `
+        ${data.companyInfo.map(info => `
           <div class="card info-card">
-            <div class="card-icon">${enlargedSvg}</div>
+            <div class="card-icon">${info.svg}</div>
             <h3 class="info-title">${info.title}</h3>
             <p class="info-description">${info.description}</p>
           </div>
-          `;
-        }).join('')}
+        `).join('')}
       </div>
     `
     : '';
@@ -740,12 +763,12 @@ function createBasicTemplate(data: TemplateData): string {
         .info-cards {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 25px;
+          gap: 20px;
           margin: 40px 0;
         }
         
         .info-card {
-          padding: 30px;
+          padding: 20px;
           border-radius: var(--radius);
           background: var(--card-bg);
           border: 1px solid var(--border);
@@ -753,47 +776,22 @@ function createBasicTemplate(data: TemplateData): string {
           flex-direction: column;
           align-items: center;
           text-align: center;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .info-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
         }
         
         .card-icon {
-          margin-bottom: 20px;
+          margin-bottom: 15px;
           color: var(--primary);
-          transform: scale(1.1);
         }
         
         .info-title {
-          font-size: 22px;
-          font-weight: 700;
-          margin-bottom: 15px;
-          color: #333;
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 10px;
         }
         
         .info-description {
           color: var(--muted);
-          line-height: 1.6;
-          font-size: 16px;
-        }
-        
-        .company-section {
-          margin-top: 40px;
-          padding-top: 20px;
-        }
-        
-        .company-section h2 {
-          font-size: 28px;
-          text-align: center;
-          margin-bottom: 30px;
-          font-weight: 700;
-          background: linear-gradient(135deg, var(--primary), #333);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          line-height: 1.5;
         }
         
         @media (max-width: 768px) {
@@ -829,10 +827,7 @@ function createBasicTemplate(data: TemplateData): string {
           ${techSpecs}
         </div>
         
-        ${companyInfo ? `<div class="company-section">
-          <h2 class="section-title">Über Uns</h2>
-          ${companyInfo}
-        </div>` : ''}
+        ${companyInfo ? `<div class="company-section">${companyInfo}</div>` : ''}
       </div>
     </body>
     </html>

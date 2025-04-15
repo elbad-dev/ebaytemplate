@@ -17,26 +17,17 @@ export function parseTemplate(htmlContent: string): TemplateData {
     // Look for titles in various product info containers (more generic approach)
     const productInfoSelectors = [
       // Product info section selectors
-      '.product-title', 
-      '.product-header h1', 
-      '.product-info h1',
       '.product-info h2', 
       '.product-info .card h2',
-      '.product-info-section h1, .product-info-section h2',
-      '.product-details h1, .product-details h2',
+      '.product-info-section h2',
+      '.product-details h2',
       '.product-header h1, .product-header h2',
       
       // Header/brand section selectors
-      '.brand-text',
-      '.brand-text h1, .brand-text h2, .brand-text p',
-      '.header .brand-section h1, .header .brand-section h2',
-      'header .brand-section h1, header .brand-section h2',
-      '.header-content .brand-info h1, .header-content .brand-info h2',
-      
-      // Other common product title containers
-      '.item-title',
-      '.listing-title',
-      '.product-name'
+      '.brand-text h1',
+      '.header .brand-section h1',
+      'header .brand-section h1',
+      '.header-content .brand-info h1'
     ];
     
     for (const selector of productInfoSelectors) {
@@ -286,33 +277,15 @@ export function parseTemplate(htmlContent: string): TemplateData {
     const companyInfo: CompanySection[] = [];
     
     // Find company info cards - from template
-    $('.info-cards .card, .info-cards .info-card').each((i, el) => {
-      const title = $(el).find('h3, .info-title').text().trim();
-      const description = $(el).find('p, .info-description').text().trim();
+    $('.info-cards .card').each((i, el) => {
+      const title = $(el).find('h3').text().trim();
+      const description = $(el).find('p').text().trim();
       
-      // Extract SVG from various icon containers
+      // Extract SVG from the info-icon container
       let svg = '';
-      const iconContainers = [
-        '.info-icon', 
-        '.card-icon',
-        '.icon',
-        '.icon-container'
-      ];
-      
-      for (const selector of iconContainers) {
-        const iconEl = $(el).find(selector);
-        if (iconEl.length) {
-          // Try to get SVG element
-          const svgEl = iconEl.find('svg');
-          if (svgEl.length) {
-            svg = $.html(svgEl) || '';
-            break;
-          } else {
-            // If no SVG found, get entire container HTML which might contain SVG
-            svg = iconEl.html() || '';
-            break;
-          }
-        }
+      const infoIcon = $(el).find('.info-icon');
+      if (infoIcon.length) {
+        svg = infoIcon.html() || '';
       }
       
       // Add to company sections
@@ -320,7 +293,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
         id: nanoid(),
         title: title || `Section ${i + 1}`,
         description: description || '',
-        svg: svg || '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
+        svg: svg || '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
       });
     });
     
@@ -345,7 +318,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
           id: nanoid(),
           title: title || `Section ${i + 1}`,
           description: description || '',
-          svg: svg || '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
+          svg: svg || '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
         });
       });
     }
@@ -357,7 +330,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
           id: nanoid(),
           title: `Company Section ${i + 1}`,
           description: 'Add description here',
-          svg: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
+          svg: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
         });
       }
     }
@@ -390,19 +363,19 @@ export function parseTemplate(htmlContent: string): TemplateData {
           id: nanoid(),
           title: 'Company Section 1',
           description: 'Add description here',
-          svg: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
+          svg: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
         },
         {
           id: nanoid(),
           title: 'Company Section 2',
           description: 'Add description here',
-          svg: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
+          svg: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
         },
         {
           id: nanoid(),
           title: 'Company Section 3',
           description: 'Add description here',
-          svg: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
+          svg: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>'
         }
       ],
       rawHtml: htmlContent

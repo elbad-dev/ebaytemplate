@@ -89,12 +89,10 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
             
             <CardContent className="space-y-4">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-24">
+                <div className="flex-shrink-0 w-16">
                   <div
-                    className="w-20 h-20 flex items-center justify-center bg-gray-50 rounded-md border p-3 shadow-sm"
-                    dangerouslySetInnerHTML={{ 
-                      __html: section.svg.replace('width="24"', 'width="32"').replace('height="24"', 'height="32"')
-                    }}
+                    className="w-14 h-14 flex items-center justify-center bg-gray-50 rounded-md border p-2"
+                    dangerouslySetInnerHTML={{ __html: section.svg }}
                   />
                   <div className="mt-2">
                     <IconSelector
@@ -112,24 +110,24 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
                 
                 <div className="flex-1 space-y-3">
                   <div>
-                    <Label htmlFor={`title-${section.id}`} className="text-sm font-medium">Section Title</Label>
+                    <Label htmlFor={`title-${section.id}`} className="text-xs">Title</Label>
                     <Input
                       id={`title-${section.id}`}
                       value={section.title}
                       onChange={(e) => updateSection(section.id, 'title', e.target.value)}
                       placeholder="Section Title"
-                      className="mt-1 text-base"
+                      className="mt-1"
                     />
                   </div>
                   
                   <div>
-                    <Label htmlFor={`description-${section.id}`} className="text-sm font-medium">Section Description</Label>
+                    <Label htmlFor={`description-${section.id}`} className="text-xs">Description</Label>
                     <Textarea
                       id={`description-${section.id}`}
                       value={section.description}
                       onChange={(e) => updateSection(section.id, 'description', e.target.value)}
                       placeholder="Section description"
-                      className="mt-1 resize-none text-base"
+                      className="mt-1 resize-none"
                       rows={3}
                     />
                   </div>
