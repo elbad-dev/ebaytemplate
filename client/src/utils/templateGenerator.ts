@@ -528,13 +528,21 @@ function createBasicTemplate(data: TemplateData): string {
   const companyInfo = data.companyInfo.length > 0
     ? `
       <div class="info-cards">
-        ${data.companyInfo.map(info => `
+        ${data.companyInfo.map(info => {
+          // Increase SVG size
+          const enlargedSvg = info.svg
+            .replace('width="24"', 'width="48"')
+            .replace('height="24"', 'height="48"')
+            .replace('stroke-width="2"', 'stroke-width="1.5"');
+            
+          return `
           <div class="card info-card">
-            <div class="card-icon">${info.svg}</div>
+            <div class="card-icon">${enlargedSvg}</div>
             <h3 class="info-title">${info.title}</h3>
             <p class="info-description">${info.description}</p>
           </div>
-        `).join('')}
+          `;
+        }).join('')}
       </div>
     `
     : '';
@@ -772,12 +780,12 @@ function createBasicTemplate(data: TemplateData): string {
         .info-cards {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 20px;
+          gap: 25px;
           margin: 40px 0;
         }
         
         .info-card {
-          padding: 20px;
+          padding: 30px;
           border-radius: var(--radius);
           background: var(--card-bg);
           border: 1px solid var(--border);
@@ -785,22 +793,32 @@ function createBasicTemplate(data: TemplateData): string {
           flex-direction: column;
           align-items: center;
           text-align: center;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .info-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
         }
         
         .card-icon {
-          margin-bottom: 15px;
+          margin-bottom: 20px;
           color: var(--primary);
+          transform: scale(1.1);
         }
         
         .info-title {
-          font-size: 18px;
-          font-weight: 600;
-          margin-bottom: 10px;
+          font-size: 22px;
+          font-weight: 700;
+          margin-bottom: 15px;
+          color: #333;
         }
         
         .info-description {
           color: var(--muted);
-          line-height: 1.5;
+          line-height: 1.6;
+          font-size: 16px;
         }
         
         @media (max-width: 768px) {
