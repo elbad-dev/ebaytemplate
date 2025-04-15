@@ -169,16 +169,16 @@ export const templateDataSchema = z.object({
     })
   ),
   // Color scheme properties
-  colorPrimary: z.string().optional(),
-  colorSecondary: z.string().optional(),
-  colorAccent: z.string().optional(),
-  colorBackground: z.string().optional(),
-  colorText: z.string().optional(),
+  color_primary: z.string().optional(),
+  color_secondary: z.string().optional(),
+  color_accent: z.string().optional(),
+  color_background: z.string().optional(),
+  color_text: z.string().optional(),
   // Font properties
-  fontHeading: z.string().optional(),
-  fontBody: z.string().optional(),
+  font_heading: z.string().optional(),
+  font_body: z.string().optional(),
   // Template style ID for the selected style
-  templateStyleId: z.number().optional(),
+  template_style_id: z.number().optional(),
   // Raw HTML content
   rawHtml: z.string().optional(),
 });

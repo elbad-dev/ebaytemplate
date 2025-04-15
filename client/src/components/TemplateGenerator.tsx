@@ -58,11 +58,11 @@ export default function TemplateGenerator({ onTemplateGenerated }: TemplateGener
         svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h16a2 2 0 0 1 1.2.4"></path><path d="M2 10h20"></path><path d="M7 15h.01"></path><path d="M11 15h2"></path><path d="M16 5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v2"></path></svg>'
       }
     ],
-    colorPrimary: "#3498db",
-    colorSecondary: "#2c3e50",
-    colorAccent: "#e74c3c",
-    colorBackground: "#ffffff",
-    colorText: "#333333"
+    color_primary: "#3498db",
+    color_secondary: "#2c3e50",
+    color_accent: "#e74c3c",
+    color_background: "#ffffff",
+    color_text: "#333333"
   });
   
   const [previewHtml, setPreviewHtml] = useState<string>('');
@@ -79,17 +79,17 @@ export default function TemplateGenerator({ onTemplateGenerated }: TemplateGener
   // Handle style selection
   const handleStyleSelect = (style: TemplateStyle) => {
     setSelectedStyle(style);
-    handleTemplateUpdate({ templateStyleId: style.id });
+    handleTemplateUpdate({ template_style_id: style.id });
   };
   
   // Reset colors to defaults
   const handleResetColors = () => {
     handleTemplateUpdate({
-      colorPrimary: "#3498db",
-      colorSecondary: "#2c3e50",
-      colorAccent: "#e74c3c",
-      colorBackground: "#ffffff",
-      colorText: "#333333"
+      color_primary: "#3498db",
+      color_secondary: "#2c3e50",
+      color_accent: "#e74c3c",
+      color_background: "#ffffff",
+      color_text: "#333333"
     });
   };
   
@@ -218,7 +218,7 @@ export default function TemplateGenerator({ onTemplateGenerated }: TemplateGener
               <TabsContent value="style" className="mt-0">
                 <TemplateStyleSelector 
                   onStyleSelect={handleStyleSelect} 
-                  selectedStyleId={templateData.templateStyleId}
+                  selectedStyleId={templateData.template_style_id}
                 />
               </TabsContent>
               

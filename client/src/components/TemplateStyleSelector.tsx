@@ -103,7 +103,7 @@ export default function TemplateStyleSelector({ onStyleSelect, selectedStyleId }
                   {style.style}
                 </span>
                 <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-sm capitalize">
-                  {style.colorScheme}
+                  {style.color_scheme}
                 </span>
               </div>
             </CardContent>
