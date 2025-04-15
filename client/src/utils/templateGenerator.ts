@@ -461,9 +461,19 @@ export function generateTemplate(templateData: TemplateData): string {
         
         // Now add each company info section as a card
         templateData.companyInfo.forEach(section => {
+          // Process the SVG to ensure it has proper size constraints
+          let svgWithSize = section.svg;
+          if (svgWithSize && !svgWithSize.includes('width=') && !svgWithSize.includes('height=')) {
+            // If SVG doesn't have dimensions, add them
+            svgWithSize = svgWithSize.replace('<svg', '<svg width="24" height="24"');
+          }
+          
+          // Add style directly to the SVG to constrain its size
+          svgWithSize = svgWithSize.replace('<svg', '<svg style="width: 24px; height: 24px; max-width: 24px; max-height: 24px;"');
+          
           const cardHtml = `
             <div class="info-card">
-              <div class="card-icon">${section.svg}</div>
+              <div class="card-icon" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">${svgWithSize}</div>
               <h3 class="info-title">${section.title}</h3>
               <p class="info-description">${section.description}</p>
             </div>
@@ -503,13 +513,25 @@ export function generateTemplate(templateData: TemplateData): string {
           // Update description
           card.find('.info-description, .card-content, p').text(section.description);
           
-          // Update SVG if possible
+          // Update SVG if possible, making sure it has size constraints
+          // Process SVG to ensure it has proper size constraints
+          let svgWithSize = section.svg;
+          if (svgWithSize && !svgWithSize.includes('width=') && !svgWithSize.includes('height=')) {
+            // If SVG doesn't have dimensions, add them
+            svgWithSize = svgWithSize.replace('<svg', '<svg width="24" height="24"');
+          }
+          
+          // Add style directly to the SVG to constrain its size
+          svgWithSize = svgWithSize.replace('<svg', '<svg style="width: 24px; height: 24px; max-width: 24px; max-height: 24px;"');
+          
           const svgContainer = card.find('.icon, .svg-container, .card-icon');
           if (svgContainer.length) {
-            svgContainer.html(section.svg);
+            svgContainer.html(svgWithSize);
+            // Add size constraints to the container as well
+            svgContainer.attr('style', 'width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;');
           } else {
             // If no container found, try to replace the SVG directly
-            card.find('svg').replaceWith(section.svg);
+            card.find('svg').replaceWith(svgWithSize);
           }
         }
         
@@ -524,9 +546,20 @@ export function generateTemplate(templateData: TemplateData): string {
           // Add the extra sections
           for (let i = existingCards.length; i < templateData.companyInfo.length; i++) {
             const section = templateData.companyInfo[i];
+            
+            // Process SVG to ensure it has proper size constraints
+            let svgWithSize = section.svg;
+            if (svgWithSize && !svgWithSize.includes('width=') && !svgWithSize.includes('height=')) {
+              // If SVG doesn't have dimensions, add them
+              svgWithSize = svgWithSize.replace('<svg', '<svg width="24" height="24"');
+            }
+            
+            // Add style directly to the SVG to constrain its size
+            svgWithSize = svgWithSize.replace('<svg', '<svg style="width: 24px; height: 24px; max-width: 24px; max-height: 24px;"');
+            
             const cardHtml = `
               <div class="info-card">
-                <div class="card-icon">${section.svg}</div>
+                <div class="card-icon" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">${svgWithSize}</div>
                 <h3 class="info-title">${section.title}</h3>
                 <p class="info-description">${section.description}</p>
               </div>
@@ -659,17 +692,28 @@ function createBasicTemplate(data: TemplateData): string {
     `
     : '<div class="tech-table"><p>No technical specifications available</p></div>';
   
-  // Create company info HTML
+  // Create company info HTML with size-constrained SVGs
   const companyInfo = data.companyInfo.length > 0
     ? `
       <div class="info-cards">
-        ${data.companyInfo.map(info => `
+        ${data.companyInfo.map(info => {
+          // Process SVG to ensure proper sizing
+          let svgWithSize = info.svg;
+          if (svgWithSize && !svgWithSize.includes('width=') && !svgWithSize.includes('height=')) {
+            // If SVG doesn't have dimensions, add them
+            svgWithSize = svgWithSize.replace('<svg', '<svg width="24" height="24"');
+          }
+          
+          // Add style directly to the SVG to constrain its size
+          svgWithSize = svgWithSize.replace('<svg', '<svg style="width: 24px; height: 24px; max-width: 24px; max-height: 24px;"');
+          
+          return `
           <div class="card info-card">
-            <div class="card-icon">${info.svg}</div>
+            <div class="card-icon" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">${svgWithSize}</div>
             <h3 class="info-title">${info.title}</h3>
             <p class="info-description">${info.description}</p>
           </div>
-        `).join('')}
+        `;}).join('')}
       </div>
     `
     : '';
