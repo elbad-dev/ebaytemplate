@@ -1,9 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Monitor, Tablet, Smartphone, Maximize2, Minimize2 } from 'lucide-react';
+import { RefreshCw, Monitor, Tablet, Smartphone } from 'lucide-react';
 import { PreviewMode } from '../types';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface PreviewPanelProps {
   html: string;
@@ -19,42 +18,14 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   onRefresh
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const fullscreenIframeRef = useRef<HTMLIFrameElement>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     updateIframeContent();
-    if (isFullscreen) {
-      updateFullscreenIframeContent();
-    }
-  }, [html, isFullscreen]);
-  
-  // When the fullscreen dialog opens, ensure we load the content
-  useEffect(() => {
-    if (isFullscreen) {
-      // Add a short delay to ensure the iframe is in the DOM
-      setTimeout(() => {
-        updateFullscreenIframeContent();
-      }, 100);
-    }
-  }, [isFullscreen]);
+  }, [html]);
 
   const updateIframeContent = () => {
     if (iframeRef.current) {
       const iframe = iframeRef.current;
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      
-      if (iframeDoc) {
-        iframeDoc.open();
-        iframeDoc.write(html || getEmptyPreview());
-        iframeDoc.close();
-      }
-    }
-  };
-  
-  const updateFullscreenIframeContent = () => {
-    if (fullscreenIframeRef.current) {
-      const iframe = fullscreenIframeRef.current;
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       
       if (iframeDoc) {
@@ -144,14 +115,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
             </div>
             <Button
               variant="secondary"
-              onClick={() => setIsFullscreen(true)}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm rounded-md flex items-center"
-            >
-              <Maximize2 className="w-4 h-4 mr-1" />
-              Expand
-            </Button>
-            <Button
-              variant="secondary"
               onClick={onRefresh}
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm rounded-md flex items-center"
             >
@@ -174,67 +137,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
           </div>
         </CardContent>
       </Card>
-
-      {/* Fullscreen Preview Dialog */}
-      <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] w-[95vw] h-[95vh] p-0">
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-xl font-semibold">Fullscreen Preview</h2>
-              <div className="flex items-center gap-4">
-                <div className="flex border border-gray-300 rounded-md p-1">
-                  <button 
-                    className={`device-button ${previewMode === 'desktop' ? 'device-button-active' : 'device-button-inactive'}`}
-                    onClick={() => onChangePreviewMode('desktop')}
-                  >
-                    <Monitor className="w-5 h-5" />
-                  </button>
-                  <button 
-                    className={`device-button ${previewMode === 'tablet' ? 'device-button-active' : 'device-button-inactive'}`}
-                    onClick={() => onChangePreviewMode('tablet')}
-                  >
-                    <Tablet className="w-5 h-5" />
-                  </button>
-                  <button 
-                    className={`device-button ${previewMode === 'mobile' ? 'device-button-active' : 'device-button-inactive'}`}
-                    onClick={() => onChangePreviewMode('mobile')}
-                  >
-                    <Smartphone className="w-5 h-5" />
-                  </button>
-                </div>
-                <Button
-                  variant="secondary"
-                  onClick={onRefresh}
-                  className="flex items-center"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Refresh
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => setIsFullscreen(false)}
-                  className="flex items-center"
-                >
-                  <Minimize2 className="w-4 h-4 mr-2" />
-                  Exit Fullscreen
-                </Button>
-              </div>
-            </div>
-            <div className="flex-1 bg-gray-100 p-4 overflow-auto">
-              <div 
-                className="bg-white mx-auto transition-all duration-300 h-full overflow-hidden" 
-                style={{ width: '100%', maxWidth: getPreviewWidth() }}
-              >
-                <iframe 
-                  ref={fullscreenIframeRef}
-                  className="w-full h-full border-0" 
-                  title="Fullscreen Template Preview"
-                />
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
