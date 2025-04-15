@@ -16,18 +16,41 @@ export function generateTemplate(templateData: TemplateData): string {
     $('title').text(templateData.title);
     
     // Update main heading(s)
-    const headings = ['h1', '.main-title', '.product-title', '.brand-text h1', '.product-info h2', '.product-info .card h2'];
-    for (const selector of headings) {
-      $(selector).each((i: number, el: any) => {
-        // Save the original styling but update the text content
+    // NOTE: We need to be more specific to avoid overwriting description section headings
+    const headings = ['h1', '.main-title', '.product-title', '.brand-text h1'];
+    
+    // First check if there's a specific product-info heading that we should update
+    let productInfoHeadingUpdated = false;
+    $('.product-info .card h2:first-of-type, .product-info h2:first-of-type').each((i: number, el: any) => {
+      // Only update if it's the first h2 in product-info (product name)
+      // and not a section heading like "Produktbeschreibung"
+      const text = $(el).text().trim();
+      if (!text.includes('Produktbeschreibung') && !text.includes('Technische Daten') && 
+          !text.includes('Über uns') && !text.includes('Beschreibung')) {
         const originalStyles = $(el).attr('style') || '';
         $(el).text(templateData.title);
         
-        // Make sure we preserve any existing styling
         if (originalStyles) {
           $(el).attr('style', originalStyles);
         }
-      });
+        productInfoHeadingUpdated = true;
+      }
+    });
+    
+    // If we didn't update a specific product-info heading, use the general selectors
+    if (!productInfoHeadingUpdated) {
+      for (const selector of headings) {
+        $(selector).each((i: number, el: any) => {
+          // Save the original styling but update the text content
+          const originalStyles = $(el).attr('style') || '';
+          $(el).text(templateData.title);
+          
+          // Make sure we preserve any existing styling
+          if (originalStyles) {
+            $(el).attr('style', originalStyles);
+          }
+        });
+      }
     }
     
     // Update subtitle
