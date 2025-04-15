@@ -10,11 +10,11 @@ export async function analyzeTemplateText(
   logoUrl?: string
 ): Promise<{
   suggestions: {
-    colorPrimary: string;
-    colorSecondary: string;
-    colorAccent: string;
-    colorBackground: string;
-    colorText: string;
+    color_primary: string;
+    color_secondary: string;
+    color_accent: string;
+    color_background: string;
+    color_text: string;
     style: string;
     companyInfo: Array<{
       id: string;
@@ -103,11 +103,11 @@ export async function analyzeTemplateText(
     console.error("Error in OpenAI template analysis:", error);
     return {
       suggestions: {
-        colorPrimary: "#3498db",
-        colorSecondary: "#2ecc71",
-        colorAccent: "#e74c3c",
-        colorBackground: "#f9f9f9",
-        colorText: "#333333",
+        color_primary: "#3498db",
+        color_secondary: "#2ecc71",
+        color_accent: "#e74c3c",
+        color_background: "#f9f9f9",
+        color_text: "#333333",
         style: "modern",
         companyInfo: [
           {

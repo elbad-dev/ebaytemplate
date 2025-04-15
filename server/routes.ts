@@ -407,8 +407,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If a template style ID is provided, fetch that style
       let style = null;
-      if (templateData.templateStyleId) {
-        style = await storage.getTemplateStyle(templateData.templateStyleId);
+      if (templateData.template_style_id) {
+        style = await storage.getTemplateStyle(templateData.template_style_id);
         if (!style) {
           return res.status(404).json({ message: "Template style not found" });
         }
@@ -436,7 +436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: templateName,
         html: generatedHtml,
         user_id: userId,
-        style_id: templateData.templateStyleId
+        style_id: templateData.template_style_id
         // Don't set created_at - it will be automatically set to now() by the database
       });
       
