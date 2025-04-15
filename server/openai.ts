@@ -70,7 +70,7 @@ export async function analyzeTemplateText(
               url: logoUrl,
             },
           },
-        ],
+        ] as any,
       });
     }
 
@@ -87,7 +87,7 @@ export async function analyzeTemplateText(
     
     // Add unique IDs to company info sections if they don't have them
     if (suggestions.companyInfo && Array.isArray(suggestions.companyInfo)) {
-      suggestions.companyInfo = suggestions.companyInfo.map((section, index) => {
+      suggestions.companyInfo = suggestions.companyInfo.map((section: {id?: string; title: string; description: string; svg: string}, index: number) => {
         if (!section.id) {
           return {
             ...section,

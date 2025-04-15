@@ -39,10 +39,10 @@ export const templateStyles = pgTable("template_styles", {
   thumbnail: varchar("thumbnail", { length: 255 }),
   type: templateTypeEnum("type").default("product").notNull(),
   style: templateStyleEnum("style").default("modern").notNull(),
-  colorScheme: templateColorSchemeEnum("color_scheme").default("light").notNull(),
-  htmlStructure: text("html_structure").notNull(),
-  cssStyles: text("css_styles"),
-  jsInteractions: text("js_interactions"),
+  color_scheme: templateColorSchemeEnum("color_scheme").default("light").notNull(),
+  html_structure: text("html_structure").notNull(),
+  css_styles: text("css_styles"),
+  js_interactions: text("js_interactions"),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -98,10 +98,10 @@ export const insertTemplateStyleSchema = createInsertSchema(templateStyles).pick
   thumbnail: true,
   type: true,
   style: true,
-  colorScheme: true,
-  htmlStructure: true,
-  cssStyles: true,
-  jsInteractions: true,
+  color_scheme: true,
+  html_structure: true,
+  css_styles: true,
+  js_interactions: true,
 });
 
 export const insertImageSchema = createInsertSchema(images).pick({

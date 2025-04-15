@@ -3937,7 +3937,18 @@ async function createTemplateStyles() {
         created_at: new Date()
       };
       
-      await db.insert(templateStyles).values(styleWithThumbnail);
+      await db.insert(templateStyles).values({
+        name: styleWithThumbnail.name,
+        description: styleWithThumbnail.description,
+        thumbnail: styleWithThumbnail.thumbnail,
+        type: styleWithThumbnail.type,
+        style: styleWithThumbnail.style,
+        color_scheme: styleWithThumbnail.color_scheme,
+        html_structure: styleWithThumbnail.html_structure,
+        css_styles: styleWithThumbnail.css_styles,
+        js_interactions: styleWithThumbnail.js_interactions,
+        created_at: styleWithThumbnail.created_at
+      });
     }
     
     console.log(`Successfully created ${styles.length} template styles`);
