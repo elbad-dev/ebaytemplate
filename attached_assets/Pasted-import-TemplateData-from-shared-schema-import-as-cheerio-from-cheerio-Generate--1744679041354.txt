@@ -123,7 +123,9 @@ export function generateTemplate(templateData: TemplateData): string {
         const thumbnailContainer = $('.thumbnail-set.set1');
         
         // Build complete gallery structure
+        const galleryContainer = $('.gallery-container');
         const thumbnailSet = $('.thumbnail-set').first();
+        const radioContainer = $('.gallery').first();
         
         // Clear existing elements
         radioContainer.find('input[type="radio"]').remove();
@@ -192,6 +194,97 @@ export function generateTemplate(templateData: TemplateData): string {
           styleElement.html(newCSS);
         } else {
           $('head').append(`<style>${newCSS}</style>`);
+        }
+        
+        // 2. Add new elements for additional images
+        if (totalImages > existingRadios) {
+          // a. Add new radio buttons first
+          for (let i = existingRadios; i < totalImages; i++) {
+            const n = i + 1;
+            radioContainer.append(`<input type="radio" name="gallery" id="img${n}">`);
+          }
+          
+          // b. Add CSS selectors for new images (up to 20 images allowed)
+          // This is the important part - making sure the correct CSS is in place for selectors
+          let newCSS = '';
+          for (let i = existingRadios; i < Math.min(totalImages, 20); i++) {
+            const n = i + 1;
+            newCSS += `
+            #img${n}:checked ~ .gallery-container #main${n} {
+              display: block;
+            }
+            `;
+          }
+          
+          // Add directional selectors for new arrows
+          for (let i = 0; i < totalImages; i++) {
+            const n = i + 1;
+            const prevN = n === 1 ? totalImages : n - 1;
+            const nextN = n === totalImages ? 1 : n + 1;
+            
+            newCSS += `
+            #img${n}:checked ~ .gallery-container .gallery-arrow.prev[for="img${prevN}"],
+            #img${n}:checked ~ .gallery-container .gallery-arrow.next[for="img${nextN}"] {
+              display: block;
+            }
+            `;
+          }
+          
+          // Append the new CSS
+          if (styleElement.length) {
+            styleElement.append(newCSS);
+          } else {
+            // If no style element exists, create one
+            $('head').append(`<style>${newCSS}</style>`);
+          }
+          
+          // c. Add/Update prev arrow navigation for ALL images (not just new ones)
+          // First remove existing arrows to avoid duplicates
+          $('.gallery-arrow.prev').remove();
+          
+          // Add all arrows fresh to ensure consistency
+          for (let i = 0; i < totalImages; i++) {
+            const n = i + 1;
+            const prevTarget = n === 1 ? totalImages : n - 1;
+            
+            galleryContainer.append(`
+              <label class="gallery-arrow prev" for="img${prevTarget}"></label>
+            `);
+          }
+          
+          // d. Add/Update next arrow navigation for ALL images
+          $('.gallery-arrow.next').remove();
+          
+          for (let i = 0; i < totalImages; i++) {
+            const n = i + 1;
+            const nextTarget = n === totalImages ? 1 : n + 1;
+            
+            galleryContainer.append(`
+              <label class="gallery-arrow next" for="img${nextTarget}"></label>
+            `);
+          }
+          
+          // e. Add new main images
+          for (let i = existingRadios; i < totalImages; i++) {
+            const n = i + 1;
+            galleryContainer.append(`
+              <img src="${templateData.images[i].url}" alt="Product Detail ${n}" class="gallery-item" id="main${n}">
+            `);
+          }
+          
+          // f. Add new thumbnails
+          for (let i = existingRadios; i < totalImages; i++) {
+            const n = i + 1;
+            thumbnailContainer.append(`
+              <label class="thumbnail" for="img${n}">
+                <img src="${templateData.images[i].url}" alt="Thumbnail ${n}">
+              </label>
+            `);
+          }
+          
+          // Make sure first radio button is checked by default
+          $('input[type="radio"][name="gallery"]').prop('checked', false);
+          $('#img1').prop('checked', true);
         }
       } else {
         // Handle other gallery types
@@ -781,21 +874,6 @@ function createBasicTemplate(data: TemplateData): string {
           font-size: 16px;
         }
         
-        .company-section {
-          margin-top: 40px;
-          padding-top: 20px;
-        }
-        
-        .company-section h2 {
-          font-size: 28px;
-          text-align: center;
-          margin-bottom: 30px;
-          font-weight: 700;
-          background: linear-gradient(135deg, var(--primary), #333);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-        
         @media (max-width: 768px) {
           .thumbnail {
             width: 60px;
@@ -829,10 +907,7 @@ function createBasicTemplate(data: TemplateData): string {
           ${techSpecs}
         </div>
         
-        ${companyInfo ? `<div class="company-section">
-          <h2 class="section-title">Über Uns</h2>
-          ${companyInfo}
-        </div>` : ''}
+        ${companyInfo ? `<div class="company-section">${companyInfo}</div>` : ''}
       </div>
     </body>
     </html>
