@@ -371,7 +371,12 @@ export function generateTemplate(data: TemplateData): string {
 
       // CSS Gallery pattern (common in eBay templates)
       const cssGalleryRegex = /<div\s+class="(?:product-gallery|gallery)"[^>]*>[\s\S]*?<\/div>/i;
-      if (cssGalleryRegex.test(html)) {
+      const hasGallery = cssGalleryRegex.test(html);
+      if (hasGallery) {
+        // Store all content before and after gallery
+        const parts = html.split(cssGalleryRegex);
+        const beforeGallery = parts[0];
+        const afterGallery = parts[1];
         // Create gallery HTML with sets of 5 thumbnails
         const createThumbnailSets = (images) => {
           const sets = [];
@@ -414,7 +419,8 @@ export function generateTemplate(data: TemplateData): string {
           </div>
         `;
 
-        html = html.replace(cssGalleryRegex, cssGalleryHTML);
+        // Reconstruct the HTML preserving all other sections
+        html = beforeGallery + cssGalleryHTML + afterGallery;
       }
     }
 
