@@ -83,21 +83,21 @@ export function generateTemplate(data: TemplateData): string {
       const descriptionRegex1 = /<h[23]>.*?Produktbeschreibung.*?<\/h[23]>\s*<div[^>]*>([\s\S]*?)<\/div>/i;
       if (descriptionRegex1.test(html)) {
         html = html.replace(descriptionRegex1, (match, p1) => {
-          return match.replace(p1, data.description);
+          return match.replace(p1, data.description || '');
         });
       } 
       // Pattern 2: Direct class-based targeting
       else {
         const descriptionRegex2 = /<div\s+class="description-text"[^>]*>([\s\S]*?)<\/div>/i;
         if (descriptionRegex2.test(html)) {
-          html = html.replace(descriptionRegex2, `<div class="description-text">${data.description}</div>`);
+          html = html.replace(descriptionRegex2, `<div class="description-text">${data.description || ''}</div>`);
         }
         // Pattern 3: Product info card pattern
         else {
           const cardDescriptionRegex = /<div\s+class="product-info"[^>]*>[\s\S]*?<h2[^>]*>.*?Produktbeschreibung.*?<\/h2>\s*<div[^>]*>([\s\S]*?)<\/div>/i;
           if (cardDescriptionRegex.test(html)) {
             html = html.replace(cardDescriptionRegex, (match, p1) => {
-              return match.replace(p1, data.description);
+              return match.replace(p1, data.description || '');
             });
           }
           // Pattern 4: General card containing description
@@ -105,7 +105,7 @@ export function generateTemplate(data: TemplateData): string {
             const generalCardRegex = /<div\s+class="card"[^>]*>[\s\S]*?<h2[^>]*>.*?(?:Produkt|Beschreibung).*?<\/h2>\s*<div[^>]*>([\s\S]*?)<\/div>/i;
             if (generalCardRegex.test(html)) {
               html = html.replace(generalCardRegex, (match, p1) => {
-                return match.replace(p1, data.description);
+                return match.replace(p1, data.description || '');
               });
             }
           }
@@ -152,9 +152,10 @@ export function generateTemplate(data: TemplateData): string {
     
     // Replace company info sections if they exist
     if (data.companyInfo.length > 0) {
+      // First approach: Replace sections by ID if it exists
       data.companyInfo.forEach(section => {
         if (section.id) {
-          const sectionRegex = new RegExp(`<div\\s+id="${section.id}"[^>]*>.*?<\\/div>`);
+          const sectionRegex = new RegExp(`<div\\s+id="${section.id}"[^>]*>.*?<\\/div>`, 's');
           if (sectionRegex.test(html)) {
             const sectionContent = `
               <div id="${section.id}" class="company-section">
@@ -169,6 +170,91 @@ export function generateTemplate(data: TemplateData): string {
           }
         }
       });
+      
+      // Second approach: Look for company-sections container and replace the whole thing
+      const companySectionsRegex = /<div\s+class="company-sections"[^>]*>([\s\S]*?)<\/div>/i;
+      if (companySectionsRegex.test(html)) {
+        const companySectionsContent = data.companyInfo.map(section => `
+          <div class="company-section" ${section.id ? `id="${section.id}"` : ''}>
+            <div class="icon-container">${section.svg || ''}</div>
+            <div class="section-content">
+              <h3>${section.title}</h3>
+              <p>${section.description}</p>
+            </div>
+          </div>
+        `).join('');
+        
+        html = html.replace(companySectionsRegex, `<div class="company-sections">${companySectionsContent}</div>`);
+      }
+      
+      // Third approach: Look for about-us or company-info section and replace all company-section divs
+      const aboutSectionRegex = /<div\s+class="(?:about-us|company-info)-section"[^>]*>[\s\S]*?<h3[^>]*>.*?About\s+Us.*?<\/h3>([\s\S]*?)<\/div>/i;
+      if (aboutSectionRegex.test(html)) {
+        html = html.replace(aboutSectionRegex, (match, content) => {
+          // Replace the content after the heading but before the closing div
+          const companySectionsContent = data.companyInfo.map(section => `
+            <div class="company-section" ${section.id ? `id="${section.id}"` : ''}>
+              <div class="icon-container">${section.svg || ''}</div>
+              <div class="section-content">
+                <h3>${section.title}</h3>
+                <p>${section.description}</p>
+              </div>
+            </div>
+          `).join('');
+          
+          return match.replace(content, `<div class="company-sections">${companySectionsContent}</div>`);
+        });
+      }
+      
+      // Fourth approach: If we have company sections in the template but not in the structure we expect,
+      // try to match them by title and replace them individually
+      if (data.companyInfo.length > 0) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const companySections = doc.querySelectorAll('.company-section, .about-section');
+        
+        if (companySections.length > 0) {
+          // We found some company sections, let's try to update them
+          Array.from(companySections).forEach((section, index) => {
+            if (index < data.companyInfo.length) {
+              const dataSection = data.companyInfo[index];
+              const titleEl = section.querySelector('h3, h4');
+              const descEl = section.querySelector('p');
+              const iconEl = section.querySelector('.icon-container, .icon');
+              
+              if (titleEl) {
+                titleEl.textContent = dataSection.title;
+              }
+              
+              if (descEl) {
+                descEl.textContent = dataSection.description;
+              }
+              
+              if (iconEl && dataSection.svg) {
+                iconEl.innerHTML = dataSection.svg;
+              }
+              
+              // Now update the HTML string
+              const tempDiv = document.createElement('div');
+              tempDiv.appendChild(section.cloneNode(true));
+              const oldHtml = tempDiv.innerHTML;
+              
+              // Create new section HTML
+              const newSectionHtml = `
+                <div class="company-section">
+                  <div class="icon-container">${dataSection.svg || ''}</div>
+                  <div class="section-content">
+                    <h3>${dataSection.title}</h3>
+                    <p>${dataSection.description}</p>
+                  </div>
+                </div>
+              `;
+              
+              html = html.replace(oldHtml, newSectionHtml);
+            }
+          });
+        }
+      }
     }
     
     // Handle image gallery

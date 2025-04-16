@@ -88,13 +88,13 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
             </CardHeader>
             
             <CardContent className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-16">
+              <div className="flex flex-col sm:flex-row items-start gap-4">
+                <div className="flex-shrink-0 w-full sm:w-24 mb-3 sm:mb-0">
                   <div
-                    className="w-14 h-14 flex items-center justify-center bg-gray-50 rounded-md border p-2"
+                    className="w-20 h-20 mx-auto flex items-center justify-center bg-gray-50 rounded-md border p-2"
                     dangerouslySetInnerHTML={{ __html: section.svg }}
                   />
-                  <div className="mt-2">
+                  <div className="mt-3 text-center">
                     <IconSelector
                       onIconSelect={(svg) => updateSection(section.id, 'svg', svg)}
                       onColorChange={(color) => {
@@ -108,26 +108,26 @@ export default function CompanySectionEditor({ sections, onChange }: CompanySect
                   </div>
                 </div>
                 
-                <div className="flex-1 space-y-3">
+                <div className="flex-1 w-full space-y-3">
                   <div>
-                    <Label htmlFor={`title-${section.id}`} className="text-xs">Title</Label>
+                    <Label htmlFor={`title-${section.id}`} className="block text-xs font-medium mb-1">Title</Label>
                     <Input
                       id={`title-${section.id}`}
                       value={section.title}
                       onChange={(e) => updateSection(section.id, 'title', e.target.value)}
                       placeholder="Section Title"
-                      className="mt-1"
+                      className="w-full"
                     />
                   </div>
                   
                   <div>
-                    <Label htmlFor={`description-${section.id}`} className="text-xs">Description</Label>
+                    <Label htmlFor={`description-${section.id}`} className="block text-xs font-medium mb-1">Description</Label>
                     <Textarea
                       id={`description-${section.id}`}
                       value={section.description}
                       onChange={(e) => updateSection(section.id, 'description', e.target.value)}
                       placeholder="Section description"
-                      className="mt-1 resize-none"
+                      className="w-full resize-none"
                       rows={3}
                     />
                   </div>
