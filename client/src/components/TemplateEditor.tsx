@@ -76,7 +76,13 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
 
   // Handle template data updates
   const updateTemplateData = (partialData: Partial<TemplateData>) => {
-    const updatedData = { ...templateData, ...partialData };
+    // Create a deep copy to ensure we don't lose nested data like images
+    const updatedData = { 
+      ...templateData, 
+      ...partialData,
+      // Special handling to ensure images are properly preserved
+      images: partialData.images || [...templateData.images] 
+    };
     setTemplateData(updatedData);
     generatePreview(updatedData);
   };

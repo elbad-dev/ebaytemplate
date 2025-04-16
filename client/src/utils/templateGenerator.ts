@@ -33,22 +33,26 @@ export function generateTemplate(data: TemplateData): string {
       }
       
       // Then try the product info section in header with specific parent element
-      const headerTitleRegex = /<div\s+class="product-info"[^>]*>.*?<h2[^>]*>(.*?)<\/h2>/;
+      const headerTitleRegex = /<div\s+class="product-info"[^>]*>[\s\S]*?<h2[^>]*>(.*?)<\/h2>/;
       if (headerTitleRegex.test(html)) {
         html = html.replace(headerTitleRegex, (match) => {
           return match.replace(/<h2[^>]*>(.*?)<\/h2>/, `<h2>${ data.title }</h2>`);
         });
       }
       
-      // Finally try product card title but avoid company sections
-      const productCardTitleRegex = /<div\s+class="(?!brand-text|company)[^"]*">.*?<h2[^>]*>(.*?)<\/h2>/;
-      if (productCardTitleRegex.test(html)) {
-        html = html.replace(productCardTitleRegex, (match) => {
-          // Only replace if not in a company or brand section
-          if (!match.includes('brand-text') && !match.includes('company-section')) {
-            return match.replace(/<h2[^>]*>(.*?)<\/h2>/, `<h2>${ data.title }</h2>`);
-          }
-          return match;
+      // Update product title in product card
+      const productCardH2Regex = /<div\s+class="product-card"[^>]*>[\s\S]*?<h2[^>]*>(.*?)<\/h2>/;
+      if (productCardH2Regex.test(html)) {
+        html = html.replace(productCardH2Regex, (match) => {
+          return match.replace(/<h2[^>]*>(.*?)<\/h2>/, `<h2>${ data.title }</h2>`);
+        });
+      }
+      
+      // ALSO update any standalone product title h2 elements
+      const productTitleH2 = html.match(/<h2[^>]*?product-title[^>]*?>(.*?)<\/h2>/g);
+      if (productTitleH2) {
+        productTitleH2.forEach(match => {
+          html = html.replace(match, `<h2 class="product-title">${ data.title }</h2>`);
         });
       }
     }
