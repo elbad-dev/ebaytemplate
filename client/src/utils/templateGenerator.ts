@@ -7,7 +7,7 @@ export function generateTemplate(data: TemplateData): string {
   if (data.rawHtml) {
     // If we have a raw HTML template, we'll modify it
     let html = data.rawHtml;
-    
+
     // Replace company name if it exists - using a more specific selector to the brand-text area
     if (data.company_name) {
       const companyNameRegex = /<div\s+class="brand-text">\s*<h1[^>]*>(.*?)<\/h1>/;
@@ -23,7 +23,7 @@ export function generateTemplate(data: TemplateData): string {
         }
       }
     }
-    
+
     // Replace product title if it exists - making selectors more specific to avoid conflicts
     if (data.title) {
       // First try the card product title with specific class
@@ -31,7 +31,7 @@ export function generateTemplate(data: TemplateData): string {
       if (titleRegex.test(html)) {
         html = html.replace(titleRegex, `<h2 class="product-title">${ data.title }</h2>`);
       }
-      
+
       // Then try the product info section in header with specific parent element
       const headerTitleRegex = /<div\s+class="product-info"[^>]*>[\s\S]*?<h2[^>]*>(.*?)<\/h2>/;
       if (headerTitleRegex.test(html)) {
@@ -39,7 +39,7 @@ export function generateTemplate(data: TemplateData): string {
           return match.replace(/<h2[^>]*>(.*?)<\/h2>/, `<h2>${ data.title }</h2>`);
         });
       }
-      
+
       // Update product title in product card
       const productCardH2Regex = /<div\s+class="product-card"[^>]*>[\s\S]*?<h2[^>]*>(.*?)<\/h2>/;
       if (productCardH2Regex.test(html)) {
@@ -47,7 +47,7 @@ export function generateTemplate(data: TemplateData): string {
           return match.replace(/<h2[^>]*>(.*?)<\/h2>/, `<h2>${ data.title }</h2>`);
         });
       }
-      
+
       // ALSO update any standalone product title h2 elements
       const productTitleH2 = html.match(/<h2[^>]*?product-title[^>]*?>(.*?)<\/h2>/g);
       if (productTitleH2) {
@@ -56,7 +56,7 @@ export function generateTemplate(data: TemplateData): string {
         });
       }
     }
-    
+
     // Replace subtitle/slogan if it exists
     if (data.subtitle) {
       const subtitleRegex = /<div\s+class="brand-text">.*?<p[^>]*>(.*?)<\/p>/;
@@ -66,7 +66,7 @@ export function generateTemplate(data: TemplateData): string {
         });
       }
     }
-    
+
     // Replace price if it exists
     if (data.price) {
       const priceRegex = /<span\s+class="price"[^>]*>(.*?)<\/span>/;
@@ -74,11 +74,11 @@ export function generateTemplate(data: TemplateData): string {
         html = html.replace(priceRegex, `<span class="price">${ data.currency } ${ data.price }</span>`);
       }
     }
-    
+
     // Replace description if it exists
     if (data.description) {
       // Try multiple patterns to find and replace the description section
-      
+
       // Pattern 1: Standard heading + div pattern
       const descriptionRegex1 = /<h[23]>.*?Produktbeschreibung.*?<\/h[23]>\s*<div[^>]*>([\s\S]*?)<\/div>/i;
       if (descriptionRegex1.test(html)) {
@@ -111,13 +111,13 @@ export function generateTemplate(data: TemplateData): string {
           }
         }
       }
-      
+
       // Last resort: If we still couldn't find a matching pattern, try to locate any div after a heading with "description" in it
       if (!html.includes(data.description)) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const headings = Array.from(doc.querySelectorAll('h2, h3'));
-        
+
         for (const heading of headings) {
           if (heading.textContent?.toLowerCase().includes('beschreibung') || 
               heading.textContent?.toLowerCase().includes('description')) {
@@ -134,7 +134,7 @@ export function generateTemplate(data: TemplateData): string {
         }
       }
     }
-    
+
     // Replace technical specs if they exist
     if (data.specs.length > 0) {
       const specsContent = data.specs.map(spec => `
@@ -143,13 +143,13 @@ export function generateTemplate(data: TemplateData): string {
           <div class="spec-value">${spec.value}</div>
         </div>
       `).join('');
-      
+
       const specsRegex = /<div\s+class="specs-container"[^>]*>.*?<\/div>/;
       if (specsRegex.test(html)) {
         html = html.replace(specsRegex, `<div class="specs-container">${ specsContent }</div>`);
       }
     }
-    
+
     // Replace company info sections if they exist
     if (data.companyInfo.length > 0) {
       // First approach: Replace sections by ID if it exists
@@ -170,7 +170,7 @@ export function generateTemplate(data: TemplateData): string {
           }
         }
       });
-      
+
       // Second approach: Look for company-sections container and replace the whole thing
       const companySectionsRegex = /<div\s+class="company-sections"[^>]*>([\s\S]*?)<\/div>/i;
       if (companySectionsRegex.test(html)) {
@@ -183,10 +183,10 @@ export function generateTemplate(data: TemplateData): string {
             </div>
           </div>
         `).join('');
-        
+
         html = html.replace(companySectionsRegex, `<div class="company-sections">${companySectionsContent}</div>`);
       }
-      
+
       // Third approach: Look for about-us or company-info section and replace all company-section divs
       const aboutSectionRegex = /<div\s+class="(?:about-us|company-info)-section"[^>]*>[\s\S]*?<h3[^>]*>.*?About\s+Us.*?<\/h3>([\s\S]*?)<\/div>/i;
       if (aboutSectionRegex.test(html)) {
@@ -201,18 +201,18 @@ export function generateTemplate(data: TemplateData): string {
               </div>
             </div>
           `).join('');
-          
+
           return match.replace(content, `<div class="company-sections">${companySectionsContent}</div>`);
         });
       }
-      
+
       // Fourth approach: If we have company sections in the template but not in the structure we expect,
       // try to match them by title and replace them individually
       if (data.companyInfo.length > 0) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const companySections = doc.querySelectorAll('.company-section, .about-section');
-        
+
         if (companySections.length > 0) {
           // We found some company sections, let's try to update them
           Array.from(companySections).forEach((section, index) => {
@@ -221,24 +221,24 @@ export function generateTemplate(data: TemplateData): string {
               const titleEl = section.querySelector('h3, h4');
               const descEl = section.querySelector('p');
               const iconEl = section.querySelector('.icon-container, .icon');
-              
+
               if (titleEl) {
                 titleEl.textContent = dataSection.title;
               }
-              
+
               if (descEl) {
                 descEl.textContent = dataSection.description;
               }
-              
+
               if (iconEl && dataSection.svg) {
                 iconEl.innerHTML = dataSection.svg;
               }
-              
+
               // Now update the HTML string
               const tempDiv = document.createElement('div');
               tempDiv.appendChild(section.cloneNode(true));
               const oldHtml = tempDiv.innerHTML;
-              
+
               // Create new section HTML
               const newSectionHtml = `
                 <div class="company-section">
@@ -249,14 +249,14 @@ export function generateTemplate(data: TemplateData): string {
                   </div>
                 </div>
               `;
-              
+
               html = html.replace(oldHtml, newSectionHtml);
             }
           });
         }
       }
     }
-    
+
     // Handle image gallery
     if (data.images.length > 0) {
       // Main image - using multiline matching without 's' flag
@@ -264,7 +264,7 @@ export function generateTemplate(data: TemplateData): string {
       if (mainImageRegex.test(html)) {
         html = html.replace(mainImageRegex, `<div class="main-image"><img src="${data.images[0].url}" alt="Product image"></div>`);
       }
-      
+
       // Check for advanced gallery patterns first
       // Gallery with radio inputs and multiple main images
       const gallerySliderRegex = /<div\s+class="gallery-slider"[^>]*>[\s\S]*?<\/div>/i;
@@ -273,21 +273,21 @@ export function generateTemplate(data: TemplateData): string {
         const radioInputs = data.images.map((_, idx) => 
           `<input type="radio" name="gallery-select" id="gallery-select-${idx}" class="gallery-select" ${idx === 0 ? 'checked' : ''} />`
         ).join('\n');
-        
+
         // Generate main images
         const mainImages = data.images.map((image, idx) => 
           `<div class="gallery-main-image" id="main-image-${idx}">
             <img src="${image.url}" alt="Product image ${idx + 1}">
            </div>`
         ).join('\n');
-        
+
         // Generate thumbnails with labels linked to radio inputs
         const thumbnails = data.images.map((image, idx) => 
           `<label for="gallery-select-${idx}" class="thumbnail-item" data-for="main-image-${idx}">
             <img src="${image.url}" alt="Thumbnail ${idx + 1}">
            </label>`
         ).join('\n');
-        
+
         // Generate navigation arrows
         const navArrows = `
           <div class="gallery-arrows">
@@ -295,7 +295,7 @@ export function generateTemplate(data: TemplateData): string {
             <label for="gallery-select-1" class="gallery-arrow next" id="gallery-next"></label>
           </div>
         `;
-        
+
         // Full replacement with custom navigation script
         const galleryHTML = `
           <div class="gallery-slider">
@@ -315,60 +315,60 @@ export function generateTemplate(data: TemplateData): string {
                 const radioButtons = document.querySelectorAll('.gallery-select');
                 const prevArrow = document.getElementById('gallery-prev');
                 const nextArrow = document.getElementById('gallery-next');
-                
+
                 // Update arrows to point to correct images
                 function updateArrows() {
                   let currentIdx = 0;
                   radioButtons.forEach((radio, idx) => {
                     if (radio.checked) currentIdx = idx;
                   });
-                  
+
                   const prevIdx = currentIdx === 0 ? radioButtons.length - 1 : currentIdx - 1;
                   const nextIdx = currentIdx === radioButtons.length - 1 ? 0 : currentIdx + 1;
-                  
+
                   prevArrow.setAttribute('for', 'gallery-select-' + prevIdx);
                   nextArrow.setAttribute('for', 'gallery-select-' + nextIdx);
                 }
-                
+
                 // Add event listeners to update arrows when selection changes
                 radioButtons.forEach(radio => {
                   radio.addEventListener('change', updateArrows);
                 });
-                
+
                 // Initial arrow setup
                 updateArrows();
               });
             </script>
           </div>
         `;
-        
+
         html = html.replace(gallerySliderRegex, galleryHTML);
       }
-      
+
       // Standard thumbnail gallery
       const thumbnailsContent = data.images.map(image => `
         <div class="thumbnail">
           <img src="${image.url}" alt="Product thumbnail">
         </div>
       `).join('');
-      
+
       const thumbnailsRegex = /<div\s+class="thumbnails"[^>]*>[\s\S]*?<\/div>/;
       if (thumbnailsRegex.test(html)) {
         html = html.replace(thumbnailsRegex, `<div class="thumbnails">${thumbnailsContent}</div>`);
       }
-      
+
       // Basic gallery container
       const galleryImagesContent = data.images.map(image => `
         <div class="gallery-item">
           <img src="${image.url}" alt="Product image">
         </div>
       `).join('');
-      
+
       const galleryRegex = /<div\s+class="gallery-container"[^>]*>[\s\S]*?<\/div>/;
       if (galleryRegex.test(html)) {
         html = html.replace(galleryRegex, `<div class="gallery-container">${galleryImagesContent}</div>`);
       }
-      
+
       // CSS Gallery pattern (common in eBay templates)
       const cssGalleryRegex = /<div\s+class="product-gallery"[^>]*>[\s\S]*?<\/div>/i;
       if (cssGalleryRegex.test(html) && !html.includes('<div class="main-image">') && !html.includes('<div class="thumbnails">')) {
@@ -389,11 +389,11 @@ export function generateTemplate(data: TemplateData): string {
             </div>
           </div>
         `;
-        
+
         html = html.replace(cssGalleryRegex, cssGalleryHTML);
       }
     }
-    
+
     return html;
   } else {
     // If no raw HTML provided, generate a new one from scratch
@@ -413,20 +413,20 @@ function generateBasicTemplate(data: TemplateData): string {
           ${data.images.map((_, idx) => 
             `<input type="radio" name="gallery-select" id="gallery-select-${idx}" class="gallery-select" ${idx === 0 ? 'checked' : ''} />`
           ).join('\n')}
-          
+
           <div class="gallery-main-container">
             ${data.images.map((image, idx) => 
               `<div class="gallery-main-image" id="main-image-${idx}">
                 <img src="${image.url}" alt="Product image ${idx + 1}">
                </div>`
             ).join('\n')}
-            
+
             <div class="gallery-arrows">
               <label for="gallery-select-${data.images.length - 1}" class="gallery-arrow prev" id="gallery-prev"></label>
               <label for="gallery-select-1" class="gallery-arrow next" id="gallery-next"></label>
             </div>
           </div>
-          
+
           <div class="gallery-thumbnails">
             <div class="thumbnail-scroll">
               ${data.images.map((image, idx) => 
@@ -437,18 +437,18 @@ function generateBasicTemplate(data: TemplateData): string {
             </div>
           </div>
         </div>
-        
+
         <style>
           .gallery-slider {
             position: relative;
             width: 100%;
             margin-bottom: 20px;
           }
-          
+
           .gallery-select {
             display: none;
           }
-          
+
           .gallery-main-container {
             position: relative;
             width: 100%;
@@ -457,7 +457,7 @@ function generateBasicTemplate(data: TemplateData): string {
             overflow: hidden;
             margin-bottom: 10px;
           }
-          
+
           .gallery-main-image {
             position: absolute;
             top: 0;
@@ -468,13 +468,13 @@ function generateBasicTemplate(data: TemplateData): string {
             transition: opacity 0.3s ease;
             z-index: 1;
           }
-          
+
           .gallery-main-image img {
             width: 100%;
             height: auto;
             display: block;
           }
-          
+
           .gallery-arrows {
             position: absolute;
             top: 0;
@@ -484,7 +484,7 @@ function generateBasicTemplate(data: TemplateData): string {
             z-index: 2;
             pointer-events: none;
           }
-          
+
           .gallery-arrow {
             position: absolute;
             top: 50%;
@@ -499,7 +499,7 @@ function generateBasicTemplate(data: TemplateData): string {
             cursor: pointer;
             pointer-events: auto;
           }
-          
+
           .gallery-arrow:before {
             content: '';
             display: block;
@@ -509,35 +509,35 @@ function generateBasicTemplate(data: TemplateData): string {
             border-width: 3px 3px 0 0;
             border-color: #333;
           }
-          
+
           .gallery-arrow.prev {
             left: 10px;
           }
-          
+
           .gallery-arrow.prev:before {
             transform: rotate(-135deg);
             margin-left: 5px;
           }
-          
+
           .gallery-arrow.next {
             right: 10px;
           }
-          
+
           .gallery-arrow.next:before {
             transform: rotate(45deg);
             margin-right: 5px;
           }
-          
+
           .gallery-thumbnails {
             width: 100%;
             overflow-x: auto;
           }
-          
+
           .thumbnail-scroll {
             display: flex;
             gap: 10px;
           }
-          
+
           .thumbnail-item {
             flex: 0 0 80px;
             height: 80px;
@@ -548,18 +548,18 @@ function generateBasicTemplate(data: TemplateData): string {
             opacity: 0.7;
             transition: all 0.3s ease;
           }
-          
+
           .thumbnail-item:hover {
             opacity: 1;
             border-color: #999;
           }
-          
+
           .thumbnail-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
           }
-          
+
           /* Selected image and thumbnail states */
           #gallery-select-0:checked ~ .gallery-main-container #main-image-0,
           #gallery-select-1:checked ~ .gallery-main-container #main-image-1,
@@ -569,7 +569,7 @@ function generateBasicTemplate(data: TemplateData): string {
             opacity: 1;
             z-index: 5;
           }
-          
+
           #gallery-select-0:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-0"],
           #gallery-select-1:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-1"],
           #gallery-select-2:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-2"],
@@ -579,33 +579,33 @@ function generateBasicTemplate(data: TemplateData): string {
             border-color: #3498db;
           }
         </style>
-        
+
         <script>
           // Simple navigation script
           document.addEventListener('DOMContentLoaded', function() {
             const radioButtons = document.querySelectorAll('.gallery-select');
             const prevArrow = document.getElementById('gallery-prev');
             const nextArrow = document.getElementById('gallery-next');
-            
+
             // Update arrows to point to correct images
             function updateArrows() {
               let currentIdx = 0;
               radioButtons.forEach((radio, idx) => {
                 if (radio.checked) currentIdx = idx;
               });
-              
+
               const prevIdx = currentIdx === 0 ? radioButtons.length - 1 : currentIdx - 1;
               const nextIdx = currentIdx === radioButtons.length - 1 ? 0 : currentIdx + 1;
-              
+
               prevArrow.setAttribute('for', 'gallery-select-' + prevIdx);
               nextArrow.setAttribute('for', 'gallery-select-' + nextIdx);
             }
-            
+
             // Add event listeners to update arrows when selection changes
             radioButtons.forEach(radio => {
               radio.addEventListener('change', updateArrows);
             });
-            
+
             // Initial arrow setup
             updateArrows();
           });
@@ -624,7 +624,7 @@ function generateBasicTemplate(data: TemplateData): string {
         </div>
       </div>
     `;
-  
+
   // Create tech specs HTML
   const specsHTML = data.specs.length > 0
     ? `
@@ -641,7 +641,7 @@ function generateBasicTemplate(data: TemplateData): string {
       </div>
     `
     : '';
-  
+
   // Create company info HTML
   const companyHTML = data.companyInfo.length > 0
     ? `
@@ -661,7 +661,7 @@ function generateBasicTemplate(data: TemplateData): string {
       </div>
     `
     : '';
-  
+
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -876,6 +876,32 @@ function generateBasicTemplate(data: TemplateData): string {
             flex-direction: column;
           }
         }
+        .thumbnail-sets {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-top: 10px;
+        }
+        .thumbnail-set {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+        .thumbnail {
+          width: 80px;
+          height: 80px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          overflow: hidden;
+          cursor: pointer;
+        }
+        .thumbnail img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
       </style>
     </head>
     <body>
@@ -890,10 +916,10 @@ function generateBasicTemplate(data: TemplateData): string {
             <span class="price">${data.currency} ${data.price || '0.00'}</span>
           </div>
         </div>
-        
+
         <div class="main-content">
           ${galleryHTML}
-          
+
           <div class="product-card">
             <h2 class="product-title">${data.title || 'Product Title'}</h2>
             <span class="price">${data.currency} ${data.price || '0.00'}</span>
@@ -903,9 +929,9 @@ function generateBasicTemplate(data: TemplateData): string {
             </div>
           </div>
         </div>
-        
+
         ${specsHTML}
-        
+
         ${companyHTML}
       </div>
     </body>
