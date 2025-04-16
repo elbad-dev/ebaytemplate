@@ -409,7 +409,7 @@ export function generateTemplate(data: TemplateData): string {
       };
 
       const hasGallery = sections.gallery.test(html);
-      if (hasGallery) {
+      if (hasGallery && data.images.length > 0) {
         // Create gallery HTML with sets of 5 thumbnails
         const createThumbnailSets = (images) => {
           const sets = [];
@@ -420,7 +420,7 @@ export function generateTemplate(data: TemplateData): string {
               <div class="thumbnail-set set${setNumber}">
                 ${images.slice(i, i + 5).map((image, idx) => `
                   <label class="thumbnail" for="img${i + idx + 1}">
-                    <img src="${image.url}" alt="Thumbnail ${i + idx + 1}" style="max-width: 100%; height: auto;">
+                    <img src="${image.url}" alt="Thumbnail ${i + idx + 1}" style="max-width: 100%; height: auto; object-fit: cover;">
                   </label>
                 `).join('')}
               </div>
@@ -432,12 +432,14 @@ export function generateTemplate(data: TemplateData): string {
         const cssGalleryHTML = `
           <div class="gallery">
             ${data.images.map((_, idx) => `
-              <input type="radio" name="gallery" id="img${idx + 1}" ${idx === 0 ? 'checked' : ''}>
+              <input type="radio" name="gallery" id="img${idx + 1}" ${idx === 0 ? 'checked' : ''} class="gallery-radio">
             `).join('')}
             
             <div class="gallery-container">
               ${data.images.map((image, idx) => `
-                <img src="${image.url}" alt="Product Detail ${idx + 1}" class="gallery-item" id="main${idx + 1}">
+                <div class="gallery-item-wrapper">
+                  <img src="${image.url}" alt="Product Detail ${idx + 1}" class="gallery-item" id="main${idx + 1}">
+                </div>
               `).join('')}
               
               ${data.images.map((_, idx) => `
