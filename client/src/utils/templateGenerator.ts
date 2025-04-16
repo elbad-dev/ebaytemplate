@@ -395,6 +395,10 @@ export function generateTemplate(data: TemplateData): string {
       }
 
       // Handle gallery section if it exists
+      // Store original content
+      const headerContent = html.match(/<header[^>]*>[\s\S]*?<\/header>/i)?.[0] || '';
+      const productCardContent = html.match(/<div\s+class="product-card"[^>]*>[\s\S]*?<\/div>/i)?.[0] || '';
+      
       const hasGallery = sections.gallery.test(html);
       if (hasGallery) {
         // Create gallery HTML with sets of 5 thumbnails
@@ -407,7 +411,7 @@ export function generateTemplate(data: TemplateData): string {
               <div class="thumbnail-set set${setNumber}">
                 ${images.slice(i, i + 5).map((image, idx) => `
                   <label class="thumbnail" for="img${i + idx + 1}">
-                    <img src="${image.url}" alt="Thumbnail ${i + idx + 1}">
+                    <img src="${image.url}" alt="Thumbnail ${i + idx + 1}" style="max-width: 100%; height: auto;">
                   </label>
                 `).join('')}
               </div>
@@ -439,11 +443,23 @@ export function generateTemplate(data: TemplateData): string {
           </div>
         `;
 
-        // Replace only the gallery section while preserving others
+        // Reconstruct the template preserving all sections
         if (sectionContents.gallery) {
-          html = html.slice(0, sectionContents.gallery.index) + 
-                 cssGalleryHTML + 
-                 html.slice(sectionContents.gallery.index + sectionContents.gallery.content.length);
+          const beforeGallery = html.slice(0, sectionContents.gallery.index);
+          const afterGallery = html.slice(sectionContents.gallery.index + sectionContents.gallery.content.length);
+          
+          // Ensure header and product card are preserved
+          html = beforeGallery + cssGalleryHTML + afterGallery;
+          
+          // Restore header if missing
+          if (!html.includes(headerContent) && headerContent) {
+            html = html.replace(/<body[^>]*>/, `$&${headerContent}`);
+          }
+          
+          // Restore product card if missing
+          if (!html.includes(productCardContent) && productCardContent) {
+            html = html.replace('</div>\n    </body>', `${productCardContent}</div>\n    </body>`);
+          }
         }
         
         // Verify all sections are still present
