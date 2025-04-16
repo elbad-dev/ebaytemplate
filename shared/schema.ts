@@ -15,7 +15,7 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   password: varchar("password", { length: 255 }).notNull(),
   role: userRoleEnum("role").default("user").notNull(),
-  isVerified: boolean("is_verified").default(false).notNull(),
+  is_verified: boolean("is_verified").default(false).notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -81,7 +81,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   password: true,
   role: true,
-  isVerified: true,
+  is_verified: true,
 });
 
 export const insertTemplateSchema = createInsertSchema(templates).pick({

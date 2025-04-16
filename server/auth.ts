@@ -18,9 +18,12 @@ declare global {
       username: string;
       email: string;
       role: string;
-      isVerified: boolean;
-      createdAt: string | Date;
-      updatedAt: string | Date;
+      is_verified?: boolean;
+      isVerified?: boolean;
+      created_at?: Date;
+      updated_at?: Date;
+      createdAt?: Date;
+      updatedAt?: Date;
     }
   }
 }
@@ -99,8 +102,17 @@ export function setupAuth(app: Express) {
             return done(null, false, { message: "Incorrect username or password" });
           }
           
-          // Return user without password
-          const { password: _, ...userWithoutPassword } = user;
+          // Convert to camelCase for frontend compatibility
+          const userWithCamelCase = {
+            ...user,
+            isVerified: user.is_verified,
+            createdAt: user.created_at,
+            updatedAt: user.updated_at,
+          };
+          
+          // Remove password before returning
+          const { password: _, ...userWithoutPassword } = userWithCamelCase;
+          
           return done(null, userWithoutPassword);
         } catch (error) {
           return done(error);
@@ -123,15 +135,27 @@ export function setupAuth(app: Express) {
           username: users.username,
           email: users.email,
           role: users.role,
-          isVerified: users.isVerified,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
+          is_verified: users.is_verified,
+          created_at: users.created_at,
+          updated_at: users.updated_at,
         })
         .from(users)
         .where(eq(users.id, id));
       
-      done(null, user || undefined);
+      if (user) {
+        // Convert snake_case to camelCase for frontend compatibility
+        const userWithCamelCase = {
+          ...user,
+          isVerified: user.is_verified,
+          createdAt: user.created_at,
+          updatedAt: user.updated_at,
+        };
+        done(null, userWithCamelCase);
+      } else {
+        done(null, undefined);
+      }
     } catch (error) {
+      console.error("Error deserializing user:", error);
       done(error);
     }
   });
@@ -174,22 +198,30 @@ export function setupAuth(app: Express) {
         email,
         password: hashedPassword,
         role: "user",
-        isVerified: true, // Auto-verify since we're skipping email verification
+        is_verified: true, // Auto-verify since we're skipping email verification
       }).returning({
         id: users.id,
         username: users.username,
         email: users.email,
         role: users.role,
-        isVerified: users.isVerified,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
+        is_verified: users.is_verified,
+        created_at: users.created_at,
+        updated_at: users.updated_at,
       });
       
+      // Convert to camelCase for frontend
+      const userWithCamelCase = {
+        ...user,
+        isVerified: user.is_verified,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
+      };
+      
       // Log user in
-      req.login(user, (err) => {
+      req.login(userWithCamelCase, (err) => {
         if (err) return next(err);
         res.setHeader('Content-Type', 'application/json');
-        return res.status(201).json(user);
+        return res.status(201).json(userWithCamelCase);
       });
     } catch (error) {
       console.error("Registration error:", error);
