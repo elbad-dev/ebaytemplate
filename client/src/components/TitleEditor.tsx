@@ -83,7 +83,7 @@ const TitleEditor: React.FC<EditorSectionProps> = ({ data, onUpdate }) => {
             <Input 
               type="text" 
               className="w-full p-2 border border-gray-300 rounded-md text-sm" 
-              value={data.company_name || data.title || ''} 
+              value={data.company_name || ''} 
               onChange={(e) => onUpdate({ company_name: e.target.value })}
               placeholder="Enter company name"
             />
