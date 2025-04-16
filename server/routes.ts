@@ -154,8 +154,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: template.name,
         html: template.html,
         description: template.description,
-        user_id: userId,
+        user_id: userId.toString(), // Convert to string since our schema expects a string
         version_type: req.body.autosave ? "autosave" : "update" as const,
+        version_number: 0, // This will be overwritten by the storage method that increments it
       };
       
       // Create template version record of the current state before updating

@@ -267,7 +267,7 @@ export class MemStorage implements IStorage {
   async getTemplates(userId?: string): Promise<Template[]> {
     const allTemplates = Array.from(this.templatesMap.values());
     if (userId) {
-      return allTemplates.filter(template => template.userId === userId);
+      return allTemplates.filter(template => template.user_id === userId);
     }
     return allTemplates;
   }
@@ -277,8 +277,9 @@ export class MemStorage implements IStorage {
     const template: Template = { 
       ...insertTemplate, 
       id,
-      userId: insertTemplate.userId || null,
-      styleId: insertTemplate.styleId || null
+      user_id: insertTemplate.user_id || null,
+      style_id: insertTemplate.style_id || null,
+      created_at: new Date()
     };
     this.templatesMap.set(id, template);
     return template;
@@ -344,7 +345,7 @@ export class MemStorage implements IStorage {
   async getImages(userId?: string): Promise<Image[]> {
     const allImages = Array.from(this.imagesMap.values());
     if (userId) {
-      return allImages.filter(image => image.userId === userId);
+      return allImages.filter(image => image.user_id === userId);
     }
     return allImages;
   }
@@ -354,7 +355,8 @@ export class MemStorage implements IStorage {
     const image: Image = { 
       ...insertImage, 
       id, 
-      userId: insertImage.userId || null 
+      user_id: insertImage.user_id || null,
+      uploaded_at: new Date()
     };
     this.imagesMap.set(id, image);
     return image;
