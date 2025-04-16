@@ -77,15 +77,60 @@ export function generateTemplate(data: TemplateData): string {
     
     // Replace description if it exists
     if (data.description) {
-      // Specifically target the description section with a heading
-      const descriptionRegex = /<h3>Produktbeschreibung<\/h3>\s*<div\s+class="description-text"[^>]*>.*?<\/div>/;
-      if (descriptionRegex.test(html)) {
-        html = html.replace(descriptionRegex, `<h3>Produktbeschreibung</h3><div class="description-text">${ data.description }</div>`);
-      } else {
-        // Alternative pattern
-        const altDescriptionRegex = /<div\s+class="description-text"[^>]*>.*?<\/div>/;
-        if (altDescriptionRegex.test(html)) {
-          html = html.replace(altDescriptionRegex, `<div class="description-text">${ data.description }</div>`);
+      // Try multiple patterns to find and replace the description section
+      
+      // Pattern 1: Standard heading + div pattern
+      const descriptionRegex1 = /<h[23]>.*?Produktbeschreibung.*?<\/h[23]>\s*<div[^>]*>([\s\S]*?)<\/div>/i;
+      if (descriptionRegex1.test(html)) {
+        html = html.replace(descriptionRegex1, (match, p1) => {
+          return match.replace(p1, data.description);
+        });
+      } 
+      // Pattern 2: Direct class-based targeting
+      else {
+        const descriptionRegex2 = /<div\s+class="description-text"[^>]*>([\s\S]*?)<\/div>/i;
+        if (descriptionRegex2.test(html)) {
+          html = html.replace(descriptionRegex2, `<div class="description-text">${data.description}</div>`);
+        }
+        // Pattern 3: Product info card pattern
+        else {
+          const cardDescriptionRegex = /<div\s+class="product-info"[^>]*>[\s\S]*?<h2[^>]*>.*?Produktbeschreibung.*?<\/h2>\s*<div[^>]*>([\s\S]*?)<\/div>/i;
+          if (cardDescriptionRegex.test(html)) {
+            html = html.replace(cardDescriptionRegex, (match, p1) => {
+              return match.replace(p1, data.description);
+            });
+          }
+          // Pattern 4: General card containing description
+          else {
+            const generalCardRegex = /<div\s+class="card"[^>]*>[\s\S]*?<h2[^>]*>.*?(?:Produkt|Beschreibung).*?<\/h2>\s*<div[^>]*>([\s\S]*?)<\/div>/i;
+            if (generalCardRegex.test(html)) {
+              html = html.replace(generalCardRegex, (match, p1) => {
+                return match.replace(p1, data.description);
+              });
+            }
+          }
+        }
+      }
+      
+      // Last resort: If we still couldn't find a matching pattern, try to locate any div after a heading with "description" in it
+      if (!html.includes(data.description)) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const headings = Array.from(doc.querySelectorAll('h2, h3'));
+        
+        for (const heading of headings) {
+          if (heading.textContent?.toLowerCase().includes('beschreibung') || 
+              heading.textContent?.toLowerCase().includes('description')) {
+            let nextEl = heading.nextElementSibling;
+            if (nextEl && nextEl.tagName === 'DIV') {
+              // Found a match - now replace this in the HTML string
+              const tempDiv = document.createElement('div');
+              tempDiv.appendChild(nextEl.cloneNode(true));
+              const divHtml = tempDiv.innerHTML;
+              html = html.replace(divHtml, `<div>${data.description}</div>`);
+              break;
+            }
+          }
         }
       }
     }
