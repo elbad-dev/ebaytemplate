@@ -370,16 +370,33 @@ export function generateTemplate(data: TemplateData): string {
       }
 
       // CSS Gallery pattern (common in eBay templates)
-      const cssGalleryRegex = /<div\s+class="(?:product-gallery|gallery)"[^>]*>[\s\S]*?<\/div>/i;
-      const hasGallery = cssGalleryRegex.test(html);
+      // Store the original template structure
+      const originalHtml = html;
+      
+      // First identify and store all major sections
+      const sections = {
+        gallery: /<div\s+class="(?:product-gallery|gallery)"[^>]*>[\s\S]*?<\/div>/i,
+        productCard: /<div\s+class="product-card"[^>]*>[\s\S]*?<\/div>/i,
+        description: /<div\s+class="description-text"[^>]*>[\s\S]*?<\/div>/i,
+        specs: /<div\s+class="specs-container"[^>]*>[\s\S]*?<\/div>/i,
+        company: /<div\s+class="company-sections"[^>]*>[\s\S]*?<\/div>/i
+      };
+
+      // Extract all existing sections
+      const sectionContents = {};
+      for (const [key, regex] of Object.entries(sections)) {
+        const match = html.match(regex);
+        if (match) {
+          sectionContents[key] = {
+            content: match[0],
+            index: html.indexOf(match[0])
+          };
+        }
+      }
+
+      // Handle gallery section if it exists
+      const hasGallery = sections.gallery.test(html);
       if (hasGallery) {
-        // Safely split HTML while preserving all sections
-        const match = html.match(cssGalleryRegex);
-        if (!match) return html;
-        
-        const index = html.indexOf(match[0]);
-        const beforeGallery = html.substring(0, index);
-        const afterGallery = html.substring(index + match[0].length);
         // Create gallery HTML with sets of 5 thumbnails
         const createThumbnailSets = (images) => {
           const sets = [];
@@ -422,12 +439,28 @@ export function generateTemplate(data: TemplateData): string {
           </div>
         `;
 
-        // Reconstruct the HTML preserving all other sections
-        html = beforeGallery + cssGalleryHTML + (afterGallery || '');
+        // Replace only the gallery section while preserving others
+        if (sectionContents.gallery) {
+          html = html.slice(0, sectionContents.gallery.index) + 
+                 cssGalleryHTML + 
+                 html.slice(sectionContents.gallery.index + sectionContents.gallery.content.length);
+        }
         
-        // Verify all sections are present
-        if (!html.includes('product-card') || !html.includes('description-text')) {
-          console.warn('Some sections may be missing after gallery update');
+        // Verify all sections are still present
+        const missingSection = Object.entries(sections).find(([key, regex]) => {
+          if (key === 'gallery') return false; // Skip gallery check since we just updated it
+          return !regex.test(html);
+        });
+
+        if (missingSection) {
+          console.warn(`Section ${missingSection[0]} was lost during update - restoring from original`);
+          const [key, regex] = missingSection;
+          const originalMatch = originalHtml.match(regex);
+          if (originalMatch) {
+            // Find appropriate insertion point
+            const insertPoint = html.lastIndexOf('</div>');
+            html = html.slice(0, insertPoint) + originalMatch[0] + html.slice(insertPoint);
+          }
         }
       }
     }
