@@ -279,6 +279,7 @@ export class MemStorage implements IStorage {
       id,
       user_id: insertTemplate.user_id || null,
       style_id: insertTemplate.style_id || null,
+      description: insertTemplate.description || null,
       created_at: new Date()
     };
     this.templatesMap.set(id, template);
@@ -330,6 +331,9 @@ export class MemStorage implements IStorage {
       ...insertVersion,
       id,
       version_number: nextVersionNumber,
+      description: insertVersion.description || null,
+      user_id: insertVersion.user_id || null,
+      version_type: insertVersion.version_type || "update",
       created_at: new Date(),
     };
     

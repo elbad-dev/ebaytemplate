@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save, DownloadCloud, Zap } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import TemplateHistory from './TemplateHistory';
 
 interface TemplateEditorProps {
   template?: Template;
@@ -171,6 +172,30 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
             <p className="text-sm text-gray-600">Edit your template without modifying HTML directly</p>
           </div>
           <div className="flex space-x-3">
+            {/* History button - only show for existing templates with ID */}
+            {template && template.id && (
+              <TemplateHistory
+                templateId={template.id}
+                onRestoreVersion={(html) => {
+                  try {
+                    const extractedData = parseTemplate(html);
+                    setTemplateData(extractedData);
+                    setGeneratedHtml(html);
+                    toast({
+                      title: 'Version restored',
+                      description: 'The template has been restored to the selected version',
+                    });
+                  } catch (error) {
+                    console.error('Error parsing template version:', error);
+                    toast({
+                      title: 'Error',
+                      description: 'Failed to restore template version',
+                      variant: 'destructive'
+                    });
+                  }
+                }}
+              />
+            )}
             <Button 
               variant="outline" 
               onClick={handleNewTemplate}

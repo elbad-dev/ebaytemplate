@@ -280,8 +280,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: req.body.name || template.name,
         html: req.body.html || template.html,
         description: req.body.description || template.description,
-        user_id: userId,
+        user_id: userId.toString(), // Convert to string since our schema expects a string
         version_type: req.body.version_type || "update", // "create", "update", or "autosave"
+        version_number: 0, // This will be overwritten by the storage method that increments it
       };
       
       const newVersion = await storage.createTemplateVersion(versionData);
@@ -341,8 +342,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: version.name,
         html: version.html,
         description: version.description,
-        user_id: userId,
+        user_id: userId.toString(), // Convert to string since our schema expects a string
         version_type: "update" as const, // Mark it as an update
+        version_number: 0, // This will be overwritten by the storage method that increments it
       };
       
       await storage.createTemplateVersion(restoreVersionData);
@@ -403,8 +405,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileType: req.file.mimetype,
         fileSize: req.file.size,
         url: imageUrl,
-        user_id: userId
-        // uploadedAt will be set to now() by the database
+        user_id: userId.toString() // Convert to string since our schema expects a string
+        // uploaded_at will be set by our storage implementation
       };
       
       console.log("Saving image with data:", imageData);
@@ -602,7 +604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newTemplate = await storage.createTemplate({
         name: templateName,
         html: generatedHtml,
-        user_id: userId,
+        user_id: userId.toString(), // Convert to string since our schema expects a string
         style_id: templateData.template_style_id
         // Don't set created_at - it will be automatically set to now() by the database
       });
