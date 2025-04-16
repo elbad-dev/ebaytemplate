@@ -373,10 +373,13 @@ export function generateTemplate(data: TemplateData): string {
       const cssGalleryRegex = /<div\s+class="(?:product-gallery|gallery)"[^>]*>[\s\S]*?<\/div>/i;
       const hasGallery = cssGalleryRegex.test(html);
       if (hasGallery) {
-        // Store all content before and after gallery
-        const parts = html.split(cssGalleryRegex);
-        const beforeGallery = parts[0];
-        const afterGallery = parts[1];
+        // Safely split HTML while preserving all sections
+        const match = html.match(cssGalleryRegex);
+        if (!match) return html;
+        
+        const index = html.indexOf(match[0]);
+        const beforeGallery = html.substring(0, index);
+        const afterGallery = html.substring(index + match[0].length);
         // Create gallery HTML with sets of 5 thumbnails
         const createThumbnailSets = (images) => {
           const sets = [];
@@ -420,7 +423,12 @@ export function generateTemplate(data: TemplateData): string {
         `;
 
         // Reconstruct the HTML preserving all other sections
-        html = beforeGallery + cssGalleryHTML + afterGallery;
+        html = beforeGallery + cssGalleryHTML + (afterGallery || '');
+        
+        // Verify all sections are present
+        if (!html.includes('product-card') || !html.includes('description-text')) {
+          console.warn('Some sections may be missing after gallery update');
+        }
       }
     }
 
