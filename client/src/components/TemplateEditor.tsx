@@ -29,6 +29,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
   const [templateData, setTemplateData] = useState<TemplateData>({
     title: '',
+    company_name: '',
     subtitle: '',
     price: '',
     currency: 'USD',
@@ -196,10 +197,91 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
         {/* Editor Panel */}
         <div className="lg:col-span-1 space-y-5">
           {/* Template Upload Section (if not editing an existing template) */}
-          {!template && <div className="mb-4 p-4 bg-muted/30 rounded-lg border border-dashed">
-            <p className="text-sm text-center text-muted-foreground">
-              No template loaded. Please import a template or create a new one.
+          {!template && <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-dashed">
+            <p className="text-sm text-center text-gray-600 mb-3">
+              Import an HTML template to edit
             </p>
+            <div className="flex flex-col space-y-2">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.html';
+                  input.onchange = async (e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (target.files && target.files[0]) {
+                      const file = target.files[0];
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      
+                      try {
+                        const response = await fetch('/api/upload/html', {
+                          method: 'POST',
+                          body: formData
+                        });
+                        
+                        if (response.ok) {
+                          const data = await response.json();
+                          const templateData = parseTemplate(data.content);
+                          setTemplateData(templateData);
+                          generatePreview(templateData);
+                          toast({
+                            title: 'Template imported',
+                            description: 'You can now edit the template content',
+                          });
+                        } else {
+                          throw new Error('Failed to upload file');
+                        }
+                      } catch (error) {
+                        toast({
+                          title: 'Error importing template',
+                          description: 'There was a problem processing your template',
+                          variant: 'destructive'
+                        });
+                      }
+                    }
+                  };
+                  input.click();
+                }}
+              >
+                Upload HTML File
+              </Button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-gray-50 px-2 text-gray-500">OR</span>
+                </div>
+              </div>
+              
+              <textarea 
+                className="w-full p-2 border rounded-md text-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                placeholder="Paste your HTML code here..."
+                onChange={(e) => {
+                  if (e.target.value.trim()) {
+                    try {
+                      const templateData = parseTemplate(e.target.value);
+                      setTemplateData(templateData);
+                      generatePreview(templateData);
+                      toast({
+                        title: 'Template imported',
+                        description: 'You can now edit the template content',
+                      });
+                    } catch (error) {
+                      toast({
+                        title: 'Error parsing template',
+                        description: 'There was a problem with the HTML code provided',
+                        variant: 'destructive'
+                      });
+                    }
+                  }
+                }}
+              ></textarea>
+            </div>
           </div>}
           
           {/* Editor Tabs */}

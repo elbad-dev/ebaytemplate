@@ -42,19 +42,23 @@ function AppHeader() {
   return (
     <header className="border-b bg-white shadow-sm">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link href="/">
-          <div className="flex items-center space-x-2 hover:opacity-90 transition-opacity cursor-pointer">
-            <Logo size="small" />
-            <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              TemplateEditor
-            </span>
-          </div>
-        </Link>
+        <div 
+          className="flex items-center space-x-2 hover:opacity-90 transition-opacity cursor-pointer"
+          onClick={() => navigate('/')}
+        >
+          <Logo size="small" />
+          <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            TemplateEditor
+          </span>
+        </div>
         
         <nav className="flex items-center space-x-6">
-          <Link href="/">
-            <div className="text-sm text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Home</div>
-          </Link>
+          <div 
+            className="text-sm text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
+            onClick={() => navigate('/')}
+          >
+            Home
+          </div>
           <a 
             href="https://github.com" 
             target="_blank" 
