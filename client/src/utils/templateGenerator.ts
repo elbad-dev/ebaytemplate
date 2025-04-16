@@ -8,26 +8,47 @@ export function generateTemplate(data: TemplateData): string {
     // If we have a raw HTML template, we'll modify it
     let html = data.rawHtml;
     
-    // Replace company name if it exists
+    // Replace company name if it exists - using a more specific selector to the brand-text area
     if (data.company_name) {
       const companyNameRegex = /<div\s+class="brand-text">\s*<h1[^>]*>(.*?)<\/h1>/;
       if (companyNameRegex.test(html)) {
         html = html.replace(companyNameRegex, `<div class="brand-text"><h1>${ data.company_name }</h1>`);
+      } else {
+        // Try alternative company name patterns
+        const altCompanyNameRegex = /<header[^>]*>.*?<h1[^>]*>(.*?)<\/h1>/;
+        if (altCompanyNameRegex.test(html)) {
+          html = html.replace(altCompanyNameRegex, (match) => {
+            return match.replace(/<h1[^>]*>(.*?)<\/h1>/, `<h1>${ data.company_name }</h1>`);
+          });
+        }
       }
     }
     
-    // Replace product title if it exists (specifically targeting the product title in the info section)
+    // Replace product title if it exists - making selectors more specific to avoid conflicts
     if (data.title) {
+      // First try the card product title with specific class
       const titleRegex = /<h2\s+class="product-title"[^>]*>(.*?)<\/h2>/;
       if (titleRegex.test(html)) {
         html = html.replace(titleRegex, `<h2 class="product-title">${ data.title }</h2>`);
       }
       
-      // Also update the product title in the header section if it exists
+      // Then try the product info section in header with specific parent element
       const headerTitleRegex = /<div\s+class="product-info"[^>]*>.*?<h2[^>]*>(.*?)<\/h2>/;
       if (headerTitleRegex.test(html)) {
         html = html.replace(headerTitleRegex, (match) => {
           return match.replace(/<h2[^>]*>(.*?)<\/h2>/, `<h2>${ data.title }</h2>`);
+        });
+      }
+      
+      // Finally try product card title but avoid company sections
+      const productCardTitleRegex = /<div\s+class="(?!brand-text|company)[^"]*">.*?<h2[^>]*>(.*?)<\/h2>/;
+      if (productCardTitleRegex.test(html)) {
+        html = html.replace(productCardTitleRegex, (match) => {
+          // Only replace if not in a company or brand section
+          if (!match.includes('brand-text') && !match.includes('company-section')) {
+            return match.replace(/<h2[^>]*>(.*?)<\/h2>/, `<h2>${ data.title }</h2>`);
+          }
+          return match;
         });
       }
     }
@@ -44,7 +65,7 @@ export function generateTemplate(data: TemplateData): string {
     
     // Replace price if it exists
     if (data.price) {
-      const priceRegex = /<span\s+class="price"[^>]*>(.*?)<\/span>/s;
+      const priceRegex = /<span\s+class="price"[^>]*>(.*?)<\/span>/;
       if (priceRegex.test(html)) {
         html = html.replace(priceRegex, `<span class="price">${ data.currency } ${ data.price }</span>`);
       }
@@ -53,12 +74,12 @@ export function generateTemplate(data: TemplateData): string {
     // Replace description if it exists
     if (data.description) {
       // Specifically target the description section with a heading
-      const descriptionRegex = /<h3>Produktbeschreibung<\/h3>\s*<div\s+class="description-text"[^>]*>.*?<\/div>/s;
+      const descriptionRegex = /<h3>Produktbeschreibung<\/h3>\s*<div\s+class="description-text"[^>]*>.*?<\/div>/;
       if (descriptionRegex.test(html)) {
         html = html.replace(descriptionRegex, `<h3>Produktbeschreibung</h3><div class="description-text">${ data.description }</div>`);
       } else {
         // Alternative pattern
-        const altDescriptionRegex = /<div\s+class="description-text"[^>]*>.*?<\/div>/s;
+        const altDescriptionRegex = /<div\s+class="description-text"[^>]*>.*?<\/div>/;
         if (altDescriptionRegex.test(html)) {
           html = html.replace(altDescriptionRegex, `<div class="description-text">${ data.description }</div>`);
         }
@@ -103,8 +124,8 @@ export function generateTemplate(data: TemplateData): string {
     
     // Handle image gallery
     if (data.images.length > 0) {
-      // Main image
-      const mainImageRegex = /<div\s+class="main-image"[^>]*>.*?<img[^>]*src="[^"]*"[^>]*>.*?<\/div>/s;
+      // Main image - using multiline matching without 's' flag
+      const mainImageRegex = /<div\s+class="main-image"[^>]*>[\s\S]*?<img[^>]*src="[^"]*"[^>]*>[\s\S]*?<\/div>/;
       if (mainImageRegex.test(html)) {
         html = html.replace(mainImageRegex, `<div class="main-image"><img src="${data.images[0].url}" alt="Product image"></div>`);
       }
@@ -116,7 +137,7 @@ export function generateTemplate(data: TemplateData): string {
         </div>
       `).join('');
       
-      const thumbnailsRegex = /<div\s+class="thumbnails"[^>]*>.*?<\/div>/s;
+      const thumbnailsRegex = /<div\s+class="thumbnails"[^>]*>[\s\S]*?<\/div>/;
       if (thumbnailsRegex.test(html)) {
         html = html.replace(thumbnailsRegex, `<div class="thumbnails">${ thumbnailsContent }</div>`);
       }
@@ -128,7 +149,7 @@ export function generateTemplate(data: TemplateData): string {
         </div>
       `).join('');
       
-      const galleryRegex = /<div\s+class="gallery-container"[^>]*>.*?<\/div>/s;
+      const galleryRegex = /<div\s+class="gallery-container"[^>]*>[\s\S]*?<\/div>/;
       if (galleryRegex.test(html)) {
         html = html.replace(galleryRegex, `<div class="gallery-container">${ galleryImagesContent }</div>`);
       }
@@ -182,7 +203,7 @@ function generateBasicTemplate(data: TemplateData): string {
         <div class="specs-container">
           ${data.specs.map(spec => `
             <div class="spec-item">
-              <div class="spec-name">${spec.name}</div>
+              <div class="spec-name">${spec.label}</div>
               <div class="spec-value">${spec.value}</div>
             </div>
           `).join('')}
@@ -202,7 +223,7 @@ function generateBasicTemplate(data: TemplateData): string {
               <div class="icon-container">${section.svg || ''}</div>
               <div class="section-content">
                 <h3>${section.title}</h3>
-                <p>${section.content}</p>
+                <p>${section.description}</p>
               </div>
             </div>
           `).join('')}

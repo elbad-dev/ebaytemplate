@@ -76,9 +76,12 @@ export function parseTemplate(html: string): TemplateData {
       data.description = descriptionTextEl.innerHTML || '';
     } else {
       // Try to find a container with the description-text class
-      descriptionTextEl = descriptionHeading.parentElement?.querySelector('.description-text');
-      if (descriptionTextEl) {
-        data.description = descriptionTextEl.innerHTML || '';
+      const parentElement = descriptionHeading.parentElement;
+      if (parentElement) {
+        descriptionTextEl = parentElement.querySelector('.description-text');
+        if (descriptionTextEl) {
+          data.description = descriptionTextEl.innerHTML || '';
+        }
       }
     }
   } else {
