@@ -45,6 +45,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
   const [showSectionSelector, setShowSectionSelector] = useState(false);
   const [currentSvgData, setCurrentSvgData] = useState({ svg: '', sectionId: '' });
   const [isSaving, setIsSaving] = useState(false);
+  const [lastAutoSaveTime, setLastAutoSaveTime] = useState<Date | null>(null);
   
   // Initialize with template if provided
   useEffect(() => {
@@ -86,6 +87,44 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
     };
     setTemplateData(updatedData);
     generatePreview(updatedData);
+    
+    // Check if we should auto-save (only if we're editing an existing template)
+    if (template?.id) {
+      const now = new Date();
+      // Auto-save every 2 minutes
+      if (!lastAutoSaveTime || (now.getTime() - lastAutoSaveTime.getTime() > 2 * 60 * 1000)) {
+        autoSaveTemplate(updatedData);
+      }
+    }
+  };
+  
+  // Auto-save the template as a new version
+  const autoSaveTemplate = async (data: TemplateData) => {
+    if (!template?.id || !generatedHtml) return;
+    
+    try {
+      const response = await apiRequest('POST', `/api/templates/${template.id}/versions`, {
+        name: template.name,
+        html: generatedHtml,
+        description: template.description,
+        version_type: 'autosave',
+      });
+      
+      if (response.ok) {
+        setLastAutoSaveTime(new Date());
+        console.log('Template auto-saved');
+        
+        // Show a subtle toast notification
+        toast({
+          title: 'Auto-saved',
+          description: `Changes saved automatically at ${new Date().toLocaleTimeString()}`,
+          variant: 'default',
+          duration: 2000, // shorter duration for auto-save notifications
+        });
+      }
+    } catch (error) {
+      console.error('Failed to auto-save template:', error);
+    }
   };
 
   // Generate HTML preview
@@ -239,12 +278,60 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
             >
               Reset Changes
             </Button>
-            <Button 
-              onClick={handleExportTemplate}
-              className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-blue-600 transition"
-            >
-              Save Template
-            </Button>
+            {template?.id ? (
+              <Button 
+                onClick={async () => {
+                  if (!template?.id || !generatedHtml) return;
+                  
+                  setIsSaving(true);
+                  try {
+                    const response = await apiRequest('POST', `/api/templates/${template.id}/versions`, {
+                      name: template.name,
+                      html: generatedHtml,
+                      description: template.description,
+                      version_type: 'update',
+                    });
+                    
+                    if (response.ok) {
+                      // Also update the template itself
+                      await apiRequest('PUT', `/api/templates/${template.id}`, {
+                        name: template.name,
+                        html: generatedHtml,
+                        description: template.description,
+                      });
+                      
+                      setLastAutoSaveTime(new Date());
+                      toast({
+                        title: 'Template saved',
+                        description: 'Your changes have been saved and a new version created'
+                      });
+                    } else {
+                      throw new Error('Failed to save template');
+                    }
+                  } catch (error) {
+                    toast({
+                      title: 'Error saving template',
+                      description: 'There was a problem saving your changes',
+                      variant: 'destructive'
+                    });
+                    console.error('Failed to save template:', error);
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }}
+                className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-blue-600 transition"
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save Template'}
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleExportTemplate}
+                className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-blue-600 transition"
+              >
+                Export Template
+              </Button>
+            )}
           </div>
         </div>
       </header>

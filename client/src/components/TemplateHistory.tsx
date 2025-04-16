@@ -245,7 +245,7 @@ export default function TemplateHistory({ templateId, onRestoreVersion }: Templa
                       <ScrollArea className="h-[180px]">
                         <pre className="text-xs font-mono">
                           {versionDetails?.html?.slice(0, 300)}
-                          {versionDetails?.html?.length > 300 ? '...' : ''}
+                          {versionDetails?.html && versionDetails.html.length > 300 ? '...' : ''}
                         </pre>
                       </ScrollArea>
                     </div>
