@@ -2,10 +2,11 @@ import {
   type Template, type InsertTemplate, templates,
   type Image, type InsertImage, images,
   type TemplateStyle, type InsertTemplateStyle, templateStyles,
-  type SvgIcon, type InsertSvgIcon, svgIcons
+  type SvgIcon, type InsertSvgIcon, svgIcons,
+  type TemplateVersion, type InsertTemplateVersion, templateVersions
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull, asc } from "drizzle-orm";
+import { eq, desc, and, isNull, asc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Template operations
@@ -14,6 +15,12 @@ export interface IStorage {
   createTemplate(template: InsertTemplate): Promise<Template>;
   updateTemplate(id: number, template: Partial<InsertTemplate>): Promise<Template | undefined>;
   deleteTemplate(id: number): Promise<boolean>;
+  
+  // Template Version operations
+  getTemplateVersion(id: number): Promise<TemplateVersion | undefined>;
+  getTemplateVersions(templateId: number): Promise<TemplateVersion[]>;
+  getLatestTemplateVersion(templateId: number): Promise<TemplateVersion | undefined>;
+  createTemplateVersion(version: InsertTemplateVersion): Promise<TemplateVersion>;
   
   // Image operations
   getImage(id: number): Promise<Image | undefined>;
@@ -47,13 +54,13 @@ export class DatabaseStorage implements IStorage {
       return db
         .select()
         .from(templates)
-        .where(eq(templates.userId, userId))
-        .orderBy(desc(templates.createdAt));
+        .where(eq(templates.user_id, userId))
+        .orderBy(desc(templates.created_at));
     }
     return db
       .select()
       .from(templates)
-      .orderBy(desc(templates.createdAt));
+      .orderBy(desc(templates.created_at));
   }
 
   async createTemplate(insertTemplate: InsertTemplate): Promise<Template> {
@@ -81,6 +88,55 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
+  // Template Version operations
+  async getTemplateVersion(id: number): Promise<TemplateVersion | undefined> {
+    const [version] = await db
+      .select()
+      .from(templateVersions)
+      .where(eq(templateVersions.id, id));
+    return version;
+  }
+
+  async getTemplateVersions(templateId: number): Promise<TemplateVersion[]> {
+    return db
+      .select()
+      .from(templateVersions)
+      .where(eq(templateVersions.template_id, templateId))
+      .orderBy(desc(templateVersions.version_number));
+  }
+
+  async getLatestTemplateVersion(templateId: number): Promise<TemplateVersion | undefined> {
+    const [version] = await db
+      .select()
+      .from(templateVersions)
+      .where(eq(templateVersions.template_id, templateId))
+      .orderBy(desc(templateVersions.version_number))
+      .limit(1);
+    return version;
+  }
+
+  async createTemplateVersion(insertVersion: InsertTemplateVersion): Promise<TemplateVersion> {
+    // Get the next version number
+    const [highestVersion] = await db
+      .select({ max: sql`MAX(${templateVersions.version_number})` })
+      .from(templateVersions)
+      .where(eq(templateVersions.template_id, insertVersion.template_id));
+    
+    // Calculate next version number
+    const nextVersionNumber = (highestVersion?.max || 0) + 1;
+    
+    // Insert the new version with calculated version number
+    const [version] = await db
+      .insert(templateVersions)
+      .values({
+        ...insertVersion,
+        version_number: nextVersionNumber
+      })
+      .returning();
+    
+    return version;
+  }
+
   // Image operations
   async getImage(id: number): Promise<Image | undefined> {
     const [image] = await db
@@ -95,13 +151,13 @@ export class DatabaseStorage implements IStorage {
       return db
         .select()
         .from(images)
-        .where(eq(images.userId, userId))
-        .orderBy(desc(images.uploadedAt));
+        .where(eq(images.user_id, userId))
+        .orderBy(desc(images.uploaded_at));
     }
     return db
       .select()
       .from(images)
-      .orderBy(desc(images.uploadedAt));
+      .orderBy(desc(images.uploaded_at));
   }
 
   async createImage(insertImage: InsertImage): Promise<Image> {

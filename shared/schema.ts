@@ -7,6 +7,7 @@ export const templateTypeEnum = pgEnum("template_type", ["product", "service", "
 export const templateStyleEnum = pgEnum("template_style", ["modern", "classic", "minimalist", "bold", "elegant"]);
 export const templateColorSchemeEnum = pgEnum("color_scheme", ["light", "dark", "colorful", "monochrome", "custom"]);
 export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
+export const versionTypeEnum = pgEnum("version_type", ["create", "update", "autosave"]);
 
 // Users table
 export const users = pgTable("users", {
@@ -63,6 +64,19 @@ export const svgIcons = pgTable("svg_icons", {
   name: varchar("name", { length: 255 }).notNull(),
   category: varchar("category", { length: 100 }).default("general").notNull(),
   svg: text("svg").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Template versions table
+export const templateVersions = pgTable("template_versions", {
+  id: serial("id").primaryKey(),
+  template_id: integer("template_id").references(() => templates.id, { onDelete: "cascade" }).notNull(),
+  version_number: integer("version_number").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  html: text("html").notNull(),
+  version_type: versionTypeEnum("version_type").default("update").notNull(),
+  user_id: text("user_id"),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -125,6 +139,16 @@ export const insertVerificationTokenSchema = createInsertSchema(verificationToke
   expires: true,
 });
 
+export const insertTemplateVersionSchema = createInsertSchema(templateVersions).pick({
+  template_id: true,
+  version_number: true,
+  name: true,
+  description: true,
+  html: true,
+  version_type: true,
+  user_id: true,
+});
+
 // TypeScript types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -138,6 +162,8 @@ export type InsertSvgIcon = z.infer<typeof insertSvgIconSchema>;
 export type SvgIcon = typeof svgIcons.$inferSelect;
 export type InsertVerificationToken = z.infer<typeof insertVerificationTokenSchema>;
 export type VerificationToken = typeof verificationTokens.$inferSelect;
+export type InsertTemplateVersion = z.infer<typeof insertTemplateVersionSchema>;
+export type TemplateVersion = typeof templateVersions.$inferSelect;
 
 // Template data schema (used in the frontend)
 export const templateDataSchema = z.object({
