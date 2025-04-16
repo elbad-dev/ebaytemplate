@@ -28,7 +28,8 @@ export default function TemplateGenerator({ onTemplateGenerated }: TemplateGener
   // Initial template data
   const [templateData, setTemplateData] = useState<TemplateData>({
     title: "Product Title",
-    subtitle: "Product Subtitle",
+    company_name: "Company Name",
+    subtitle: "Company Slogan",
     price: "1999.99",
     currency: "USD",
     description: "This is a sample product description. Replace this with your actual product details and information.",

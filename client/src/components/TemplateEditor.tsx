@@ -135,6 +135,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
   const handleNewTemplate = () => {
     setTemplateData({
       title: '',
+      company_name: '',
       subtitle: '',
       price: '',
       currency: 'EUR',
