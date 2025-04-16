@@ -141,35 +141,78 @@ export function parseTemplate(html: string): TemplateData {
   
   // Extract images - multiple approaches to find all possible images
   
-  // 1. Look for main image first
-  const mainImage = doc.querySelector('.main-image img');
-  if (mainImage) {
-    const src = mainImage.getAttribute('src');
-    if (src && !src.includes('placeholder')) {
-      data.images.push({ id: `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`, url: src });
+  // 1. Check for advanced gallery patterns first
+  let galleryImages: string[] = [];
+  
+  // 1.1 First check radio-controlled galleries (most advanced pattern)
+  const galleryMainImages = doc.querySelectorAll('.gallery-main-image img, .gallery-slide img');
+  if (galleryMainImages.length > 0) {
+    Array.from(galleryMainImages).forEach(img => {
+      const src = img.getAttribute('src');
+      if (src && !src.includes('placeholder') && !galleryImages.includes(src)) {
+        galleryImages.push(src);
+      }
+    });
+  }
+  
+  // 1.2 Next check for gallery slider pattern
+  if (galleryImages.length === 0) {
+    const gallerySlider = doc.querySelector('.gallery-slider');
+    if (gallerySlider) {
+      const sliderImages = gallerySlider.querySelectorAll('img');
+      const thumbnailItems = gallerySlider.querySelectorAll('.thumbnail-item img');
+      
+      // Create a set of non-thumbnail images
+      const mainImgSet = new Set<string>();
+      Array.from(sliderImages).forEach(img => {
+        const isThumb = Array.from(thumbnailItems).some(thumb => thumb === img);
+        if (!isThumb) {
+          const src = img.getAttribute('src');
+          if (src && !src.includes('placeholder')) {
+            mainImgSet.add(src);
+          }
+        }
+      });
+      
+      galleryImages = [...mainImgSet];
     }
   }
   
-  // 2. Look for gallery items and image containers
-  const galleryItems = doc.querySelectorAll('.gallery-item img, .gallery-container img, .gallery img');
-  Array.from(galleryItems).forEach((img, index) => {
-    const src = img.getAttribute('src');
-    if (src && !src.includes('placeholder') && !data.images.some(image => image.url === src)) {
-      data.images.push({ id: `img-${Date.now()}-${index}-${Math.floor(Math.random() * 1000)}`, url: src });
+  // 2. Look for main image
+  if (galleryImages.length === 0) {
+    const mainImage = doc.querySelector('.main-image img');
+    if (mainImage) {
+      const src = mainImage.getAttribute('src');
+      if (src && !src.includes('placeholder')) {
+        galleryImages.push(src);
+      }
     }
-  });
+  }
   
-  // 3. Look for thumbnails
-  const thumbnails = doc.querySelectorAll('.thumbnail img');
-  Array.from(thumbnails).forEach((img, index) => {
-    const src = img.getAttribute('src');
-    if (src && !src.includes('placeholder') && !data.images.some(image => image.url === src)) {
-      data.images.push({ id: `img-${Date.now()}-${index}-${Math.floor(Math.random() * 1000)}`, url: src });
-    }
-  });
+  // 3. Look for gallery items and image containers
+  if (galleryImages.length === 0) {
+    const galleryItems = doc.querySelectorAll('.gallery-item img, .gallery-container img, .gallery img, .product-gallery img');
+    Array.from(galleryItems).forEach(img => {
+      const src = img.getAttribute('src');
+      if (src && !src.includes('placeholder') && !galleryImages.includes(src)) {
+        galleryImages.push(src);
+      }
+    });
+  }
   
-  // 4. Last resort - look for any images
-  if (data.images.length === 0) {
+  // 4. Look for thumbnails (if we still have no images)
+  if (galleryImages.length === 0) {
+    const thumbnails = doc.querySelectorAll('.thumbnail img');
+    Array.from(thumbnails).forEach(img => {
+      const src = img.getAttribute('src');
+      if (src && !src.includes('placeholder') && !galleryImages.includes(src)) {
+        galleryImages.push(src);
+      }
+    });
+  }
+  
+  // 5. Last resort - look for any product-related images
+  if (galleryImages.length === 0) {
     const allImages = doc.querySelectorAll('img');
     Array.from(allImages)
       .filter(img => {
@@ -185,13 +228,19 @@ export function parseTemplate(html: string): TemplateData {
                 (src.indexOf('png') > -1)
               );
       })
-      .forEach((img, index) => {
+      .forEach(img => {
         const src = img.getAttribute('src');
-        if (src && !data.images.some(image => image.url === src)) {
-          data.images.push({ id: `img-${Date.now()}-${index}-${Math.floor(Math.random() * 1000)}`, url: src });
+        if (src && !galleryImages.includes(src)) {
+          galleryImages.push(src);
         }
       });
   }
+  
+  // Convert the gallery images to the expected format
+  data.images = galleryImages.map((url, index) => ({
+    id: `img-${Date.now()}-${index}-${Math.floor(Math.random() * 1000)}`,
+    url
+  }));
   
   // Extract tech specs - first try standard spec items
   let specItems = doc.querySelectorAll('.spec-item, .tech-item');

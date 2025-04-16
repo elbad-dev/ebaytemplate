@@ -265,7 +265,87 @@ export function generateTemplate(data: TemplateData): string {
         html = html.replace(mainImageRegex, `<div class="main-image"><img src="${data.images[0].url}" alt="Product image"></div>`);
       }
       
-      // Thumbnail gallery
+      // Check for advanced gallery patterns first
+      // Gallery with radio inputs and multiple main images
+      const gallerySliderRegex = /<div\s+class="gallery-slider"[^>]*>[\s\S]*?<\/div>/i;
+      if (gallerySliderRegex.test(html)) {
+        // Generate radio inputs for image selection
+        const radioInputs = data.images.map((_, idx) => 
+          `<input type="radio" name="gallery-select" id="gallery-select-${idx}" class="gallery-select" ${idx === 0 ? 'checked' : ''} />`
+        ).join('\n');
+        
+        // Generate main images
+        const mainImages = data.images.map((image, idx) => 
+          `<div class="gallery-main-image" id="main-image-${idx}">
+            <img src="${image.url}" alt="Product image ${idx + 1}">
+           </div>`
+        ).join('\n');
+        
+        // Generate thumbnails with labels linked to radio inputs
+        const thumbnails = data.images.map((image, idx) => 
+          `<label for="gallery-select-${idx}" class="thumbnail-item" data-for="main-image-${idx}">
+            <img src="${image.url}" alt="Thumbnail ${idx + 1}">
+           </label>`
+        ).join('\n');
+        
+        // Generate navigation arrows
+        const navArrows = `
+          <div class="gallery-arrows">
+            <label for="gallery-select-${data.images.length - 1}" class="gallery-arrow prev" id="gallery-prev"></label>
+            <label for="gallery-select-1" class="gallery-arrow next" id="gallery-next"></label>
+          </div>
+        `;
+        
+        // Full replacement with custom navigation script
+        const galleryHTML = `
+          <div class="gallery-slider">
+            ${radioInputs}
+            <div class="gallery-main-container">
+              ${mainImages}
+              ${navArrows}
+            </div>
+            <div class="gallery-thumbnails">
+              <div class="thumbnail-scroll">
+                ${thumbnails}
+              </div>
+            </div>
+            <script>
+              // Simple navigation script
+              document.addEventListener('DOMContentLoaded', function() {
+                const radioButtons = document.querySelectorAll('.gallery-select');
+                const prevArrow = document.getElementById('gallery-prev');
+                const nextArrow = document.getElementById('gallery-next');
+                
+                // Update arrows to point to correct images
+                function updateArrows() {
+                  let currentIdx = 0;
+                  radioButtons.forEach((radio, idx) => {
+                    if (radio.checked) currentIdx = idx;
+                  });
+                  
+                  const prevIdx = currentIdx === 0 ? radioButtons.length - 1 : currentIdx - 1;
+                  const nextIdx = currentIdx === radioButtons.length - 1 ? 0 : currentIdx + 1;
+                  
+                  prevArrow.setAttribute('for', 'gallery-select-' + prevIdx);
+                  nextArrow.setAttribute('for', 'gallery-select-' + nextIdx);
+                }
+                
+                // Add event listeners to update arrows when selection changes
+                radioButtons.forEach(radio => {
+                  radio.addEventListener('change', updateArrows);
+                });
+                
+                // Initial arrow setup
+                updateArrows();
+              });
+            </script>
+          </div>
+        `;
+        
+        html = html.replace(gallerySliderRegex, galleryHTML);
+      }
+      
+      // Standard thumbnail gallery
       const thumbnailsContent = data.images.map(image => `
         <div class="thumbnail">
           <img src="${image.url}" alt="Product thumbnail">
@@ -274,10 +354,10 @@ export function generateTemplate(data: TemplateData): string {
       
       const thumbnailsRegex = /<div\s+class="thumbnails"[^>]*>[\s\S]*?<\/div>/;
       if (thumbnailsRegex.test(html)) {
-        html = html.replace(thumbnailsRegex, `<div class="thumbnails">${ thumbnailsContent }</div>`);
+        html = html.replace(thumbnailsRegex, `<div class="thumbnails">${thumbnailsContent}</div>`);
       }
       
-      // Update image gallery if it exists
+      // Basic gallery container
       const galleryImagesContent = data.images.map(image => `
         <div class="gallery-item">
           <img src="${image.url}" alt="Product image">
@@ -286,7 +366,31 @@ export function generateTemplate(data: TemplateData): string {
       
       const galleryRegex = /<div\s+class="gallery-container"[^>]*>[\s\S]*?<\/div>/;
       if (galleryRegex.test(html)) {
-        html = html.replace(galleryRegex, `<div class="gallery-container">${ galleryImagesContent }</div>`);
+        html = html.replace(galleryRegex, `<div class="gallery-container">${galleryImagesContent}</div>`);
+      }
+      
+      // CSS Gallery pattern (common in eBay templates)
+      const cssGalleryRegex = /<div\s+class="product-gallery"[^>]*>[\s\S]*?<\/div>/i;
+      if (cssGalleryRegex.test(html) && !html.includes('<div class="main-image">') && !html.includes('<div class="thumbnails">')) {
+        const cssGalleryHTML = `
+          <div class="product-gallery">
+            <div class="gallery-wrapper">
+              ${data.images.map((image, idx) => `
+                <input type="radio" name="gallery-nav" id="gallery-${idx}" ${idx === 0 ? 'checked' : ''} class="gallery-nav" />
+                <div class="gallery-slide">
+                  <img src="${image.url}" alt="Product image ${idx + 1}">
+                </div>
+              `).join('')}
+              <div class="gallery-nav-controls">
+                ${data.images.map((_, idx) => `
+                  <label for="gallery-${idx}" class="gallery-nav-dot"></label>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+        
+        html = html.replace(cssGalleryRegex, cssGalleryHTML);
       }
     }
     
@@ -305,16 +409,207 @@ function generateBasicTemplate(data: TemplateData): string {
   const galleryHTML = data.images.length > 0 
     ? `
       <div class="product-gallery">
-        <div class="main-image">
-          <img src="${data.images[0].url}" alt="Product image">
-        </div>
-        <div class="thumbnails">
-          ${data.images.map(image => `
-            <div class="thumbnail">
-              <img src="${image.url}" alt="Product thumbnail">
+        <div class="gallery-slider">
+          ${data.images.map((_, idx) => 
+            `<input type="radio" name="gallery-select" id="gallery-select-${idx}" class="gallery-select" ${idx === 0 ? 'checked' : ''} />`
+          ).join('\n')}
+          
+          <div class="gallery-main-container">
+            ${data.images.map((image, idx) => 
+              `<div class="gallery-main-image" id="main-image-${idx}">
+                <img src="${image.url}" alt="Product image ${idx + 1}">
+               </div>`
+            ).join('\n')}
+            
+            <div class="gallery-arrows">
+              <label for="gallery-select-${data.images.length - 1}" class="gallery-arrow prev" id="gallery-prev"></label>
+              <label for="gallery-select-1" class="gallery-arrow next" id="gallery-next"></label>
             </div>
-          `).join('')}
+          </div>
+          
+          <div class="gallery-thumbnails">
+            <div class="thumbnail-scroll">
+              ${data.images.map((image, idx) => 
+                `<label for="gallery-select-${idx}" class="thumbnail-item" data-for="main-image-${idx}">
+                  <img src="${image.url}" alt="Thumbnail ${idx + 1}">
+                 </label>`
+              ).join('\n')}
+            </div>
+          </div>
         </div>
+        
+        <style>
+          .gallery-slider {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+          }
+          
+          .gallery-select {
+            display: none;
+          }
+          
+          .gallery-main-container {
+            position: relative;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+          }
+          
+          .gallery-main-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+          }
+          
+          .gallery-main-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+          }
+          
+          .gallery-arrows {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+          }
+          
+          .gallery-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+          }
+          
+          .gallery-arrow:before {
+            content: '';
+            display: block;
+            width: 10px;
+            height: 10px;
+            border-style: solid;
+            border-width: 3px 3px 0 0;
+            border-color: #333;
+          }
+          
+          .gallery-arrow.prev {
+            left: 10px;
+          }
+          
+          .gallery-arrow.prev:before {
+            transform: rotate(-135deg);
+            margin-left: 5px;
+          }
+          
+          .gallery-arrow.next {
+            right: 10px;
+          }
+          
+          .gallery-arrow.next:before {
+            transform: rotate(45deg);
+            margin-right: 5px;
+          }
+          
+          .gallery-thumbnails {
+            width: 100%;
+            overflow-x: auto;
+          }
+          
+          .thumbnail-scroll {
+            display: flex;
+            gap: 10px;
+          }
+          
+          .thumbnail-item {
+            flex: 0 0 80px;
+            height: 80px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+          }
+          
+          .thumbnail-item:hover {
+            opacity: 1;
+            border-color: #999;
+          }
+          
+          .thumbnail-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          
+          /* Selected image and thumbnail states */
+          #gallery-select-0:checked ~ .gallery-main-container #main-image-0,
+          #gallery-select-1:checked ~ .gallery-main-container #main-image-1,
+          #gallery-select-2:checked ~ .gallery-main-container #main-image-2,
+          #gallery-select-3:checked ~ .gallery-main-container #main-image-3,
+          #gallery-select-4:checked ~ .gallery-main-container #main-image-4 {
+            opacity: 1;
+            z-index: 5;
+          }
+          
+          #gallery-select-0:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-0"],
+          #gallery-select-1:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-1"],
+          #gallery-select-2:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-2"],
+          #gallery-select-3:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-3"],
+          #gallery-select-4:checked ~ .gallery-thumbnails .thumbnail-item[data-for="main-image-4"] {
+            opacity: 1;
+            border-color: #3498db;
+          }
+        </style>
+        
+        <script>
+          // Simple navigation script
+          document.addEventListener('DOMContentLoaded', function() {
+            const radioButtons = document.querySelectorAll('.gallery-select');
+            const prevArrow = document.getElementById('gallery-prev');
+            const nextArrow = document.getElementById('gallery-next');
+            
+            // Update arrows to point to correct images
+            function updateArrows() {
+              let currentIdx = 0;
+              radioButtons.forEach((radio, idx) => {
+                if (radio.checked) currentIdx = idx;
+              });
+              
+              const prevIdx = currentIdx === 0 ? radioButtons.length - 1 : currentIdx - 1;
+              const nextIdx = currentIdx === radioButtons.length - 1 ? 0 : currentIdx + 1;
+              
+              prevArrow.setAttribute('for', 'gallery-select-' + prevIdx);
+              nextArrow.setAttribute('for', 'gallery-select-' + nextIdx);
+            }
+            
+            // Add event listeners to update arrows when selection changes
+            radioButtons.forEach(radio => {
+              radio.addEventListener('change', updateArrows);
+            });
+            
+            // Initial arrow setup
+            updateArrows();
+          });
+        </script>
       </div>
     ` 
     : `
