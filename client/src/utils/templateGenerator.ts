@@ -372,43 +372,20 @@ export function generateTemplate(data: TemplateData): string {
       // CSS Gallery pattern (common in eBay templates)
       const cssGalleryRegex = /<div\s+class="product-gallery"[^>]*>[\s\S]*?<\/div>/i;
       if (cssGalleryRegex.test(html) && !html.includes('<div class="main-image">') && !html.includes('<div class="thumbnails">')) {
-        // Create sets of 5 thumbnails
-        const createThumbnailSets = (images) => {
-          const sets = [];
-          for(let i = 0; i < images.length; i += 5) {
-            const setNumber = Math.floor(i / 5) + 1;
-            sets.push(`
-              <div class="thumbnail-set set${setNumber}">
-                ${images.slice(i, i + 5).map((image, idx) => `
-                  <label class="thumbnail" for="img${i + idx + 1}">
-                    <img src="${image.url}" alt="Thumbnail ${i + idx + 1}">
-                  </label>
+        const cssGalleryHTML = `
+          <div class="product-gallery">
+            <div class="gallery-wrapper">
+              ${data.images.map((image, idx) => `
+                <input type="radio" name="gallery-nav" id="gallery-${idx}" ${idx === 0 ? 'checked' : ''} class="gallery-nav" />
+                <div class="gallery-slide">
+                  <img src="${image.url}" alt="Product image ${idx + 1}">
+                </div>
+              `).join('')}
+              <div class="gallery-nav-controls">
+                ${data.images.map((_, idx) => `
+                  <label for="gallery-${idx}" class="gallery-nav-dot"></label>
                 `).join('')}
               </div>
-            `);
-          }
-          return sets.join('');
-        };
-
-        const cssGalleryHTML = `
-          <div class="gallery">
-            ${data.images.map((_, idx) => `
-              <input type="radio" name="gallery" id="img${idx + 1}" ${idx === 0 ? 'checked' : ''}>
-            `).join('')}
-
-            <div class="gallery-container">
-              ${data.images.map((image, idx) => `
-                ${idx > 0 ? `<label class="gallery-arrow prev" for="img${idx}"></label>` : ''}
-                ${idx < data.images.length - 1 ? `<label class="gallery-arrow next" for="img${idx + 2}"></label>` : ''}
-              `).join('')}
-
-              ${data.images.map((image, idx) => `
-                <img src="${image.url}" alt="Product Detail ${idx + 1}" class="gallery-item" id="main${idx + 1}">
-              `).join('')}
-            </div>
-
-            <div class="thumbnail-sets">
-              ${createThumbnailSets(data.images)}
             </div>
           </div>
         `;
