@@ -40,10 +40,27 @@ export function parseTemplate(html: string): TemplateData {
   if (productTitle) {
     data.title = productTitle.textContent?.trim() || '';
   } else {
-    // Try alternative location (product info in header)
-    const headerTitle = doc.querySelector('.product-info h2');
-    if (headerTitle) {
-      data.title = headerTitle.textContent?.trim() || '';
+    // Try product info section looking for the first h2 that's not Produktbeschreibung
+    const productInfoCards = doc.querySelectorAll('.product-info .card');
+    for (let i = 0; i < productInfoCards.length; i++) {
+      const card = productInfoCards[i];
+      const h2 = card.querySelector('h2');
+      if (h2 && 
+          !h2.textContent?.includes('Produktbeschreibung') && 
+          !h2.textContent?.includes('Product Description') &&
+          !h2.textContent?.includes('Technische Daten') &&
+          !h2.textContent?.includes('Technical Data')) {
+        data.title = h2.textContent?.trim() || '';
+        break;
+      }
+    }
+    
+    // If still no title, try any first h2 in product-info
+    if (!data.title) {
+      const headerTitle = doc.querySelector('.product-info h2');
+      if (headerTitle) {
+        data.title = headerTitle.textContent?.trim() || '';
+      }
     }
   }
   
@@ -94,16 +111,16 @@ export function parseTemplate(html: string): TemplateData {
   // If still no description, try to find a product-card or product-info description
   if (!data.description) {
     const productInfoSections = doc.querySelectorAll('.product-info .card, .product-card');
-    for (const section of productInfoSections) {
+    // Convert NodeList to Array to safely iterate
+    Array.from(productInfoSections).forEach(section => {
       const h2 = section.querySelector('h2');
       if (h2 && (h2.textContent?.includes('Produktbeschreibung') || h2.textContent?.includes('Product Description'))) {
         const descriptionDiv = section.querySelector('div:not(.tags):not(.button-container)');
-        if (descriptionDiv) {
+        if (descriptionDiv && !data.description) {
           data.description = descriptionDiv.innerHTML || '';
-          break;
         }
       }
-    }
+    });
   }
   
   // Last resort - try direct approach if no heading found
@@ -122,7 +139,9 @@ export function parseTemplate(html: string): TemplateData {
     }
   }
   
-  // Extract images
+  // Extract images - multiple approaches to find all possible images
+  
+  // 1. Look for main image first
   const mainImage = doc.querySelector('.main-image img');
   if (mainImage) {
     const src = mainImage.getAttribute('src');
@@ -131,20 +150,65 @@ export function parseTemplate(html: string): TemplateData {
     }
   }
   
-  // Extract thumbnails (except for the ones that match the main image)
-  const thumbnails = doc.querySelectorAll('.thumbnail img, .gallery-item img');
-  thumbnails.forEach((img, index) => {
+  // 2. Look for gallery items and image containers
+  const galleryItems = doc.querySelectorAll('.gallery-item img, .gallery-container img, .gallery img');
+  Array.from(galleryItems).forEach((img, index) => {
     const src = img.getAttribute('src');
     if (src && !src.includes('placeholder') && !data.images.some(image => image.url === src)) {
       data.images.push({ id: `img-${Date.now()}-${index}-${Math.floor(Math.random() * 1000)}`, url: src });
     }
   });
   
-  // Extract tech specs
-  const specItems = doc.querySelectorAll('.spec-item');
-  specItems.forEach((item, index) => {
-    const nameEl = item.querySelector('.spec-name');
-    const valueEl = item.querySelector('.spec-value');
+  // 3. Look for thumbnails
+  const thumbnails = doc.querySelectorAll('.thumbnail img');
+  Array.from(thumbnails).forEach((img, index) => {
+    const src = img.getAttribute('src');
+    if (src && !src.includes('placeholder') && !data.images.some(image => image.url === src)) {
+      data.images.push({ id: `img-${Date.now()}-${index}-${Math.floor(Math.random() * 1000)}`, url: src });
+    }
+  });
+  
+  // 4. Last resort - look for any images
+  if (data.images.length === 0) {
+    const allImages = doc.querySelectorAll('img');
+    Array.from(allImages)
+      .filter(img => {
+        const src = img.getAttribute('src');
+        return src && 
+              src.indexOf('placeholder') === -1 && 
+              src.indexOf('icon') === -1 && 
+              src.indexOf('logo') === -1 &&
+              (
+                (src.indexOf('webp') > -1) || 
+                (src.indexOf('jpg') > -1) || 
+                (src.indexOf('jpeg') > -1) || 
+                (src.indexOf('png') > -1)
+              );
+      })
+      .forEach((img, index) => {
+        const src = img.getAttribute('src');
+        if (src && !data.images.some(image => image.url === src)) {
+          data.images.push({ id: `img-${Date.now()}-${index}-${Math.floor(Math.random() * 1000)}`, url: src });
+        }
+      });
+  }
+  
+  // Extract tech specs - first try standard spec items
+  let specItems = doc.querySelectorAll('.spec-item, .tech-item');
+  
+  // If no specs found, look for tech-data section
+  if (!specItems.length) {
+    const techData = doc.querySelector('.tech-data, .tech-specs');
+    if (techData) {
+      specItems = techData.querySelectorAll('.tech-item');
+    }
+  }
+  
+  // Convert NodeList to Array for safer iteration
+  Array.from(specItems).forEach((item, index) => {
+    // Try different class combinations for spec names and values
+    const nameEl = item.querySelector('.spec-name, .tech-label');
+    const valueEl = item.querySelector('.spec-value, .tech-value');
     
     if (nameEl && valueEl) {
       data.specs.push({
@@ -167,8 +231,8 @@ export function parseTemplate(html: string): TemplateData {
     }
   }
   
-  // Process each company section
-  companySections.forEach((section, index) => {
+  // Process each company section - convert NodeList to Array for safer iteration
+  Array.from(companySections).forEach((section, index) => {
     const id = section.id || `company-section-${index + 1}`;
     
     // Try to find icon container with different selectors
