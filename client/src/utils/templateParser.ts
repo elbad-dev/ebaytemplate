@@ -10,10 +10,28 @@ export function parseTemplate(htmlContent: string): TemplateData {
   try {
     const $ = cheerio.load(htmlContent);
     
-    // Extract title from specific product info section (templates)
+    // Extract title and company name separately
     let title = '';
+    let company_name = '';
     
-    // Method 1: Try to find product title from h2 in product-info section
+    // First, try to find company name from brand-text h1
+    const companyNameSelectors = [
+      '.brand-text h1',
+      '.brand-name',
+      '.company-name',
+      '.store-name',
+      'header h1'
+    ];
+    
+    for (const selector of companyNameSelectors) {
+      const companyElement = $(selector);
+      if (companyElement.length) {
+        company_name = companyElement.text().trim();
+        break;
+      }
+    }
+    
+    // Then, find product title from h2 in product-info section
     // Look for titles in various product info containers (more generic approach)
     const productInfoSelectors = [
       '.product-info h2', 
@@ -330,6 +348,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
     
     return {
       title,
+      company_name,
       subtitle,
       price,
       currency,
@@ -345,6 +364,7 @@ export function parseTemplate(htmlContent: string): TemplateData {
     // Return a default template data structure
     return {
       title: 'Product Title',
+      company_name: 'Company Name',
       subtitle: '',
       price: '',
       currency: 'EUR',

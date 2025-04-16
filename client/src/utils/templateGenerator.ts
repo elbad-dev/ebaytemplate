@@ -15,25 +15,63 @@ export function generateTemplate(templateData: TemplateData): string {
     // Update title
     $('title').text(templateData.title);
     
-    // Update main heading(s)
-    const headings = ['h1', '.main-title', '.product-title', '.brand-text h1', '.product-info h2', '.product-info .card h2'];
+    // Update company name in brand section
+    const companySelectors = ['.brand-text h1', '.brand-name', '.company-name', '.store-name', 'header h1'];
     
-    for (const selector of headings) {
-      $(selector).each((i: number, el: any) => {
-        // Only update if it's NOT a section heading like "Produktbeschreibung"
-        const text = $(el).text().trim();
-        if (!text.includes('Produktbeschreibung') && !text.includes('Technische Daten') && 
-            !text.includes('Über uns') && !text.includes('Beschreibung')) {
+    if (templateData.company_name) {
+      for (const selector of companySelectors) {
+        const companyElement = $(selector);
+        if (companyElement.length) {
           // Save the original styling but update the text content
-          const originalStyles = $(el).attr('style') || '';
-          $(el).text(templateData.title);
+          const originalStyles = companyElement.attr('style') || '';
+          companyElement.text(templateData.company_name);
           
           // Make sure we preserve any existing styling
           if (originalStyles) {
-            $(el).attr('style', originalStyles);
+            companyElement.attr('style', originalStyles);
           }
+          break; // Update only the first matching element
         }
-      });
+      }
+    }
+    
+    // Update product title in product info section
+    const productTitleSelectors = [
+      '.product-info h2', 
+      '.product-info .card h2',
+      '.product-info-section h2',
+      '.product-details h2',
+      '.product-header h1, .product-header h2'
+    ];
+    
+    if (templateData.title) {
+      for (const selector of productTitleSelectors) {
+        const titleElements = $(selector);
+        let titleUpdated = false;
+        
+        titleElements.each((i: number, el: any) => {
+          // Only update if it's NOT a section heading like "Produktbeschreibung"
+          const text = $(el).text().trim();
+          if (!text.includes('Produktbeschreibung') && !text.includes('Technische Daten') && 
+              !text.includes('Über uns') && !text.includes('Beschreibung')) {
+            // Save the original styling but update the text content
+            const originalStyles = $(el).attr('style') || '';
+            $(el).text(templateData.title);
+            
+            // Make sure we preserve any existing styling
+            if (originalStyles) {
+              $(el).attr('style', originalStyles);
+            }
+            
+            titleUpdated = true;
+            return false; // Break the inner loop
+          }
+        });
+        
+        if (titleUpdated) {
+          break; // Break the outer loop if we updated a title
+        }
+      }
     }
     
     // Update subtitle

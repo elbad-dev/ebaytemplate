@@ -142,7 +142,7 @@ export type VerificationToken = typeof verificationTokens.$inferSelect;
 // Template data schema (used in the frontend)
 export const templateDataSchema = z.object({
   title: z.string(),
-  company_name: z.string().optional(),
+  company_name: z.string(),
   subtitle: z.string().optional(),
   price: z.string().optional(),
   currency: z.string().optional(),
