@@ -29,7 +29,6 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
   const [currency, setCurrency] = useState(data.currency || 'EUR');
   const [description, setDescription] = useState(data.description || '');
   const [detectingDescription, setDetectingDescription] = useState(false);
-  const [detectingTitle, setDetectingTitle] = useState(false);
   const contentEditableRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,20 +70,7 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
     }
   };
 
-  const handleDetectTitle = () => {
-    if (data.rawHtml) {
-      setDetectingTitle(true);
-      
-      // Look for title in the template
-      if (data.title) {
-        setTitle(data.title);
-      }
-      
-      setTimeout(() => {
-        setDetectingTitle(false);
-      }, 1000);
-    }
-  };
+  // Remove detect title function since we handle this in the Company Information section
 
   const handleDetectDescription = () => {
     if (data.rawHtml) {
@@ -122,21 +108,6 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="productTitle">Product Title</Label>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDetectTitle}
-                disabled={!data.rawHtml || detectingTitle}
-                className="relative"
-              >
-                {detectingTitle ? 'Detecting...' : 'Detect Title'}
-                {detectingTitle && (
-                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                  </span>
-                )}
-              </Button>
             </div>
             <Input
               id="productTitle"
