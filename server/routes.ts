@@ -148,6 +148,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You don't have permission to update this template" });
       }
       
+      // Create a version snapshot before updating the template
+      const versionData = {
+        template_id: id,
+        name: template.name,
+        html: template.html,
+        description: template.description,
+        user_id: userId,
+        version_type: req.body.autosave ? "autosave" : "update" as const,
+      };
+      
+      // Create template version record of the current state before updating
+      await storage.createTemplateVersion(versionData);
+      
+      // Now update the template
       const templateData = req.body;
       const updatedTemplate = await storage.updateTemplate(id, templateData);
       
@@ -183,6 +197,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).end();
     } catch (error: any) {
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // TEMPLATE VERSION HISTORY API ROUTES
+  // Get all versions of a template by templateId
+  app.get("/api/templates/:id/versions", async (req: Request, res: Response) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      
+      // Get the template to check access permissions
+      const template = await storage.getTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // If template has an owner, check if the current user is the owner
+      if (template.user_id !== null && (!req.isAuthenticated() || template.user_id !== (req.user as Express.User).id)) {
+        return res.status(403).json({ message: "You don't have permission to access this template's history" });
+      }
+      
+      const versions = await storage.getTemplateVersions(templateId);
+      res.json(versions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get a specific version of a template
+  app.get("/api/template-versions/:id", async (req: Request, res: Response) => {
+    try {
+      const versionId = parseInt(req.params.id);
+      const version = await storage.getTemplateVersion(versionId);
+      
+      if (!version) {
+        return res.status(404).json({ message: "Template version not found" });
+      }
+      
+      // Get the associated template to check access permissions
+      const template = await storage.getTemplate(version.template_id);
+      if (!template) {
+        return res.status(404).json({ message: "Associated template not found" });
+      }
+      
+      // If template has an owner, check if the current user is the owner
+      if (template.user_id !== null && (!req.isAuthenticated() || template.user_id !== (req.user as Express.User).id)) {
+        return res.status(403).json({ message: "You don't have permission to access this template version" });
+      }
+      
+      res.json(version);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create a new version of a template (requires authentication and ownership)
+  app.post("/api/templates/:id/versions", async (req: Request, res: Response) => {
+    try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const templateId = parseInt(req.params.id);
+      
+      // Get the template to check ownership
+      const template = await storage.getTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Check if the template belongs to the authenticated user
+      const userId = (req.user as Express.User).id;
+      if (template.user_id !== userId) {
+        return res.status(403).json({ message: "You don't have permission to create versions for this template" });
+      }
+      
+      // Create a new version with the template data and version type
+      const versionData = {
+        template_id: templateId,
+        name: req.body.name || template.name,
+        html: req.body.html || template.html,
+        description: req.body.description || template.description,
+        user_id: userId,
+        version_type: req.body.version_type || "update", // "create", "update", or "autosave"
+      };
+      
+      const newVersion = await storage.createTemplateVersion(versionData);
+      res.status(201).json(newVersion);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Restore a template to a specific version (requires authentication and ownership)
+  app.post("/api/templates/:id/restore/:versionId", async (req: Request, res: Response) => {
+    try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const templateId = parseInt(req.params.id);
+      const versionId = parseInt(req.params.versionId);
+      
+      // Get the template to check ownership
+      const template = await storage.getTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Check if the template belongs to the authenticated user
+      const userId = (req.user as Express.User).id;
+      if (template.user_id !== userId) {
+        return res.status(403).json({ message: "You don't have permission to restore this template" });
+      }
+      
+      // Get the version to restore
+      const version = await storage.getTemplateVersion(versionId);
+      if (!version) {
+        return res.status(404).json({ message: "Template version not found" });
+      }
+      
+      // Check that the version belongs to this template
+      if (version.template_id !== templateId) {
+        return res.status(400).json({ message: "Version does not belong to this template" });
+      }
+      
+      // Update the template with the version's data
+      const updateData = {
+        name: version.name,
+        html: version.html,
+        description: version.description
+      };
+      
+      // Update the template in the database
+      const updatedTemplate = await storage.updateTemplate(templateId, updateData);
+      
+      // Create a new version to record this restore operation
+      const restoreVersionData = {
+        template_id: templateId,
+        name: version.name,
+        html: version.html,
+        description: version.description,
+        user_id: userId,
+        version_type: "update" as const, // Mark it as an update
+      };
+      
+      await storage.createTemplateVersion(restoreVersionData);
+      
+      res.json(updatedTemplate);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   });
 

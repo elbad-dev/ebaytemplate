@@ -123,7 +123,8 @@ export class DatabaseStorage implements IStorage {
       .where(eq(templateVersions.template_id, insertVersion.template_id));
     
     // Calculate next version number
-    const nextVersionNumber = (highestVersion?.max || 0) + 1;
+    const maxVersion = highestVersion?.max ? Number(highestVersion.max) : 0;
+    const nextVersionNumber = maxVersion + 1;
     
     // Insert the new version with calculated version number
     const [version] = await db
@@ -238,20 +239,24 @@ export class MemStorage implements IStorage {
   private imagesMap: Map<number, Image>;
   private styleMap: Map<number, TemplateStyle>;
   private iconMap: Map<number, SvgIcon>;
+  private versionMap: Map<number, TemplateVersion>;
   private templateCurrentId: number;
   private imageCurrentId: number;
   private styleCurrentId: number;
   private iconCurrentId: number;
+  private versionCurrentId: number;
 
   constructor() {
     this.templatesMap = new Map();
     this.imagesMap = new Map();
     this.styleMap = new Map();
     this.iconMap = new Map();
+    this.versionMap = new Map();
     this.templateCurrentId = 1;
     this.imageCurrentId = 1;
     this.styleCurrentId = 1;
     this.iconCurrentId = 1;
+    this.versionCurrentId = 1;
   }
 
   // Template operations
@@ -292,6 +297,43 @@ export class MemStorage implements IStorage {
 
   async deleteTemplate(id: number): Promise<boolean> {
     return this.templatesMap.delete(id);
+  }
+  
+  // Template Version operations
+  async getTemplateVersion(id: number): Promise<TemplateVersion | undefined> {
+    return this.versionMap.get(id);
+  }
+
+  async getTemplateVersions(templateId: number): Promise<TemplateVersion[]> {
+    const allVersions = Array.from(this.versionMap.values());
+    return allVersions
+      .filter(version => version.template_id === templateId)
+      .sort((a, b) => b.version_number - a.version_number);
+  }
+
+  async getLatestTemplateVersion(templateId: number): Promise<TemplateVersion | undefined> {
+    const versions = await this.getTemplateVersions(templateId);
+    return versions.length > 0 ? versions[0] : undefined;
+  }
+
+  async createTemplateVersion(insertVersion: InsertTemplateVersion): Promise<TemplateVersion> {
+    const id = this.versionCurrentId++;
+    
+    // Get highest version number for this template
+    const versions = await this.getTemplateVersions(insertVersion.template_id);
+    const nextVersionNumber = versions.length > 0 
+      ? Math.max(...versions.map(v => v.version_number)) + 1 
+      : 1;
+    
+    const version: TemplateVersion = {
+      ...insertVersion,
+      id,
+      version_number: nextVersionNumber,
+      created_at: new Date(),
+    };
+    
+    this.versionMap.set(id, version);
+    return version;
   }
 
   // Image operations
