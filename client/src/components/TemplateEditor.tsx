@@ -11,11 +11,12 @@ import ProductDescriptionEditor from './ProductDescriptionEditor';
 import TechSpecsEditor from './TechSpecsEditor';
 import CompanyEditor from './CompanyEditor';
 import SvgEditor from './SvgEditor';
+import TemplateSectionSelector from './TemplateSectionSelector';
 import { generateTemplate } from '../utils/templateGenerator';
 import { parseTemplate } from '../utils/templateParser';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Save, DownloadCloud } from 'lucide-react';
+import { ArrowLeft, Save, DownloadCloud, Zap } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
 interface TemplateEditorProps {
@@ -40,6 +41,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
   });
   const [generatedHtml, setGeneratedHtml] = useState<string>('');
   const [showSvgEditor, setShowSvgEditor] = useState(false);
+  const [showSectionSelector, setShowSectionSelector] = useState(false);
   const [currentSvgData, setCurrentSvgData] = useState({ svg: '', sectionId: '' });
   const [isSaving, setIsSaving] = useState(false);
   
@@ -220,6 +222,20 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Editor Panel */}
         <div className="lg:col-span-1 space-y-5">
+          {/* Manual Section Selection Button */}
+          {generatedHtml && (
+            <div className="mb-4">
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-center gap-2 bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                onClick={() => setShowSectionSelector(true)}
+              >
+                <Zap size={16} />
+                <span>Manually Select Sections</span>
+              </Button>
+            </div>
+          )}
+          
           {/* Template Upload Section (if not editing an existing template) */}
           {!template && <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-dashed">
             <p className="text-sm text-center text-gray-600 mb-3">
@@ -391,6 +407,20 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
           onSave={saveSvgChanges}
           onClose={() => setShowSvgEditor(false)}
         />
+      )}
+
+      {/* Manual Section Selector Modal */}
+      {showSectionSelector && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-6xl bg-white rounded-lg shadow-xl">
+            <TemplateSectionSelector
+              htmlContent={generatedHtml}
+              templateData={templateData}
+              onUpdate={updateTemplateData}
+              onClose={() => setShowSectionSelector(false)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
