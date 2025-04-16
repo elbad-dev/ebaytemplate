@@ -65,27 +65,49 @@ export function parseTemplate(html: string): TemplateData {
   }
   
   // Extract description (first look for the specific description section)
-  const descriptionHeading = Array.from(doc.querySelectorAll('h3')).find(h => 
+  // Look for h2 with "Produktbeschreibung" text first
+  const descriptionHeading = Array.from(doc.querySelectorAll('h2, h3')).find(h => 
     h.textContent?.includes('Produktbeschreibung') || 
     h.textContent?.includes('Product Description'));
   
   if (descriptionHeading) {
-    // Try to find the description text after this heading
-    let descriptionTextEl = descriptionHeading.nextElementSibling;
-    if (descriptionTextEl && descriptionTextEl.classList.contains('description-text')) {
-      data.description = descriptionTextEl.innerHTML || '';
-    } else {
-      // Try to find a container with the description-text class
-      const parentElement = descriptionHeading.parentElement;
-      if (parentElement) {
-        descriptionTextEl = parentElement.querySelector('.description-text');
-        if (descriptionTextEl) {
-          data.description = descriptionTextEl.innerHTML || '';
+    // Get the parent element of the heading - which is likely the container
+    const container = descriptionHeading.parentElement;
+    if (container) {
+      // Try to find the div containing the description right after the heading
+      const descriptionDiv = container.querySelector('div');
+      if (descriptionDiv) {
+        data.description = descriptionDiv.innerHTML || '';
+      }
+      
+      // If no div found, try paragraphs
+      if (!data.description && container.querySelectorAll('p').length > 0) {
+        const paragraphs = container.querySelectorAll('p');
+        const descriptionHtml = Array.from(paragraphs)
+          .map(p => p.outerHTML)
+          .join('');
+        data.description = descriptionHtml;
+      }
+    }
+  } 
+  
+  // If still no description, try to find a product-card or product-info description
+  if (!data.description) {
+    const productInfoSections = doc.querySelectorAll('.product-info .card, .product-card');
+    for (const section of productInfoSections) {
+      const h2 = section.querySelector('h2');
+      if (h2 && (h2.textContent?.includes('Produktbeschreibung') || h2.textContent?.includes('Product Description'))) {
+        const descriptionDiv = section.querySelector('div:not(.tags):not(.button-container)');
+        if (descriptionDiv) {
+          data.description = descriptionDiv.innerHTML || '';
+          break;
         }
       }
     }
-  } else {
-    // Try direct approach if no heading found
+  }
+  
+  // Last resort - try direct approach if no heading found
+  if (!data.description) {
     const descriptionEl = doc.querySelector('.description-text');
     if (descriptionEl) {
       data.description = descriptionEl.innerHTML || '';
@@ -133,20 +155,45 @@ export function parseTemplate(html: string): TemplateData {
     }
   });
   
-  // Extract company info sections
-  const companySections = doc.querySelectorAll('.company-section');
+  // Extract company info sections - first try direct company-section classes
+  let companySections = doc.querySelectorAll('.company-section');
+  
+  // If no company sections found, look for company-info and info-cards
+  if (!companySections.length) {
+    const companyInfo = doc.querySelector('.company-info');
+    if (companyInfo) {
+      const infoCards = companyInfo.querySelectorAll('.info-cards .card');
+      companySections = infoCards;
+    }
+  }
+  
+  // Process each company section
   companySections.forEach((section, index) => {
     const id = section.id || `company-section-${index + 1}`;
-    const titleEl = section.querySelector('.section-content h3, h3');
-    const contentEl = section.querySelector('.section-content p, p');
-    const iconContainer = section.querySelector('.icon-container');
     
-    if (titleEl && contentEl) {
+    // Try to find icon container with different selectors
+    const iconContainer = section.querySelector('.icon-container, .info-icon');
+    let svg = '';
+    if (iconContainer) {
+      svg = iconContainer.innerHTML || '';
+    }
+    
+    // Try to find title with various selectors
+    let titleEl = section.querySelector('.section-content h3, h3, h4');
+    if (!titleEl && section.classList.contains('card')) {
+      titleEl = section.querySelector('h3');
+    }
+    
+    // Try to find description with various selectors
+    let descEl = section.querySelector('.section-content p, p');
+    
+    // Only add if we have either a title or description
+    if (titleEl || descEl) {
       data.companyInfo.push({
         id,
-        title: titleEl.textContent?.trim() || '',
-        description: contentEl.textContent?.trim() || '',
-        svg: iconContainer ? iconContainer.innerHTML || '' : ''
+        title: titleEl ? titleEl.textContent?.trim() || '' : '',
+        description: descEl ? descEl.textContent?.trim() || '' : '',
+        svg
       });
     }
   });
