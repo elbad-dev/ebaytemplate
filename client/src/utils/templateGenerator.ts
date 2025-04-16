@@ -1,560 +1,214 @@
-import { TemplateData } from '@shared/schema';
-import * as cheerio from 'cheerio';
+import { TemplateData } from '../types';
 
 /**
- * Generate HTML from template data by modifying the original HTML
+ * Generates HTML template based on provided template data
  */
-export function generateTemplate(templateData: TemplateData): string {
-  if (!templateData.rawHtml) {
-    return createBasicTemplate(templateData);
-  }
-  
-  try {
-    const $ = cheerio.load(templateData.rawHtml);
+export function generateTemplate(data: TemplateData): string {
+  if (data.rawHtml) {
+    // If we have a raw HTML template, we'll modify it
+    let html = data.rawHtml;
     
-    // Update title
-    $('title').text(templateData.title);
-    
-    // Update company name in brand section
-    const companySelectors = ['.brand-text h1', '.brand-name', '.company-name', '.store-name', 'header h1'];
-    
-    if (templateData.company_name) {
-      for (const selector of companySelectors) {
-        const companyElement = $(selector);
-        if (companyElement.length) {
-          // Save the original styling but update the text content
-          const originalStyles = companyElement.attr('style') || '';
-          companyElement.text(templateData.company_name);
-          
-          // Make sure we preserve any existing styling
-          if (originalStyles) {
-            companyElement.attr('style', originalStyles);
-          }
-          break; // Update only the first matching element
-        }
+    // Replace company name if it exists
+    if (data.company_name) {
+      const companyNameRegex = /<div\s+class="brand-text">\s*<h1[^>]*>(.*?)<\/h1>/;
+      if (companyNameRegex.test(html)) {
+        html = html.replace(companyNameRegex, `<div class="brand-text"><h1>${ data.company_name }</h1>`);
       }
     }
     
-    // Update product title in product info section
-    const productTitleSelectors = [
-      '.product-info h2', 
-      '.product-info .card h2',
-      '.product-info-section h2',
-      '.product-details h2',
-      '.product-header h1, .product-header h2'
-    ];
-    
-    if (templateData.title) {
-      for (const selector of productTitleSelectors) {
-        const titleElements = $(selector);
-        let titleUpdated = false;
-        
-        titleElements.each((i: number, el: any) => {
-          // Only update if it's NOT a section heading like "Produktbeschreibung"
-          const text = $(el).text().trim();
-          if (!text.includes('Produktbeschreibung') && !text.includes('Technische Daten') && 
-              !text.includes('Über uns') && !text.includes('Beschreibung')) {
-            // Save the original styling but update the text content
-            const originalStyles = $(el).attr('style') || '';
-            $(el).text(templateData.title);
-            
-            // Make sure we preserve any existing styling
-            if (originalStyles) {
-              $(el).attr('style', originalStyles);
-            }
-            
-            titleUpdated = true;
-            return false; // Break the inner loop
-          }
+    // Replace product title if it exists (specifically targeting the product title in the info section)
+    if (data.title) {
+      const titleRegex = /<h2\s+class="product-title"[^>]*>(.*?)<\/h2>/;
+      if (titleRegex.test(html)) {
+        html = html.replace(titleRegex, `<h2 class="product-title">${ data.title }</h2>`);
+      }
+      
+      // Also update the product title in the header section if it exists
+      const headerTitleRegex = /<div\s+class="product-info"[^>]*>.*?<h2[^>]*>(.*?)<\/h2>/;
+      if (headerTitleRegex.test(html)) {
+        html = html.replace(headerTitleRegex, (match) => {
+          return match.replace(/<h2[^>]*>(.*?)<\/h2>/, `<h2>${ data.title }</h2>`);
         });
-        
-        if (titleUpdated) {
-          break; // Break the outer loop if we updated a title
-        }
       }
     }
     
-    // Update subtitle
-    const subtitleSelectors = ['.subtitle', '.brand-subtitle', 'h2:first-of-type', '.product-subtitle'];
-    let subtitleUpdated = false;
-    
-    for (const selector of subtitleSelectors) {
-      if ($(selector).length) {
-        $(selector).text(templateData.subtitle || '');
-        subtitleUpdated = true;
-        break;
+    // Replace subtitle/slogan if it exists
+    if (data.subtitle) {
+      const subtitleRegex = /<div\s+class="brand-text">.*?<p[^>]*>(.*?)<\/p>/;
+      if (subtitleRegex.test(html)) {
+        html = html.replace(subtitleRegex, (match) => {
+          return match.replace(/<p[^>]*>(.*?)<\/p>/, `<p>${ data.subtitle }</p>`);
+        });
       }
     }
     
-    // Create subtitle if not found and there is a subtitle to add
-    if (!subtitleUpdated && templateData.subtitle) {
-      $('h1').after(`<h2 class="subtitle">${templateData.subtitle}</h2>`);
+    // Replace price if it exists
+    if (data.price) {
+      const priceRegex = /<span\s+class="price"[^>]*>(.*?)<\/span>/s;
+      if (priceRegex.test(html)) {
+        html = html.replace(priceRegex, `<span class="price">${ data.currency } ${ data.price }</span>`);
+      }
     }
     
-    // Update the logo if it exists
-    if (templateData.logo) {
-      const logoStr = templateData.logo; // Local constant to avoid undefined errors
-      
-      // Update image-based logos
-      $('img[src*="logo"], img.logo, .header-logo img, .brand-logo img, .logo img, header img').each((i: number, el: any) => {
-        // If the logo is a URL to an image
-        if (!logoStr.includes('<svg')) {
-          $(el).attr('src', logoStr);
-        } else {
-          // If it's an SVG, replace the img tag with the SVG
-          $(el).replaceWith(logoStr);
-        }
-      });
-      
-      // Update SVG-based logos
-      $('.logo svg, .header-logo svg, .brand-logo svg').each((i: number, el: any) => {
-        // If the logo is an SVG, replace it
-        if (logoStr.includes('<svg')) {
-          $(el).replaceWith(logoStr);
-        } else {
-          // If it's an image URL, replace the SVG with an img tag
-          $(el).replaceWith(`<img src="${logoStr}" alt="Logo" />`);
-        }
-      });
-    }
-    
-    // Update price
-    if (templateData.price) {
-      $('.price').each((i: number, el: any) => {
-        const currencySymbol = getCurrencySymbol(templateData.currency || 'EUR');
-        $(el).text(`${currencySymbol}${templateData.price}`);
-      });
-    }
-    
-    // Update gallery images - Specifically handle the pattern in the user's example
-    if (templateData.images.length > 0) {
-      // Check if we have the eBay-style gallery with radio buttons, arrows and main images
-      const hasEbayGallery = $('input[type="radio"][name="gallery"]').length > 0;
-      
-      if (hasEbayGallery) {
-        // Count existing radio buttons to determine how many images are already in place
-        const existingRadios = $('input[type="radio"][name="gallery"]').length;
-        const totalImages = templateData.images.length;
-        
-        // Get container references for all four components
-        const galleryContainer = $('.gallery-container');
-        const radioContainer = $('input[type="radio"][name="gallery"]').first().parent();
-        const thumbnailContainer = $('.thumbnail-set.set1');
-        
-        // Before updating, get references to existing CSS that manages the image visibility
-        const styleElement = $('style:contains("#img")');
-        let cssContent = styleElement.html() || '';
-        
-        // 1. First update existing images
-        for (let i = 0; i < Math.min(existingRadios, totalImages); i++) {
-          const n = i + 1; // Use 1-based indexing as in the example
-          
-          // Update main image
-          const mainImage = $(`#main${n}`);
-          if (mainImage.length) {
-            mainImage.attr('src', templateData.images[i].url);
-          }
-          
-          // Update thumbnail
-          const thumbnail = $(`.thumbnail[for="img${n}"] img`);
-          if (thumbnail.length) {
-            thumbnail.attr('src', templateData.images[i].url);
-          }
-        }
-        
-        // 2. Add new elements for additional images
-        if (totalImages > existingRadios) {
-          // a. Add new radio buttons first
-          for (let i = existingRadios; i < totalImages; i++) {
-            const n = i + 1;
-            radioContainer.append(`<input type="radio" name="gallery" id="img${n}">`);
-          }
-          
-          // b. Add CSS selectors for new images (up to 20 images allowed)
-          // This is the important part - making sure the correct CSS is in place for selectors
-          let newCSS = '';
-          for (let i = existingRadios; i < Math.min(totalImages, 20); i++) {
-            const n = i + 1;
-            newCSS += `
-            #img${n}:checked ~ .gallery-container #main${n} {
-              display: block;
-            }
-            `;
-          }
-          
-          // Add directional selectors for new arrows
-          for (let i = 0; i < totalImages; i++) {
-            const n = i + 1;
-            const prevN = n === 1 ? totalImages : n - 1;
-            const nextN = n === totalImages ? 1 : n + 1;
-            
-            newCSS += `
-            #img${n}:checked ~ .gallery-container .gallery-arrow.prev[for="img${prevN}"],
-            #img${n}:checked ~ .gallery-container .gallery-arrow.next[for="img${nextN}"] {
-              display: block;
-            }
-            `;
-          }
-          
-          // Append the new CSS
-          if (styleElement.length) {
-            styleElement.append(newCSS);
-          } else {
-            // If no style element exists, create one
-            $('head').append(`<style>${newCSS}</style>`);
-          }
-          
-          // c. Add/Update prev arrow navigation for ALL images (not just new ones)
-          // First remove existing arrows to avoid duplicates
-          $('.gallery-arrow.prev').remove();
-          
-          // Add all arrows fresh to ensure consistency
-          for (let i = 0; i < totalImages; i++) {
-            const n = i + 1;
-            const prevTarget = n === 1 ? totalImages : n - 1;
-            
-            galleryContainer.append(`
-              <label class="gallery-arrow prev" for="img${prevTarget}"></label>
-            `);
-          }
-          
-          // d. Add/Update next arrow navigation for ALL images
-          $('.gallery-arrow.next').remove();
-          
-          for (let i = 0; i < totalImages; i++) {
-            const n = i + 1;
-            const nextTarget = n === totalImages ? 1 : n + 1;
-            
-            galleryContainer.append(`
-              <label class="gallery-arrow next" for="img${nextTarget}"></label>
-            `);
-          }
-          
-          // e. Add new main images
-          for (let i = existingRadios; i < totalImages; i++) {
-            const n = i + 1;
-            galleryContainer.append(`
-              <img src="${templateData.images[i].url}" alt="Product Detail ${n}" class="gallery-item" id="main${n}">
-            `);
-          }
-          
-          // f. Add new thumbnails
-          for (let i = existingRadios; i < totalImages; i++) {
-            const n = i + 1;
-            thumbnailContainer.append(`
-              <label class="thumbnail" for="img${n}">
-                <img src="${templateData.images[i].url}" alt="Thumbnail ${n}">
-              </label>
-            `);
-          }
-          
-          // Make sure first radio button is checked by default
-          $('input[type="radio"][name="gallery"]').prop('checked', false);
-          $('#img1').prop('checked', true);
-        }
+    // Replace description if it exists
+    if (data.description) {
+      // Specifically target the description section with a heading
+      const descriptionRegex = /<h3>Produktbeschreibung<\/h3>\s*<div\s+class="description-text"[^>]*>.*?<\/div>/s;
+      if (descriptionRegex.test(html)) {
+        html = html.replace(descriptionRegex, `<h3>Produktbeschreibung</h3><div class="description-text">${ data.description }</div>`);
       } else {
-        // Handle other gallery types
-        const mainImages = $('.gallery-item');
-        const thumbnailImages = $('.thumbnail img');
-        
-        // Update existing images
-        mainImages.each((i: number, el: any) => {
-          if (i < templateData.images.length) {
-            if ($(el).is('img')) {
-              $(el).attr('src', templateData.images[i].url);
-            } else {
-              $(el).find('img').attr('src', templateData.images[i].url);
-            }
-          }
-        });
-        
-        thumbnailImages.each((i: number, el: any) => {
-          if (i < templateData.images.length) {
-            $(el).attr('src', templateData.images[i].url);
-          }
-        });
-        
-        // Add new images if there are more in the templateData than in the template
-        if (mainImages.length < templateData.images.length) {
-          const galleryContainer = $('.gallery-container').first();
-          if (galleryContainer.length) {
-            for (let i = mainImages.length; i < templateData.images.length; i++) {
-              if (mainImages.first().is('img')) {
-                galleryContainer.append(`<img src="${templateData.images[i].url}" alt="Product image ${i + 1}" class="gallery-item">`);
-              } else {
-                galleryContainer.append(`
-                  <div class="gallery-item">
-                    <img src="${templateData.images[i].url}" alt="Product image ${i + 1}" />
-                  </div>
-                `);
-              }
-            }
-          }
-          
-          // Add thumbnails
-          const thumbnailContainer = $('.thumbnail-set, .thumbnails').first();
-          if (thumbnailContainer.length) {
-            for (let i = thumbnailImages.length; i < templateData.images.length; i++) {
-              thumbnailContainer.append(`
-                <div class="thumbnail">
-                  <img src="${templateData.images[i].url}" alt="Thumbnail ${i + 1}" />
-                </div>
-              `);
-            }
-          }
+        // Alternative pattern
+        const altDescriptionRegex = /<div\s+class="description-text"[^>]*>.*?<\/div>/s;
+        if (altDescriptionRegex.test(html)) {
+          html = html.replace(altDescriptionRegex, `<div class="description-text">${ data.description }</div>`);
         }
       }
     }
     
-    // Update technical specifications
-    if (templateData.specs.length > 0) {
-      let specsUpdated = false;
+    // Replace technical specs if they exist
+    if (data.specs.length > 0) {
+      const specsContent = data.specs.map(spec => `
+        <div class="spec-item">
+          <div class="spec-name">${spec.label}</div>
+          <div class="spec-value">${spec.value}</div>
+        </div>
+      `).join('');
       
-      // Try different common tech spec patterns
-      const techSpecContainers = [
-        '.tech-table', '.specifications', '.specs', '.tech-specs',
-        '.spec-table', '.product-specs'
-      ];
-      
-      for (const container of techSpecContainers) {
-        const specTable = $(container);
-        if (specTable.length) {
-          // Check if it's a table or a div-based structure
-          const isTable = specTable.is('table') || specTable.find('table').length > 0;
-          
-          if (isTable) {
-            // For table structure - clear existing rows (except header) and add new ones
-            const tableEl = specTable.is('table') ? specTable : specTable.find('table');
-            tableEl.find('tr:not(:first-child)').remove(); // Keep header row if exists
-            
-            templateData.specs.forEach(spec => {
-              tableEl.append(`
-                <tr>
-                  <td class="tech-label">${spec.label}</td>
-                  <td class="tech-value">${spec.value}</td>
-                </tr>
-              `);
-            });
-          } else {
-            // For div-based structure that might use the same class
-            // First remove all existing specs
-            specTable.empty();
-            
-            // Then add all new specs
-            templateData.specs.forEach(spec => {
-              specTable.append(`
-                <div class="tech-row">
-                  <div class="tech-label">${spec.label}</div>
-                  <div class="tech-value">${spec.value}</div>
-                </div>
-              `);
-            });
-          }
-          
-          specsUpdated = true;
-          break;
-        }
-      }
-      
-      // If no spec table found, look for div-based specs
-      if (!specsUpdated) {
-        const specDivs = $('.spec-item, .tech-item');
-        if (specDivs.length) {
-          // First, update existing spec items
-          specDivs.each((i: number, el: any) => {
-            if (i < templateData.specs.length) {
-              const spec = templateData.specs[i];
-              $(el).find('.tech-label, .spec-label').text(spec.label);
-              $(el).find('.tech-value, .spec-value').text(spec.value);
-            }
-          });
-          
-          // Then, if we have more specs than existing items, add new ones
-          if (specDivs.length < templateData.specs.length) {
-            const specContainer = specDivs.first().parent();
-            
-            // Get the structure of an existing spec item to create new ones with same format
-            const existingSpecItem = specDivs.first();
-            
-            for (let i = specDivs.length; i < templateData.specs.length; i++) {
-              const spec = templateData.specs[i];
-              // Clone the existing item, but replace its content
-              const newSpecItem = existingSpecItem.clone();
-              newSpecItem.find('.tech-label, .spec-label').text(spec.label);
-              newSpecItem.find('.tech-value, .spec-value').text(spec.value);
-              
-              // Add to the container
-              specContainer.append(newSpecItem);
-            }
-          }
-          
-          specsUpdated = true;
-        }
+      const specsRegex = /<div\s+class="specs-container"[^>]*>.*?<\/div>/;
+      if (specsRegex.test(html)) {
+        html = html.replace(specsRegex, `<div class="specs-container">${ specsContent }</div>`);
       }
     }
     
-    // Update product description - preserve HTML formatting
-    if (templateData.description) {
-      let descriptionUpdated = false;
-      
-      // Look for elements specifically under a section titled "Produktbeschreibung"
-      $('.product-section h2, .section-title, .card-title').each((i: number, el: any) => {
-        const title = $(el).text().trim();
-        if (title.includes('Produktbeschreibung')) {
-          const parent = $(el).parent();
-          const descriptionEl = parent.find('p, .description, .content, div[style]');
-          if (descriptionEl.length) {
-            descriptionEl.html(templateData.description || '');
-            descriptionUpdated = true;
-          } else {
-            // Add description if there's no content element
-            // Insert as raw HTML to preserve formatting
-            $(el).after(`<div class="product-description">${templateData.description || ''}</div>`);
-            descriptionUpdated = true;
+    // Replace company info sections if they exist
+    if (data.companyInfo.length > 0) {
+      data.companyInfo.forEach(section => {
+        if (section.id) {
+          const sectionRegex = new RegExp(`<div\\s+id="${section.id}"[^>]*>.*?<\\/div>`);
+          if (sectionRegex.test(html)) {
+            const sectionContent = `
+              <div id="${section.id}" class="company-section">
+                <div class="icon-container">${section.svg || ''}</div>
+                <div class="section-content">
+                  <h3>${section.title}</h3>
+                  <p>${section.description}</p>
+                </div>
+              </div>
+            `;
+            html = html.replace(sectionRegex, sectionContent);
           }
         }
       });
+    }
+    
+    // Handle image gallery
+    if (data.images.length > 0) {
+      // Main image
+      const mainImageRegex = /<div\s+class="main-image"[^>]*>.*?<img[^>]*src="[^"]*"[^>]*>.*?<\/div>/s;
+      if (mainImageRegex.test(html)) {
+        html = html.replace(mainImageRegex, `<div class="main-image"><img src="${data.images[0].url}" alt="Product image"></div>`);
+      }
       
-      // Only if we couldn't find a dedicated "Produktbeschreibung" section,
-      // look for generic description elements
-      if (!descriptionUpdated) {
-        $('.product-description, .description, .produktbeschreibung').each((i: number, el: any) => {
-          $(el).html(templateData.description || '');
-          descriptionUpdated = true;
-        });
+      // Thumbnail gallery
+      const thumbnailsContent = data.images.map(image => `
+        <div class="thumbnail">
+          <img src="${image.url}" alt="Product thumbnail">
+        </div>
+      `).join('');
+      
+      const thumbnailsRegex = /<div\s+class="thumbnails"[^>]*>.*?<\/div>/s;
+      if (thumbnailsRegex.test(html)) {
+        html = html.replace(thumbnailsRegex, `<div class="thumbnails">${ thumbnailsContent }</div>`);
+      }
+      
+      // Update image gallery if it exists
+      const galleryImagesContent = data.images.map(image => `
+        <div class="gallery-item">
+          <img src="${image.url}" alt="Product image">
+        </div>
+      `).join('');
+      
+      const galleryRegex = /<div\s+class="gallery-container"[^>]*>.*?<\/div>/s;
+      if (galleryRegex.test(html)) {
+        html = html.replace(galleryRegex, `<div class="gallery-container">${ galleryImagesContent }</div>`);
       }
     }
     
-    // Update company information sections
-    if (templateData.companyInfo.length > 0) {
-      const companyContainers = [
-        '.info-card', '.company-card', '.info-section', '.company-section',
-        '.info-cards .card'
-      ];
-      
-      for (const section of templateData.companyInfo) {
-        for (const container of companyContainers) {
-          const cards = $(container);
-          let updated = false;
-          
-          cards.each((i: number, el: any) => {
-            const sectionIndex = templateData.companyInfo.findIndex(s => s.id === section.id);
-            if (i === sectionIndex) {
-              // Update title
-              $(el).find('.info-title, .card-title, h3').text(section.title);
-              
-              // Update description
-              $(el).find('.info-description, .card-content, p').text(section.description);
-              
-              // Update SVG if possible
-              const svgContainer = $(el).find('.icon, .svg-container, .card-icon');
-              if (svgContainer.length) {
-                svgContainer.html(section.svg);
-              } else {
-                // If no container found, try to replace the SVG directly
-                $(el).find('svg').replaceWith(section.svg);
-              }
-              
-              updated = true;
-            }
-          });
-          
-          if (updated) break;
-        }
-      }
-    }
-    
-    return $.html();
-  } catch (error) {
-    console.error('Error generating template:', error);
-    return templateData.rawHtml || createBasicTemplate(templateData);
+    return html;
+  } else {
+    // If no raw HTML provided, generate a new one from scratch
+    return generateBasicTemplate(data);
   }
 }
 
 /**
- * Create a basic HTML template from scratch if no original template exists
+ * Generates a basic template from scratch when no existing template is provided
  */
-function createBasicTemplate(data: TemplateData): string {
-  const currencySymbol = getCurrencySymbol(data.currency || 'EUR');
-  
-  // Create image gallery HTML with radio buttons like in the example
-  const imageGallery = data.images.length > 0 
+function generateBasicTemplate(data: TemplateData): string {
+  // Create image gallery HTML
+  const galleryHTML = data.images.length > 0 
     ? `
-      <div class="gallery">
-        <!-- Image Selection Radio Buttons -->
-        ${data.images.map((img, index) => `
-          <input type="radio" name="gallery" id="img${index + 1}"${index === 0 ? ' checked' : ''}>
-        `).join('')}
-        
-        <!-- Main Image Container -->
-        <div class="gallery-container">
-          <!-- Navigation Arrows -->
-          ${data.images.map((img, index) => {
-            const currentIndex = index + 1;
-            const prevIndex = currentIndex === 1 ? data.images.length : currentIndex - 1;
-            return `<label class="gallery-arrow prev" for="img${prevIndex}"></label>`;
-          }).join('')}
-          
-          ${data.images.map((img, index) => {
-            const currentIndex = index + 1;
-            const nextIndex = currentIndex === data.images.length ? 1 : currentIndex + 1;
-            return `<label class="gallery-arrow next" for="img${nextIndex}"></label>`;
-          }).join('')}
-          
-          <!-- Main Images -->
-          ${data.images.map((img, index) => `
-            <img src="${img.url}" alt="Product image ${index + 1}" class="gallery-item" id="main${index + 1}">
+      <div class="product-gallery">
+        <div class="main-image">
+          <img src="${data.images[0].url}" alt="Product image">
+        </div>
+        <div class="thumbnails">
+          ${data.images.map(image => `
+            <div class="thumbnail">
+              <img src="${image.url}" alt="Product thumbnail">
+            </div>
           `).join('')}
         </div>
-        
-        <!-- Thumbnail Sets -->
-        <div class="thumbnail-sets">
-          <div class="thumbnail-set set1">
-            ${data.images.map((img, index) => `
-              <label class="thumbnail" for="img${index + 1}">
-                <img src="${img.url}" alt="Thumbnail ${index + 1}">
-              </label>
-            `).join('')}
+      </div>
+    ` 
+    : `
+      <div class="product-gallery">
+        <div class="main-image">
+          <img src="https://via.placeholder.com/500x500" alt="Product image">
+        </div>
+        <div class="thumbnails">
+          <div class="thumbnail">
+            <img src="https://via.placeholder.com/100x100" alt="Product thumbnail">
           </div>
         </div>
       </div>
-    `
-    : '<div class="gallery"><p>No product images available</p></div>';
+    `;
   
-  // Create technical specifications HTML
-  const techSpecs = data.specs.length > 0
+  // Create tech specs HTML
+  const specsHTML = data.specs.length > 0
     ? `
-      <div class="tech-table">
-        ${data.specs.map(spec => `
-          <div class="tech-row">
-            <div class="tech-label">${spec.label}</div>
-            <div class="tech-value">${spec.value}</div>
-          </div>
-        `).join('')}
-      </div>
-    `
-    : '<div class="tech-table"><p>No technical specifications available</p></div>';
-  
-  // Create company info HTML
-  const companyInfo = data.companyInfo.length > 0
-    ? `
-      <div class="info-cards">
-        ${data.companyInfo.map(info => `
-          <div class="card info-card">
-            <div class="card-icon">${info.svg}</div>
-            <h3 class="info-title">${info.title}</h3>
-            <p class="info-description">${info.description}</p>
-          </div>
-        `).join('')}
+      <div class="specs-section">
+        <h3>Technical Specifications</h3>
+        <div class="specs-container">
+          ${data.specs.map(spec => `
+            <div class="spec-item">
+              <div class="spec-name">${spec.name}</div>
+              <div class="spec-value">${spec.value}</div>
+            </div>
+          `).join('')}
+        </div>
       </div>
     `
     : '';
   
-  // Create logo HTML if a logo exists
-  const logoHtml = data.logo 
-    ? data.logo.includes('<svg') 
-      ? `<div class="logo">${data.logo}</div>`
-      : `<div class="logo"><img src="${data.logo}" alt="Logo" /></div>`
+  // Create company info HTML
+  const companyHTML = data.companyInfo.length > 0
+    ? `
+      <div class="company-info-section">
+        <h3>About Us</h3>
+        <div class="company-sections">
+          ${data.companyInfo.map(section => `
+            <div id="${section.id}" class="company-section">
+              <div class="icon-container">${section.svg || ''}</div>
+              <div class="section-content">
+                <h3>${section.title}</h3>
+                <p>${section.content}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `
     : '';
   
   return `
@@ -563,311 +217,247 @@ function createBasicTemplate(data: TemplateData): string {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${data.title}</title>
+      <title>${data.title || 'Product Template'}</title>
       <style>
         * {
+          box-sizing: border-box;
           margin: 0;
           padding: 0;
-          box-sizing: border-box;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-        
-        :root {
-          --primary: #00a651;
-          --background: rgba(255, 255, 255, 0.95);
-          --text: #1a1a1a;
-          --muted: #666666;
-          --border: #e5e5e5;
-          --card-bg: rgba(255, 255, 255, 0.95);
-          --radius: 16px;
-        }
-        
         body {
-          background-color: var(--background);
-          color: var(--text);
-          padding: 20px;
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          background-color: #f9f9f9;
         }
-        
-        .container {
+        .template-container {
           max-width: 1200px;
           margin: 0 auto;
           padding: 20px;
         }
-        
-        .product-header {
-          text-align: center;
+        .header-section {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           margin-bottom: 30px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid #eee;
         }
-        
-        .product-title {
-          font-size: 28px;
-          font-weight: 700;
+        .brand-text {
+          flex: 1;
+        }
+        .brand-text h1 {
+          font-size: 24px;
+          color: #444;
+          margin-bottom: 5px;
+        }
+        .brand-text p {
+          font-size: 16px;
+          color: #666;
+        }
+        .product-info {
+          flex: 1;
+          text-align: right;
+        }
+        .product-info h2 {
+          font-size: 22px;
+          color: #222;
           margin-bottom: 10px;
         }
-        
-        .subtitle {
-          font-size: 18px;
-          color: var(--muted);
-          margin-bottom: 15px;
-        }
-        
         .price {
           font-size: 24px;
-          font-weight: 700;
-          color: var(--primary);
+          font-weight: bold;
+          color: #e63946;
         }
-        
-        .gallery {
-          margin: 30px 0;
-        }
-        
-        .gallery-container {
-          position: relative;
-          width: 100%;
-          padding-bottom: 75%;
-          overflow: hidden;
-          border-radius: var(--radius);
-          background: var(--background);
-          margin-bottom: 15px;
-        }
-        
-        .gallery-item {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          display: none;
-        }
-        
-        .gallery-item img {
-          max-width: 100%;
-          max-height: 100%;
-          object-fit: contain;
-        }
-        
-        .thumbnail-sets {
+        .main-content {
           display: flex;
-          justify-content: center;
-          gap: 10px;
+          flex-wrap: wrap;
+          gap: 30px;
+          margin-bottom: 40px;
         }
-        
-        .thumbnail-set {
+        .product-gallery {
+          flex: 1;
+          min-width: 300px;
+        }
+        .main-image {
+          width: 100%;
+          margin-bottom: 10px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          overflow: hidden;
+        }
+        .main-image img {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        .thumbnails {
           display: flex;
           gap: 10px;
           flex-wrap: wrap;
-          justify-content: center;
         }
-        
         .thumbnail {
           width: 80px;
           height: 80px;
-          border-radius: 8px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
           overflow: hidden;
-          border: 1px solid var(--border);
           cursor: pointer;
         }
-        
         .thumbnail img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          display: block;
         }
-        
-        .gallery-arrow {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 50px;
-          height: 50px;
-          background: rgba(255, 255, 255, 0.7);
-          border-radius: 50%;
-          display: none;
-          z-index: 2;
-          cursor: pointer;
+        .product-card {
+          flex: 1;
+          min-width: 300px;
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+          padding: 20px;
         }
-        
-        .gallery-arrow::before {
-          content: '';
-          position: absolute;
-          width: 15px;
-          height: 15px;
-          border-top: 3px solid var(--text);
-          border-right: 3px solid var(--text);
-          top: 50%;
-          left: 50%;
+        .product-card h2 {
+          font-size: 20px;
+          margin-bottom: 15px;
+          color: #333;
         }
-        
-        .gallery-arrow.prev {
-          left: 15px;
-        }
-        
-        .gallery-arrow.prev::before {
-          transform: translate(-30%, -50%) rotate(-135deg);
-        }
-        
-        .gallery-arrow.next {
-          right: 15px;
-        }
-        
-        .gallery-arrow.next::before {
-          transform: translate(-70%, -50%) rotate(45deg);
-        }
-        
-        /* Logic for showing images based on radio selection */
-        input[type="radio"] {
-          display: none;
-        }
-        
-        ${data.images.map((img, index) => {
-          const i = index + 1;
-          const prev = i === 1 ? data.images.length : i - 1;
-          const next = i === data.images.length ? 1 : i + 1;
-          
-          return `
-            #img${i}:checked ~ .gallery-container #main${i} {
-              display: block;
-            }
-            #img${i}:checked ~ .gallery-container .gallery-arrow.prev[for="img${prev}"],
-            #img${i}:checked ~ .gallery-container .gallery-arrow.next[for="img${next}"] {
-              display: block;
-            }
-          `;
-        }).join('')}
-        
-        /* Make thumbnails for selected image stand out */
-        ${data.images.map((img, index) => {
-          const i = index + 1;
-          return `
-            #img${i}:checked ~ .thumbnail-sets .thumbnail[for="img${i}"] {
-              border-color: var(--color-primary);
-              transform: translateY(-2px);
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-          `;
-        }).join('')}
-        
-        .product-section,
-        .tech-section {
-          margin: 40px 0;
-        }
-        
-        .section-title {
-          font-size: 22px;
-          margin-bottom: 20px;
-          font-weight: 600;
-        }
-        
-        .product-description {
-          line-height: 1.6;
-          color: var(--text);
+        .description-section {
           margin-bottom: 30px;
         }
-        
-        .tech-row {
-          display: flex;
-          border-bottom: 1px solid var(--border);
-          padding: 12px 0;
-        }
-        
-        .tech-label {
-          flex: 1;
-          font-weight: 500;
-          color: var(--muted);
-        }
-        
-        .tech-value {
-          flex: 2;
-        }
-        
-        .info-cards {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 20px;
-          margin: 40px 0;
-        }
-        
-        .info-card {
-          padding: 20px;
-          border-radius: var(--radius);
-          background: var(--card-bg);
-          border: 1px solid var(--border);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-        }
-        
-        .card-icon {
-          margin-bottom: 15px;
-          color: var(--primary);
-        }
-        
-        .info-title {
+        .description-section h3 {
           font-size: 18px;
-          font-weight: 600;
-          margin-bottom: 10px;
+          margin-bottom: 15px;
+          color: #333;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #eee;
         }
-        
-        .info-description {
-          color: var(--muted);
-          line-height: 1.5;
+        .description-text {
+          font-size: 16px;
+          line-height: 1.7;
+          color: #555;
         }
-        
+        .specs-section {
+          margin-bottom: 30px;
+        }
+        .specs-section h3 {
+          font-size: 18px;
+          margin-bottom: 15px;
+          color: #333;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #eee;
+        }
+        .specs-container {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          gap: 15px;
+        }
+        .spec-item {
+          display: flex;
+          background: #f5f5f5;
+          padding: 10px 15px;
+          border-radius: 6px;
+        }
+        .spec-name {
+          font-weight: bold;
+          margin-right: 10px;
+          min-width: 120px;
+        }
+        .spec-value {
+          color: #555;
+        }
+        .company-info-section {
+          margin-bottom: 30px;
+        }
+        .company-info-section h3 {
+          font-size: 18px;
+          margin-bottom: 20px;
+          color: #333;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #eee;
+        }
+        .company-sections {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 20px;
+        }
+        .company-section {
+          display: flex;
+          align-items: flex-start;
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .icon-container {
+          width: 50px;
+          height: 50px;
+          margin-right: 15px;
+          color: #3498db;
+        }
+        .icon-container svg {
+          width: 100%;
+          height: 100%;
+        }
+        .section-content h3 {
+          font-size: 16px;
+          margin-bottom: 8px;
+          padding: 0;
+          border: none;
+        }
+        .section-content p {
+          font-size: 14px;
+          color: #666;
+        }
         @media (max-width: 768px) {
-          .thumbnail {
-            width: 60px;
-            height: 60px;
+          .header-section {
+            flex-direction: column;
+            align-items: flex-start;
           }
-          
-          .gallery-container {
-            padding-bottom: 100%;
+          .brand-text {
+            margin-bottom: 15px;
+          }
+          .product-info {
+            text-align: left;
+          }
+          .main-content {
+            flex-direction: column;
           }
         }
       </style>
     </head>
     <body>
-      <div class="container">
-        <div class="product-header">
-          ${logoHtml}
-          <h1 class="product-title">${data.title}</h1>
-          ${data.subtitle ? `<h2 class="subtitle">${data.subtitle}</h2>` : ''}
-          ${data.price ? `<div class="price">${currencySymbol}${data.price}</div>` : ''}
+      <div class="template-container">
+        <div class="header-section">
+          <div class="brand-text">
+            <h1>${data.company_name || 'Company Name'}</h1>
+            <p>${data.subtitle || 'Company Slogan'}</p>
+          </div>
+          <div class="product-info">
+            <h2>${data.title || 'Product Title'}</h2>
+            <span class="price">${data.currency} ${data.price || '0.00'}</span>
+          </div>
         </div>
         
-        ${imageGallery}
-        
-        <div class="product-section">
-          <h2 class="section-title">Produktbeschreibung</h2>
-          <div class="product-description">${data.description || ''}</div>
+        <div class="main-content">
+          ${galleryHTML}
+          
+          <div class="product-card">
+            <h2 class="product-title">${data.title || 'Product Title'}</h2>
+            <span class="price">${data.currency} ${data.price || '0.00'}</span>
+            <div class="description-section">
+              <h3>Produktbeschreibung</h3>
+              <div class="description-text">${data.description || 'Product Description'}</div>
+            </div>
+          </div>
         </div>
         
-        <div class="tech-section">
-          <h2 class="section-title">Technische Daten</h2>
-          ${techSpecs}
-        </div>
+        ${specsHTML}
         
-        ${companyInfo ? `<div class="company-section">${companyInfo}</div>` : ''}
+        ${companyHTML}
       </div>
     </body>
     </html>
   `;
-}
-
-/**
- * Helper function to get currency symbol from currency code
- */
-function getCurrencySymbol(currency: string): string {
-  const currencyMap: Record<string, string> = {
-    'EUR': '€',
-    'USD': '$',
-    'GBP': '£',
-    'JPY': '¥',
-    'CNY': '¥',
-    'KRW': '₩',
-    'INR': '₹',
-    'RUB': '₽'
-  };
-  
-  return currencyMap[currency] || currency;
 }
