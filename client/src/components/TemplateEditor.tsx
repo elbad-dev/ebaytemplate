@@ -172,15 +172,39 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onBack }) => 
             </Button>
             <Button 
               variant="outline"
-              disabled={!templateData.rawHtml}
               onClick={() => {
-                if (templateData.rawHtml) {
-                  updateTemplateData({});
+                if (window.confirm("Are you sure you want to reset all changes? This will revert to the original template or clear all fields if you're creating a new template.")) {
+                  if (template) {
+                    // If we have an original template, revert to it
+                    try {
+                      const extractedData = parseTemplate(template.html);
+                      setTemplateData(extractedData);
+                      setGeneratedHtml(template.html);
+                      toast({
+                        title: 'Template reset',
+                        description: 'Changes have been reverted to the original template',
+                      });
+                    } catch (error) {
+                      console.error('Error parsing template:', error);
+                      toast({
+                        title: 'Error',
+                        description: 'Failed to reset template',
+                        variant: 'destructive'
+                      });
+                    }
+                  } else {
+                    // If we're creating a new template, clear everything
+                    handleNewTemplate();
+                    toast({
+                      title: 'Template reset',
+                      description: 'All fields have been cleared',
+                    });
+                  }
                 }
               }}
               className="px-4 py-2 bg-gray-200 rounded-md text-gray-700 text-sm font-medium hover:bg-gray-300 transition"
             >
-              Refresh Template
+              Reset Changes
             </Button>
             <Button 
               onClick={handleExportTemplate}
