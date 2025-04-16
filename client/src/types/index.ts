@@ -25,6 +25,7 @@ export interface CompanySection {
 
 export interface TemplateData {
   title: string;
+  company_name: string;
   subtitle?: string;
   price?: string;
   currency?: string;

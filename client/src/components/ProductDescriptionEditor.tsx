@@ -69,6 +69,36 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
       onUpdate({ description: newDescription });
     }
   };
+  
+  // Handle paste events to preserve formatting
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/html') || e.clipboardData.getData('text');
+    
+    if (document.queryCommandSupported('insertHTML')) {
+      document.execCommand('insertHTML', false, text);
+    } else {
+      // Fallback for browsers that don't support insertHTML
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        const textNode = document.createTextNode(text);
+        range.insertNode(textNode);
+        range.setStartAfter(textNode);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }
+    
+    // Ensure we capture the update
+    if (contentEditableRef.current) {
+      const newDescription = contentEditableRef.current.innerHTML;
+      setDescription(newDescription);
+      onUpdate({ description: newDescription });
+    }
+  };
 
   // Remove detect title function since we handle this in the Company Information section
 
@@ -98,9 +128,9 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
       <CardContent className="p-6">
         <div className="space-y-6">
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Product Information</h3>
+            <h3 className="text-lg font-semibold">Product Details</h3>
             <p className="text-sm text-gray-500">
-              Edit the product title, description, price, and currency.
+              Edit the product details, price, and description.
             </p>
           </div>
 
@@ -188,6 +218,7 @@ const ProductDescriptionEditor: React.FC<EditorSectionProps> = ({
                   contentEditable
                   onInput={handleDescriptionChange}
                   onBlur={handleDescriptionChange}
+                  onPaste={handlePaste}
                   className="w-full p-3 min-h-[200px] max-h-[400px] overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
                   style={{ 
                     fontFamily: 'inherit',
