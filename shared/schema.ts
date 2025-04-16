@@ -26,7 +26,7 @@ export const templates = pgTable("templates", {
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   style_id: integer("style_id"),
-  user_id: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  user_id: text("user_id"), // Changed to text to match database
   html: text("html").notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
@@ -53,7 +53,7 @@ export const images = pgTable("images", {
   fileType: varchar("file_type", { length: 50 }).notNull(),
   fileSize: integer("file_size").notNull(),
   url: varchar("url", { length: 255 }).notNull(),
-  user_id: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  user_id: text("user_id"), // Changed to text to match database
   uploaded_at: timestamp("uploaded_at").defaultNow().notNull(),
 });
 
