@@ -59,6 +59,13 @@ export interface SvgEditorProps {
   onClose: () => void;
 }
 
+export interface SvgPreset {
+  id: string;
+  name: string;
+  svg: string;
+  category: string;
+}
+
 export interface EditorSectionProps {
   data: TemplateData;
   onUpdate: (updatedData: Partial<TemplateData>) => void;
