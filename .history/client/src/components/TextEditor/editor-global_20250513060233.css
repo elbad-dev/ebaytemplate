@@ -1,0 +1,52 @@
+/* Global styles to prevent unwanted frames in edit mode */
+*[contenteditable="true"],
+*[contenteditable="true"] *,
+.template-editor-container.editing *,
+.template-editor-container.editing,
+[contenteditable="true"],
+[contenteditable="true"] * {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Prevent unwanted frames on all interactive elements during edit mode */
+button:focus,
+select:focus,
+input:focus,
+[role="button"]:focus,
+[tabindex]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove frame from iframe during edit mode */
+iframe {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Reset specific styles for editor elements */
+.editor-toolbar {
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.editor-controls-group {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+.editor-controls-group:last-child {
+  border-right: none !important;
+}
+
+.editor-button:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.editor-select {
+  background-color: #f8fafc !important;
+}
+
+.editor-color-picker {
+  background-color: white !important;
+}

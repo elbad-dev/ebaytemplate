@@ -1,12 +1,33 @@
+import dotenv from "dotenv";
+dotenv.config();
+console.log('DATABASE_URL =', process.env.DATABASE_URL);
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path from 'path';
 import fs from 'fs';
+import { createTestUser } from "./auth";
+import { pool } from "./db";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Initialize database and create test user
+(async () => {
+  try {
+    // Test database connection first
+    const client = await pool.connect();
+    console.log("Database connected successfully");
+    client.release();
+
+    // Create test user after confirming database connection
+    await createTestUser();
+    console.log("Test user initialization completed");
+  } catch (error) {
+    console.error('Database initialization error:', error);
+  }
+})();
 
 // Serve our test auth page
 app.get('/auth-test', (req, res) => {
@@ -72,11 +93,7 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port} (http://0.0.0.0:${port})`);
+  server.listen(port, 'localhost', () => {
+    log(`serving on port ${port} (http://localhost:${port})`);
   });
 })();

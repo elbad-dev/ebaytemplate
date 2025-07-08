@@ -1,16 +1,27 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import dotenv from "dotenv";
+dotenv.config();
+import pkg from 'pg';
+const { Pool } = pkg;
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Configure neon to use websockets in serverless environments
-neonConfig.webSocketConstructor = ws;
+export const pool = new Pool({ 
+  host: 'localhost',
+  port: 5432,
+  database: 'ebay_templates',
+  user: 'postgres', 
+  password: 'sa',
+  ssl: false
+});
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
+// Test the database connection
+pool.connect()
+  .then(client => {
+    console.log("Successfully connected to database");
+    client.release();
+  })
+  .catch(err => {
+    console.error("Database connection error:", err);
+  });
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle(pool, { schema });
