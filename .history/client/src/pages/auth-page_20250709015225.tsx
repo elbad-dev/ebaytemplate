@@ -93,12 +93,6 @@ export default function AuthPage() {
   
   return (
     <div className="min-h-screen flex flex-col">
-      {isDemoMode && (
-        <div className="bg-blue-600 text-white p-3 text-center text-sm">
-          <strong>Demo Mode:</strong> Use username "demo" or "testuser" and password "password" to login. 
-          Full functionality requires a backend server.
-        </div>
-      )}
       <div className="flex-1 container relative h-full flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
         <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700"></div>
@@ -136,11 +130,6 @@ export default function AuthPage() {
                     <CardTitle>Login</CardTitle>
                     <CardDescription>
                       Enter your credentials to access your account
-                      {isDemoMode && (
-                        <span className="block mt-2 text-blue-600 font-medium">
-                          Demo: Use "demo"/"testuser" + "password"
-                        </span>
-                      )}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">

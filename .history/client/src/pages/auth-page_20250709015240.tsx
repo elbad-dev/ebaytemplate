@@ -136,11 +136,6 @@ export default function AuthPage() {
                     <CardTitle>Login</CardTitle>
                     <CardDescription>
                       Enter your credentials to access your account
-                      {isDemoMode && (
-                        <span className="block mt-2 text-blue-600 font-medium">
-                          Demo: Use "demo"/"testuser" + "password"
-                        </span>
-                      )}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">

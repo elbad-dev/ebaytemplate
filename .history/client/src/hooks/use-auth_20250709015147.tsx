@@ -213,13 +213,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       console.log("Attempting logout");
-      
-      // In demo mode, simulate logout
-      if (isDemo) {
-        console.log("Demo mode: Logout successful");
-        return { message: "Logged out successfully" };
-      }
-      
       try {
         const res = await fetch("/api/logout", {
           method: "POST",
@@ -245,7 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], null);
       toast({
         title: "Logged out",
-        description: `You have been logged out successfully${isDemo ? ' (Demo Mode)' : ''}`,
+        description: "You have been logged out successfully",
       });
     },
     onError: (error: Error) => {
@@ -267,7 +260,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
-        isDemoMode: isDemo,
       }}
     >
       {children}

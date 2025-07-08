@@ -163,13 +163,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation({
     mutationFn: async (credentials: RegisterData) => {
       console.log("Attempting registration with:", credentials.username);
-      
-      // In demo mode, simulate registration
-      if (isDemo) {
-        console.log("Demo mode: Registration successful");
-        return { ...DEMO_USER, username: credentials.username, email: credentials.email };
-      }
-      
       try {
         const res = await fetch("/api/register", {
           method: "POST",
@@ -196,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Registration successful",
-        description: `Your account has been created${isDemo ? ' (Demo Mode)' : ''}`,
+        description: "Your account has been created",
       });
     },
     onError: (error: Error) => {
@@ -213,13 +206,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       console.log("Attempting logout");
-      
-      // In demo mode, simulate logout
-      if (isDemo) {
-        console.log("Demo mode: Logout successful");
-        return { message: "Logged out successfully" };
-      }
-      
       try {
         const res = await fetch("/api/logout", {
           method: "POST",
@@ -245,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], null);
       toast({
         title: "Logged out",
-        description: `You have been logged out successfully${isDemo ? ' (Demo Mode)' : ''}`,
+        description: "You have been logged out successfully",
       });
     },
     onError: (error: Error) => {
@@ -267,7 +253,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
-        isDemoMode: isDemo,
       }}
     >
       {children}
