@@ -90,19 +90,13 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
       if (isDemoMode()) {
         // In demo mode, read the file content directly using FileReader
         htmlContent = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();        reader.onload = (e) => {
-          console.log('FileReader onload triggered');
-          if (e.target?.result && typeof e.target.result === 'string') {
-            // Security: Limit content size
-            const content = e.target.result;
-            if (content.length > 1024 * 1024) { // 1MB text limit
-              reject(new Error('HTML content is too large (max 1MB)'));
-              return;
-            }
-            
-            console.log('File content length:', content.length);
-            resolve(content);
-          } else {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            console.log('FileReader onload triggered');
+            if (e.target?.result && typeof e.target.result === 'string') {
+              console.log('File content length:', e.target.result.length);
+              resolve(e.target.result);
+            } else {
               console.error('FileReader result is not a string:', e.target?.result);
               reject(new Error('Failed to read file content'));
             }

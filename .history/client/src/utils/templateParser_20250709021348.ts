@@ -8,38 +8,14 @@ export function parseTemplate(html: string): TemplateData {
   try {
     console.log('Starting template parsing...');
     
-    // Security: Input validation
+    // Validate input
     if (!html || typeof html !== 'string') {
-      throw new Error('Invalid HTML content provided');
-    }
-    
-    // Security: Limit content size
-    if (html.length > 2 * 1024 * 1024) { // 2MB limit
-      throw new Error('HTML content is too large');
-    }
-    
-    // Security: Sanitize HTML before parsing
-    let cleanHtml = html;
-    if (typeof DOMPurify !== 'undefined') {
-      cleanHtml = DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: [
-          'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-          'img', 'a', 'ul', 'ol', 'li', 'table', 'tr', 'td', 'th',
-          'strong', 'em', 'b', 'i', 'u', 'br', 'hr', 'center',
-          'font', 'style', 'tbody', 'thead', 'tfoot'
-        ],
-        ALLOWED_ATTR: [
-          'src', 'alt', 'width', 'height', 'style', 'class', 'id',
-          'href', 'target', 'align', 'border', 'cellpadding', 'cellspacing',
-          'color', 'size', 'face'
-        ],
-        ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
-      });
+      throw new Error('Invalid HTML input provided');
     }
     
     // Create a temporary DOM to parse the HTML
     const parser = new DOMParser();
-    const doc = parser.parseFromString(cleanHtml, 'text/html');
+    const doc = parser.parseFromString(html, 'text/html');
   
   // Extract template data
   const data: TemplateData = {
@@ -206,7 +182,7 @@ export function parseTemplate(html: string): TemplateData {
         }
       });
       
-      galleryImages = Array.from(mainImgSet);
+      galleryImages = [...mainImgSet];
     }
   }
   

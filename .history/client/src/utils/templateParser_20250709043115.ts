@@ -206,7 +206,7 @@ export function parseTemplate(html: string): TemplateData {
         }
       });
       
-      galleryImages = Array.from(mainImgSet);
+      galleryImages = [...mainImgSet];
     }
   }
   

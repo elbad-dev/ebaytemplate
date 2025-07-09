@@ -60,14 +60,6 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Enhanced file validation - Security measures
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB limit
-    if (file.size > MAX_FILE_SIZE) {
-      setUploadError('File size must be less than 5MB');
-      setUploadState('error');
-      return;
-    }
-
     // Only accept HTML files - be more lenient with MIME types
     const isHtmlFile = file.type === 'text/html' || 
                        file.type === '' || // Some browsers don't set MIME type
@@ -90,19 +82,13 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
       if (isDemoMode()) {
         // In demo mode, read the file content directly using FileReader
         htmlContent = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();        reader.onload = (e) => {
-          console.log('FileReader onload triggered');
-          if (e.target?.result && typeof e.target.result === 'string') {
-            // Security: Limit content size
-            const content = e.target.result;
-            if (content.length > 1024 * 1024) { // 1MB text limit
-              reject(new Error('HTML content is too large (max 1MB)'));
-              return;
-            }
-            
-            console.log('File content length:', content.length);
-            resolve(content);
-          } else {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            console.log('FileReader onload triggered');
+            if (e.target?.result && typeof e.target.result === 'string') {
+              console.log('File content length:', e.target.result.length);
+              resolve(e.target.result);
+            } else {
               console.error('FileReader result is not a string:', e.target?.result);
               reject(new Error('Failed to read file content'));
             }
