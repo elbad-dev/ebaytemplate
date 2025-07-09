@@ -198,15 +198,6 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
     <>
       <Card>
         <CardContent className="p-4">
-          {/* Demo mode banner */}
-          {isDemoMode() && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
-                <strong>Demo Mode:</strong> Template files are processed entirely in your browser - no server upload required!
-              </p>
-            </div>
-          )}
-          
           <div
             className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center"
             onPaste={handlePaste}

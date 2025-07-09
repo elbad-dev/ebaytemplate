@@ -41,41 +41,22 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
       setUploadState('uploading');
       setUploadError('');
 
-      let htmlContent: string;
+      // Create a FormData instance
+      const formData = new FormData();
+      formData.append('file', file);
 
-      // Check if we're in demo mode (GitHub Pages)
-      if (isDemoMode()) {
-        // In demo mode, read the file content directly using FileReader
-        htmlContent = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            if (e.target?.result && typeof e.target.result === 'string') {
-              resolve(e.target.result);
-            } else {
-              reject(new Error('Failed to read file content'));
-            }
-          };
-          reader.onerror = () => reject(new Error('Failed to read file'));
-          reader.readAsText(file);
-        });
-      } else {
-        // In full-stack mode, upload the file to the server
-        const formData = new FormData();
-        formData.append('file', file);
+      // Upload the file
+      const response = await fetch('/api/upload/html', {
+        method: 'POST',
+        body: formData,
+      });
 
-        const response = await fetch('/api/upload/html', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to upload template');
-        }
-
-        const data = await response.json();
-        htmlContent = data.content;
+      if (!response.ok) {
+        throw new Error('Failed to upload template');
       }
 
+      const data = await response.json();
+      const htmlContent = data.content;
       setCurrentHtmlContent(htmlContent);
 
       // Parse the template HTML
@@ -198,15 +179,6 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
     <>
       <Card>
         <CardContent className="p-4">
-          {/* Demo mode banner */}
-          {isDemoMode() && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
-                <strong>Demo Mode:</strong> Template files are processed entirely in your browser - no server upload required!
-              </p>
-            </div>
-          )}
-          
           <div
             className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center"
             onPaste={handlePaste}
