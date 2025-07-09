@@ -205,27 +205,8 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
       setUploadError('');
       setCurrentHtmlContent(htmlContent);
 
-      // Parse the template HTML with error handling
-      let templateData: TemplateData;
-      try {
-        templateData = parseTemplate(htmlContent);
-        console.log('Template parsed successfully:', templateData);
-      } catch (parseError) {
-        console.error('Failed to parse template:', parseError);
-        // Create a basic template data structure if parsing fails
-        templateData = {
-          title: 'Pasted Template',
-          company_name: '',
-          subtitle: '',
-          price: '',
-          currency: 'EUR',
-          description: '',
-          images: [],
-          specs: [],
-          companyInfo: [],
-          rawHtml: htmlContent
-        };
-      }
+      // Parse the template HTML
+      const templateData = parseTemplate(htmlContent);
       
       // Add the raw HTML to the template data
       templateData.rawHtml = htmlContent;

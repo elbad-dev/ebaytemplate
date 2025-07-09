@@ -334,16 +334,9 @@ export function parseTemplate(html: string): TemplateData {
     priceNote = priceNoteElem.textContent?.trim() || '';
   }
   
-  console.log('Template parsing completed successfully');
-  
   return {
     ...data,
     tags,
     priceNote,
   };
-  } catch (error) {
-    console.error('Error parsing template:', error);
-    console.error('HTML content preview:', html?.substring(0, 200) + '...');
-    throw new Error(`Failed to parse template: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
 }

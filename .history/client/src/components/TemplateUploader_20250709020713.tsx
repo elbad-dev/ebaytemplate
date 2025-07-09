@@ -1,35 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { UploadState, TemplateData }         });
-
-      setCurrentHtmlContent(htmlContent);
-
-      // Parse the template HTML with error handling
-      let templateData: TemplateData;
-      try {
-        templateData = parseTemplate(htmlContent);
-        console.log('Template parsed successfully:', templateData);
-      } catch (parseError) {
-        console.error('Failed to parse template:', parseError);
-        // Create a basic template data structure if parsing fails
-        templateData = {
-          title: 'Imported Template',
-          company_name: '',
-          subtitle: '',
-          price: '',
-          currency: 'EUR',
-          description: '',
-          images: [],
-          specs: [],
-          companyInfo: [],
-          rawHtml: htmlContent
-        };
-      }
-      
-      // Add the raw HTML to the template data
-      templateData.rawHtml = htmlContent;
-      
-      // Store the template data for possible manual editing
-      setCurrentTemplateData(templateData);es';
+import { UploadState, TemplateData } from '../types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { parseTemplate } from '../utils/templateParser';
@@ -84,19 +54,13 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
         htmlContent = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = (e) => {
-            console.log('FileReader onload triggered');
             if (e.target?.result && typeof e.target.result === 'string') {
-              console.log('File content length:', e.target.result.length);
               resolve(e.target.result);
             } else {
-              console.error('FileReader result is not a string:', e.target?.result);
               reject(new Error('Failed to read file content'));
             }
           };
-          reader.onerror = (e) => {
-            console.error('FileReader error:', e);
-            reject(new Error('Failed to read file'));
-          };
+          reader.onerror = () => reject(new Error('Failed to read file'));
           reader.readAsText(file);
         });
       } else {
@@ -146,12 +110,6 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
       }
     } catch (error) {
       console.error('Upload error:', error);
-      console.error('File details:', {
-        name: file?.name,
-        type: file?.type,
-        size: file?.size,
-        isDemoMode: isDemoMode()
-      });
       setUploadError(error instanceof Error ? error.message : 'Failed to upload template');
       setUploadState('error');
     }
@@ -205,27 +163,8 @@ export default function TemplateUploader({ onTemplateImport }: TemplateUploaderP
       setUploadError('');
       setCurrentHtmlContent(htmlContent);
 
-      // Parse the template HTML with error handling
-      let templateData: TemplateData;
-      try {
-        templateData = parseTemplate(htmlContent);
-        console.log('Template parsed successfully:', templateData);
-      } catch (parseError) {
-        console.error('Failed to parse template:', parseError);
-        // Create a basic template data structure if parsing fails
-        templateData = {
-          title: 'Pasted Template',
-          company_name: '',
-          subtitle: '',
-          price: '',
-          currency: 'EUR',
-          description: '',
-          images: [],
-          specs: [],
-          companyInfo: [],
-          rawHtml: htmlContent
-        };
-      }
+      // Parse the template HTML
+      const templateData = parseTemplate(htmlContent);
       
       // Add the raw HTML to the template data
       templateData.rawHtml = htmlContent;
